@@ -639,6 +639,154 @@
     #floating-cta.visible { transform: translateY(0); }
 
     /* =====================================================
+       ビジュアル・オーダーフロー用スタイル
+    ===================================================== */
+    #visual-order-flow {
+      background: var(--color-bg-surface);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding: 80px 20px;
+      text-align: center;
+    }
+    .flow-step {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .flow-step.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      max-width: 960px;
+      margin: 0 auto 32px;
+    }
+    .visual-card {
+      background: #ffffff;
+      border: 2px solid var(--color-border);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .visual-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+      border-color: #cbd5e1;
+    }
+    .visual-card.selected {
+      border-color: var(--color-accent-blue);
+      background: #f0f7ff;
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.15);
+    }
+    .visual-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--color-accent-blue);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    }
+    .card-img-placeholder {
+      width: 100%;
+      height: 140px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--color-text-primary);
+    }
+    .card-features {
+      text-align: left;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      padding-left: 20px;
+      margin-bottom: 0;
+      line-height: 1.6;
+    }
+    .card-features li { margin-bottom: 4px; }
+    .flow-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .btn-flow {
+      background: var(--color-accent-blue);
+      color: #fff;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+    .btn-flow:disabled {
+      background: #cbd5e1; box-shadow: none; cursor: not-allowed;
+    }
+    .btn-flow:not(:disabled):hover {
+      transform: translateY(-2px); background: #0066cc; box-shadow: 0 8px 20px rgba(0, 122, 255, 0.4);
+    }
+    .btn-flow-back {
+      background: #fff;
+      color: var(--color-text-secondary);
+      border: 2px solid var(--color-border);
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-flow-back:hover { background: #f8fafc; border-color: #cbd5e1; }
+    #order-summary-box {
+      background: #fff; border: 1px solid var(--color-border); border-radius: 16px;
+      padding: 32px; max-width: 600px; margin: 0 auto 32px; text-align: left;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    }
+    .summary-row { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px dashed var(--color-border); }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { font-weight: 700; color: var(--color-text-secondary); }
+    .summary-value { font-weight: 800; color: var(--color-text-primary); }
+    .summary-price-row {
+      margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--color-border); text-align: center;
+    }
+    #loading-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8); z-index: 9999;
+      align-items: center; justify-content: center; flex-direction: column;
+    }
+
+    /* =====================================================
        フッター
     ===================================================== */
     footer { background: var(--color-bg-primary); border-top: 1px solid var(--color-border); padding: 40px 20px; text-align: center; }
@@ -823,65 +971,90 @@
       </div>
     </section>
 
-    <!-- 注文シミュレーション＆フォーム #order-form -->
-    <section id="order-form">
+    <!-- 注文フロー #visual-order-flow -->
+    <section id="visual-order-flow">
       <div class="inner">
         <span class="section-label fade-in-up">ORDER FORM</span>
-        <h2 class="section-title fade-in-up">料金確認 ＆ ご注文</h2>
-        <div class="divider fade-in-up"></div>
-        <p class="section-desc fade-in-up">
-          ご希望のモデルとレンズを選択して特別価格をご確認いただいた後、下部のGoogleフォームよりご注文ください。
-        </p>
-
-        <div class="order-box fade-in-up">
-          <p class="section-desc" style="font-size: 0.85rem; margin-bottom: 24px; color: var(--color-text-primary); font-weight: 700;">
-            ※ ここに表示されない商品をご希望の場合は、ご注文フォームの「ご希望の製品」欄で「その他」を選択し、フリー記述欄に製品の詳細をご入力ください。
-          </p>
-
-          <!-- モデル選択 -->
-          <div class="order-form-group">
-            <label for="select-model">1. モデルを選択</label>
-            <select id="select-model" class="order-select">
-              <option value="" selected>モデルを選択してください</option>
-              <option value="AF-301">AF-301</option>
-              <option value="AF-301-BK">AF-301-BK</option>
-              <option value="AF-301-WV">AF-301-WV</option>
-              <option value="AF-302-WP">AF-302-WP</option>
-              <option value="AF-302-SP">AF-302-SP</option>
-              <option value="AF-402">AF-402</option>
-              <option value="AF-901">AF-901</option>
-            </select>
+        <h2 class="section-title fade-in-up">AirFly オーダーフロー</h2>
+        <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
+        
+        <!-- ステップ1: モデル選択 -->
+        <div id="flow-step-1" class="flow-step active">
+          <p class="section-desc">まずはご希望のモデルをお選びください。</p>
+          <div class="card-grid" id="model-cards">
+            <!-- JSで動的に生成 -->
           </div>
-
-          <!-- レンズ選択 -->
-          <div class="order-form-group">
-            <label for="select-lens">2. レンズを選択</label>
-            <select id="select-lens" class="order-select" disabled>
-              <option value="" disabled selected>先にモデルを選択してください</option>
-            </select>
+          <div class="flow-actions">
+            <button class="btn-flow" id="btn-next-1" onclick="nextStep(2)" disabled>次へ進む（レンズ選択）</button>
           </div>
+        </div>
 
-          <!-- 価格計算結果 -->
-          <div class="order-price-result" id="order-price-result" style="display: none;">
-            <span class="price-label">定価参考</span>
-            <span class="price-original" id="sim-price-original">¥0（税込）</span>
-            <span class="price-label">TempMachi 特別限定価格</span>
-            <div class="price-sale-row">
-              <span class="price-sale" id="sim-price-sale">¥0</span>
-              <span class="price-sale-unit">（税込）</span>
+        <!-- ステップ2: レンズ選択 -->
+        <div id="flow-step-2" class="flow-step">
+          <p class="section-desc">次に、レンズの種類をお選びください。</p>
+          <div class="card-grid" id="lens-cards">
+            <!-- JSで動的に生成 -->
+          </div>
+          <div class="flow-actions">
+            <button class="btn-flow-back" onclick="prevStep(1)">戻る</button>
+            <button class="btn-flow" id="btn-next-2" onclick="nextStep(3)" disabled>次へ進む（フレーム選択）</button>
+          </div>
+        </div>
+
+        <!-- ステップ3: フレーム選択 -->
+        <div id="flow-step-3" class="flow-step">
+          <p class="section-desc">最後に、フレームのバリエーションをお選びください。</p>
+          <div class="card-grid" id="frame-cards">
+            <!-- JSで動的に生成 -->
+          </div>
+          <div class="flow-actions">
+            <button class="btn-flow-back" onclick="prevStep(2)">戻る</button>
+            <button class="btn-flow" id="btn-next-3" onclick="nextStep(4)" disabled>ご注文の確認へ</button>
+          </div>
+        </div>
+
+        <!-- ステップ4: 最終確認 -->
+        <div id="flow-step-4" class="flow-step">
+          <p class="section-desc">以下の内容で注文を確定します。</p>
+          <div id="order-summary-box">
+            <div class="summary-row">
+              <span class="summary-label">メールアドレス</span>
+              <span class="summary-value" id="summary-email"></span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">モデル</span>
+              <span class="summary-value" id="summary-model"></span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">レンズ</span>
+              <span class="summary-value" id="summary-lens"></span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">フレーム</span>
+              <span class="summary-value" id="summary-frame"></span>
+            </div>
+            <div class="summary-price-row">
+              <span class="price-label">TempMachi 特別限定価格</span>
+              <div class="price-sale-row" style="margin-top: 12px;">
+                <span class="price-sale" id="summary-price">¥0</span>
+                <span class="price-sale-unit">（税込）</span>
+              </div>
             </div>
           </div>
+          <div class="flow-actions">
+            <button class="btn-flow-back" onclick="prevStep(3)">戻る</button>
+            <button class="btn-flow" id="btn-submit" onclick="submitOrder()">注文を確定する</button>
+          </div>
         </div>
 
-        <!-- Googleフォーム 別タブ遷移ボタン -->
-        <div class="form-external-wrapper fade-in-up">
-          <a id="order-button" href="#" target="_blank" rel="noopener noreferrer" class="btn-order-external">
-            特別価格で注文する
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 8px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
-        </div>
       </div>
     </section>
+
+    <!-- ローディング用オーバーレイ -->
+    <div id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p style="font-weight: 700; color: #2d3748; margin-top: 16px;">送信中...</p>
+    </div>
 
     <!-- フッター -->
     <footer>
@@ -938,30 +1111,20 @@
       showMainContent(emailInput);
     }
 
-    // ステップ3を表示し、GoogleフォームのURLを書き換える
+    // メインコンテンツを表示し、ビジュアルオーダーフローを初期化する
     function showMainContent(email) {
-      // ゲートコンテナを隠し、メインコンテンツを表示
       document.getElementById('gate-container').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
-
-      // プレフィル用のURLを生成してiframeにセット
-      // パラメータ名: entry.1788641189
-      const baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSeeDvsQ9k-AqJ6x_UDqSOxVRlSTxLSskrqUc2DHyXv-R-6iqQ/viewform";
-      const params = new URLSearchParams({
-        "embedded": "true",
-        "usp": "pp_url",
-        "entry.1788641189": email
-      });
-
-      const finalUrl = `${baseUrl}?${params.toString()}`;
-      document.getElementById('order-button').href = finalUrl;
-
-      // メインコンテンツ表示後にスクロールアニメーションを初期化
+      
+      // メールアドレスをサマリーにセット
+      document.getElementById('summary-email').textContent = email || 'test@example.com';
+      
       initScrollAnimation();
+      initVisualOrderFlow();
     }
 
     /* ==============================================
-       料金シミュレーターロジック
+       ビジュアル・オーダーフロー ロジック
     ============================================== */
     const LENS_OPTIONS = {
       'AF-301': ['グレー★偏光', 'ライトスモーク', 'ゴールド', 'ブルーピンク', 'ブルー'],
@@ -973,64 +1136,179 @@
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
 
+    const DUMMY_FRAMES = ['フレームA', 'フレームB', 'フレームC'];
+
+    let orderState = {
+      model: '',
+      lens: '',
+      frame: '',
+      price: 0
+    };
+
     function formatPrice(num) { return num.toLocaleString('ja-JP'); }
 
-    function initOrderSimulator() {
-      const selectModel = document.getElementById('select-model');
-      const selectLens = document.getElementById('select-lens');
-      const resultArea = document.getElementById('order-price-result');
-      const elOriginal = document.getElementById('sim-price-original');
-      const elSale = document.getElementById('sim-price-sale');
-
-      function getPriceData(model, lens) {
-        if (model === 'AF-901') {
-          return { orig: 16500, sale: 15000 };
-        } else if (model === 'AF-402') {
-          if (lens === 'アンバー' || lens === 'ブルー') {
-            return { orig: 18700, sale: 16800 };
-          } else if (lens && lens.includes('★偏光')) {
-            return { orig: 22000, sale: 19800 };
-          } else {
-            return { orig: 17600, sale: 15800 };
-          }
+    function getPriceData(model, lens) {
+      if (model === 'AF-901') {
+        return { orig: 16500, sale: 15000 };
+      } else if (model === 'AF-402') {
+        if (lens === 'アンバー' || lens === 'ブルー') {
+          return { orig: 18700, sale: 16800 };
+        } else if (lens && lens.includes('★偏光')) {
+          return { orig: 22000, sale: 19800 };
         } else {
-          if (lens && lens.includes('★偏光')) {
-             return { orig: 26400, sale: 22000 };
-          } else {
-             return { orig: 22000, sale: 18000 };
-          }
+          return { orig: 17600, sale: 15800 };
+        }
+      } else {
+        if (lens && lens.includes('★偏光')) {
+           return { orig: 26400, sale: 22000 };
+        } else {
+           return { orig: 22000, sale: 18000 };
         }
       }
+    }
 
-      function checkSimulationComplete() {
-        const m = selectModel.value;
-        const l = selectLens.value;
-
-        if (m && l) {
-          const priceInfo = getPriceData(m, l);
-          elOriginal.textContent = `¥${formatPrice(priceInfo.orig)}（税込）`;
-          elSale.textContent = `¥${formatPrice(priceInfo.sale)}`;
-          
-          resultArea.style.display = 'block';
-        }
-      }
-
-      selectModel.addEventListener('change', function(e) {
-        const val = e.target.value;
-        selectLens.innerHTML = '<option value="" disabled selected>レンズを選択してください</option>';
-        if (LENS_OPTIONS[val]) {
-          LENS_OPTIONS[val].forEach(txt => {
-            const opt = document.createElement('option');
-            opt.value = txt; opt.textContent = txt;
-            selectLens.appendChild(opt);
-          });
-          selectLens.disabled = false;
-        }
-        resultArea.style.display = 'none';
+    function initVisualOrderFlow() {
+      const modelContainer = document.getElementById('model-cards');
+      if(modelContainer.innerHTML.trim() !== '') return; // 既に初期化済みの場合はスキップ
+      
+      const models = Object.keys(LENS_OPTIONS);
+      models.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'visual-card';
+        card.innerHTML = `
+          <div class="card-img-placeholder">NO IMAGE<br>${m}</div>
+          <h4 class="card-title">${m}</h4>
+          <ul class="card-features">
+            <li>特徴1のダミーテキスト</li>
+            <li>特徴2のダミーテキスト</li>
+            <li>特徴3のダミーテキスト</li>
+          </ul>
+        `;
+        card.onclick = () => selectModel(m, card);
+        modelContainer.appendChild(card);
       });
+    }
 
-      selectLens.addEventListener('change', function(e) {
-        checkSimulationComplete();
+    function selectModel(model, cardElement) {
+      document.querySelectorAll('#model-cards .visual-card').forEach(el => el.classList.remove('selected'));
+      cardElement.classList.add('selected');
+      orderState.model = model;
+      document.getElementById('btn-next-1').disabled = false;
+      
+      // レンズカード再生成
+      const lensContainer = document.getElementById('lens-cards');
+      lensContainer.innerHTML = '';
+      orderState.lens = '';
+      document.getElementById('btn-next-2').disabled = true;
+
+      LENS_OPTIONS[model].forEach(l => {
+        const card = document.createElement('div');
+        card.className = 'visual-card';
+        card.innerHTML = `
+          <div class="card-img-placeholder">NO IMAGE<br>${l}</div>
+          <h4 class="card-title">${l}</h4>
+          <ul class="card-features">
+            <li>レンズの機能特徴ダミー</li>
+          </ul>
+        `;
+        card.onclick = () => selectLens(l, card);
+        lensContainer.appendChild(card);
+      });
+    }
+
+    function selectLens(lens, cardElement) {
+      document.querySelectorAll('#lens-cards .visual-card').forEach(el => el.classList.remove('selected'));
+      cardElement.classList.add('selected');
+      orderState.lens = lens;
+      document.getElementById('btn-next-2').disabled = false;
+
+      // フレームカード初期化
+      const frameContainer = document.getElementById('frame-cards');
+      if(frameContainer.innerHTML.trim() === '') {
+        DUMMY_FRAMES.forEach(f => {
+          const card = document.createElement('div');
+          card.className = 'visual-card';
+          card.innerHTML = `
+            <div class="card-img-placeholder">NO IMAGE<br>${f}</div>
+            <h4 class="card-title">${f}</h4>
+          `;
+          card.onclick = () => selectFrame(f, card);
+          frameContainer.appendChild(card);
+        });
+      }
+    }
+
+    function selectFrame(frame, cardElement) {
+      document.querySelectorAll('#frame-cards .visual-card').forEach(el => el.classList.remove('selected'));
+      cardElement.classList.add('selected');
+      orderState.frame = frame;
+      document.getElementById('btn-next-3').disabled = false;
+    }
+
+    function nextStep(step) {
+      document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
+      document.getElementById('flow-step-' + step).classList.add('active');
+
+      if(step === 4) {
+        // 確認画面の描画
+        document.getElementById('summary-model').textContent = orderState.model;
+        document.getElementById('summary-lens').textContent = orderState.lens;
+        document.getElementById('summary-frame').textContent = orderState.frame;
+
+        const priceInfo = getPriceData(orderState.model, orderState.lens);
+        orderState.price = priceInfo.sale;
+        document.getElementById('summary-price').textContent = formatPrice(priceInfo.sale);
+      }
+    }
+
+    function prevStep(step) {
+      document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
+      document.getElementById('flow-step-' + step).classList.add('active');
+    }
+
+    function submitOrder() {
+      document.getElementById('loading-overlay').style.display = 'flex';
+      const email = localStorage.getItem('airfry_registered_email') || '';
+      
+      const payload = {
+        email: email,
+        model: orderState.model,
+        lens: orderState.lens,
+        frame: orderState.frame,
+        price: orderState.price
+      };
+
+      // プレースホルダ：後でGASのURLに書き換える
+      const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL"; 
+      
+      if(GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
+         setTimeout(() => {
+           document.getElementById('loading-overlay').style.display = 'none';
+           alert('注文データを送信しました！（デモ動作完了）\\n※実際のGAS WebアプリURLを設定すると、スプレッドシートにデータが保存されます。');
+         }, 1000);
+         return;
+      }
+
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain' // GASの制約上text/plainで送信
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        if(data.status === 'success') {
+          alert('ご注文ありがとうございました！');
+          window.location.reload();
+        } else {
+          alert('エラーが発生しました。もう一度お試しください。');
+        }
+      })
+      .catch(err => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        alert('通信エラーが発生しました。');
       });
     }
 
@@ -1061,7 +1339,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      initOrderSimulator();
       // 登録状態チェックスタート
       checkEmailRegistration();
     });
