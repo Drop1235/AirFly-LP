@@ -848,6 +848,7 @@
               <option value="AF-301-WV">AF-301-WV</option>
               <option value="AF-302-WP">AF-302-WP</option>
               <option value="AF-302-SP">AF-302-SP</option>
+              <option value="AF-402">AF-402</option>
               <option value="AF-901">AF-901</option>
             </select>
           </div>
@@ -968,6 +969,7 @@
       'AF-301-WV': ['ブルー★偏光', 'ゴールド★偏光', 'グレー★偏光'],
       'AF-302-WP': ['ブルー★偏光', 'ブルーピンク★偏光', 'グレー★偏光', 'ハイコントラストローズ'],
       'AF-302-SP': ['グレー★偏光', 'ハイコントラストローズ★偏光', 'ライトスモーク', 'ゴールド', 'ブルー', 'ライトピンク', 'ブルーピンク'],
+      'AF-402': ['アンバー', 'ブルー', 'ブラックマット', 'クリアアッシュ', 'ブラウン', 'グレー★偏光', 'グリーン★偏光'],
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
 
@@ -983,6 +985,14 @@
       function getPriceData(model, lens) {
         if (model === 'AF-901') {
           return { orig: 16500, sale: 15000 };
+        } else if (model === 'AF-402') {
+          if (lens === 'アンバー' || lens === 'ブルー') {
+            return { orig: 18700, sale: 16800 };
+          } else if (lens && lens.includes('★偏光')) {
+            return { orig: 22000, sale: 19800 };
+          } else {
+            return { orig: 17600, sale: 15800 };
+          }
         } else {
           if (lens && lens.includes('★偏光')) {
              return { orig: 26400, sale: 22000 };
