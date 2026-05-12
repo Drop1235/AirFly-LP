@@ -750,6 +750,14 @@
       transition: all 0.2s ease;
       box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
     }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.5); }
+      70% { box-shadow: 0 0 0 12px rgba(0, 122, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+    }
+    .btn-flow:not(:disabled) {
+      animation: pulseGlow 1.5s infinite;
+    }
     .btn-flow:disabled {
       background: #cbd5e1; box-shadow: none; cursor: not-allowed;
     }
@@ -863,8 +871,8 @@
           <span>the Limit</span>
         </h1>
         <p class="hero-subtitle">「限界」の先へ。<br>ストレスフリーな視界で最高のパフォーマンスを。</p>
-        <a href="#order-form" class="btn-cta" style="display:inline-flex; max-width:340px; margin: 0 auto;">
-          注文シミュレーターへ
+        <a href="#visual-order-flow" class="btn-cta" style="display:inline-flex; max-width:340px; margin: 0 auto;">
+          商品を選んで注文する
           <span>↓</span>
         </a>
         <p class="hero-line-note">※ このページはTempMachi LINE登録者限定の特別ページです</p>
@@ -953,23 +961,6 @@
       </div>
     </section>
 
-    <!-- 公式サイト誘導セクション #official-gallery -->
-    <section id="official-gallery">
-      <div class="inner">
-        <div class="gallery-box fade-in-up">
-          <span class="section-label" style="justify-content:center; display:flex;">Design Gallery</span>
-          <h2 class="section-title">デザインの確認は公式サイトへ</h2>
-          <p class="section-desc" style="margin-bottom: 24px;">
-            本ページでは画像著作権に配慮し、商品モデルの画像を直接掲載しておりません。<br>
-            各モデルの詳細なデザインやカラー展開については、AirFly公式のギャラリーページにてご確認をお願いいたします。
-          </p>
-          <a href="https://netshop.zygospec.com/" target="_blank" rel="noopener noreferrer" class="btn-cta btn-dark">
-            公式サイトでデザインを確認する
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
-        </div>
-      </div>
-    </section>
 
     <!-- 注文フロー #visual-order-flow -->
     <section id="visual-order-flow">
@@ -1034,6 +1025,8 @@
               <span class="summary-value" id="summary-frame"></span>
             </div>
             <div class="summary-price-row">
+              <span class="price-label">定価参考</span>
+              <span class="price-original" id="summary-price-original">¥0（税込）</span>
               <span class="price-label">TempMachi 特別限定価格</span>
               <div class="price-sale-row" style="margin-top: 12px;">
                 <span class="price-sale" id="summary-price">¥0</span>
@@ -1066,8 +1059,8 @@
     </footer>
 
     <div id="floating-cta">
-      <a href="#order-form" class="btn-cta" id="floating-cta-btn">
-        🛒 シミュレーター・注文フォームへ
+      <a href="#visual-order-flow" class="btn-cta" id="floating-cta-btn">
+        🛒 商品を選んで注文する
         <span>↑</span>
       </a>
     </div>
@@ -1136,7 +1129,22 @@
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
 
-    const DUMMY_FRAMES = ['フレームA', 'フレームB', 'フレームC'];
+    const DUMMY_FRAMES = [
+      'ホワイトマット',
+      'ブラック',
+      'ブルーカモフラージュ',
+      'ブルー',
+      'レッド',
+      'ネオンイエローマット',
+      'シルバー',
+      'カーボンスタイル',
+      'クリアアッシュ',
+      'アクアブルー',
+      'クリアグレー',
+      'ピンク',
+      'ペールホワイト',
+      'エメラルドグリーン'
+    ];
 
     let orderState = {
       model: '',
@@ -1148,9 +1156,7 @@
     function formatPrice(num) { return num.toLocaleString('ja-JP'); }
 
     function getPriceData(model, lens) {
-      if (model === 'AF-901') {
-        return { orig: 16500, sale: 15000 };
-      } else if (model === 'AF-402') {
+      if (model === 'AF-402') {
         if (lens === 'アンバー' || lens === 'ブルー') {
           return { orig: 18700, sale: 16800 };
         } else if (lens && lens.includes('★偏光')) {
@@ -1159,17 +1165,25 @@
           return { orig: 17600, sale: 15800 };
         }
       } else {
-        if (lens && lens.includes('★偏光')) {
-           return { orig: 26400, sale: 22000 };
+        let orig = 0;
+        if (model === 'AF-901') {
+          orig = 16500;
         } else {
-           return { orig: 22000, sale: 18000 };
+          if (lens && lens.includes('★偏光')) {
+             orig = 26400;
+          } else {
+             orig = 22000;
+          }
         }
+        // 10%オフで、10円単位は切り下げ
+        let sale = Math.floor((orig * 0.9) / 100) * 100;
+        return { orig: orig, sale: sale };
       }
     }
 
     function initVisualOrderFlow() {
       const modelContainer = document.getElementById('model-cards');
-      if(modelContainer.innerHTML.trim() !== '') return; // 既に初期化済みの場合はスキップ
+      if(modelContainer.children.length > 0) return; // 既に初期化済みの場合はスキップ
       
       const models = Object.keys(LENS_OPTIONS);
       models.forEach(m => {
@@ -1193,7 +1207,9 @@
       document.querySelectorAll('#model-cards .visual-card').forEach(el => el.classList.remove('selected'));
       cardElement.classList.add('selected');
       orderState.model = model;
-      document.getElementById('btn-next-1').disabled = false;
+      const btnNext = document.getElementById('btn-next-1');
+      btnNext.disabled = false;
+      setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
       
       // レンズカード再生成
       const lensContainer = document.getElementById('lens-cards');
@@ -1220,11 +1236,13 @@
       document.querySelectorAll('#lens-cards .visual-card').forEach(el => el.classList.remove('selected'));
       cardElement.classList.add('selected');
       orderState.lens = lens;
-      document.getElementById('btn-next-2').disabled = false;
+      const btnNext = document.getElementById('btn-next-2');
+      btnNext.disabled = false;
+      setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
 
       // フレームカード初期化
       const frameContainer = document.getElementById('frame-cards');
-      if(frameContainer.innerHTML.trim() === '') {
+      if(frameContainer.children.length === 0) {
         DUMMY_FRAMES.forEach(f => {
           const card = document.createElement('div');
           card.className = 'visual-card';
@@ -1242,7 +1260,9 @@
       document.querySelectorAll('#frame-cards .visual-card').forEach(el => el.classList.remove('selected'));
       cardElement.classList.add('selected');
       orderState.frame = frame;
-      document.getElementById('btn-next-3').disabled = false;
+      const btnNext = document.getElementById('btn-next-3');
+      btnNext.disabled = false;
+      setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
     }
 
     function nextStep(step) {
@@ -1257,6 +1277,7 @@
 
         const priceInfo = getPriceData(orderState.model, orderState.lens);
         orderState.price = priceInfo.sale;
+        document.getElementById('summary-price-original').textContent = `¥${formatPrice(priceInfo.orig)}（税込）`;
         document.getElementById('summary-price').textContent = formatPrice(priceInfo.sale);
       }
     }
