@@ -90,6 +90,17 @@
       margin-bottom: 20px;
       display: inline-block;
     }
+    .step-badge {
+      display: inline-block;
+      background: #eef7ff;
+      color: #0066cc;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
+    }
     .gate-title {
       font-size: 24px;
       font-weight: 900;
@@ -833,23 +844,29 @@
 
     <!-- ステップ1：LINEログイン画面 (初期非表示) -->
     <div id="step1-login" class="gate-card" style="display: none;">
+      <span class="step-badge">STEP 1 / 2</span>
       <div class="liff-gate-icon">
         <img src="エアフライロゴ2024 .png" alt="AirFly Logo" class="liff-logo-img">
       </div>
       <h2 class="gate-title">TempMachi限定セール</h2>
       <p class="gate-description">
-        本サイトは「TempMachi公式LINE」<br>
-        友だち限定の特別販売サイトです。<br>
-        LINEでログインしてご利用ください。
+        本サイトはTempMachi会員様向けの特別シークレットセールです。<br><br>
+        サイトへアクセスするには以下の手順が必要です：<br>
+        <span style="display:inline-block; text-align:left; background:#f8fafc; padding:12px; border-radius:8px; margin-top:8px; font-size:0.9rem; border:1px solid #e2e8f0;">
+          <b>① LINEログイン（友だち認証）</b><br>
+          <b style="color:var(--color-text-secondary); margin-top:4px; display:inline-block;">② ご案内用メールアドレスの登録</b>
+        </span><br><br>
+        まずはLINEでログインして次へお進みください。
       </p>
       <button type="button" class="btn-line" onclick="loginWithLine()">
         <i class="fab fa-line" style="font-size: 1.2em;"></i>
-        LINEでログイン
+        LINEでログインして次へ
       </button>
     </div>
 
     <!-- ステップ2：メールアドレス登録画面 (初期非表示) -->
     <div id="step2-email" class="gate-card" style="display: none;">
+      <span class="step-badge">STEP 2 / 2</span>
       <h2 class="gate-subtitle">メールアドレスをご登録いただくと、AirFlyを【限定特別価格】でご購入いただけます！</h2>
       
       <form id="gate-email-form" onsubmit="submitEmail(event)">
