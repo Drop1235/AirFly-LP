@@ -1311,7 +1311,7 @@
         } else {
           // ====== ステップ1: 未ログインなのでLINEログインボタン表示 ======
           if (liff.isInClient() || navigator.userAgent.indexOf("Line") !== -1) {
-            liff.login({ redirectUri: window.location.href });
+            liff.login();
           } else {
             document.getElementById('step-loading').style.display = 'none';
             document.getElementById('step1-login').style.display = 'block';
@@ -1327,7 +1327,8 @@
 
     // LINEでログイン
     function loginWithLine() {
-      liff.login({ redirectUri: window.location.href });
+      // ローカル環境等での400エラーを防ぐため、引数なし（設定されたエンドポイントURLに戻る）に変更
+      liff.login();
     }
 
     function toggleSubmitButton() {
@@ -1361,7 +1362,6 @@
       // メールアドレスをサマリーにセット
       document.getElementById('summary-email').textContent = email || 'test@example.com';
       
-      initScrollAnimation();
       initVisualOrderFlow();
     }
 
@@ -1611,6 +1611,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       // 登録状態チェックの前に一旦 main-content を表示 (ヒーローは常に見えるように)
       document.getElementById('main-content').style.display = 'block';
+      
+      // 最初から見えている要素のアニメーションを起動
+      initScrollAnimation();
       
       // LIFF初期化＆ステップ判定スタート
       initLiff();
