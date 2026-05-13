@@ -59,23 +59,15 @@
        ゲート機能 (LINE / メール登録) のスタイル
     ===================================================== */
     #gate-container {
-      position: relative;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: #ffffff;
-      z-index: 100;
+      z-index: 9999;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 60px 20px;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .locked {
-      filter: blur(8px);
-      pointer-events: none;
-      user-select: none;
-      opacity: 0.6;
-      transition: all 0.5s ease;
+      padding: 20px;
     }
     .gate-card {
       background: #ffffff;
@@ -866,16 +858,6 @@
       </div>
     </section>
 
-  <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <div id="gate-container">
-    
-    <!-- ローディング（LIFF初期化中） -->
-    <div id="step-loading" class="gate-card">
-      <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: var(--color-text-secondary);">LINE認証情報を読み込み中...</p>
-    </div>
 
     <!-- ステップ1：LINEログイン画面 (初期非表示) -->
     <div id="step1-login" class="gate-card" style="display: none;">
@@ -921,8 +903,6 @@
 
   </div>
 
-    <!-- ロックされるコンテンツ -->
-    <div id="locked-content" class="locked">
 
     <!-- マーケティングセクション（UV対策） -->
     <section id="uv-marketing">
@@ -965,16 +945,6 @@
       </div>
     </section>
 
-  <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <div id="gate-container">
-    
-    <!-- ローディング（LIFF初期化中） -->
-    <div id="step-loading" class="gate-card">
-      <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: var(--color-text-secondary);">LINE認証情報を読み込み中...</p>
-    </div>
 
     <!-- ステップ1：LINEログイン画面 (初期非表示) -->
     <div id="step1-login" class="gate-card" style="display: none;">
@@ -1020,8 +990,6 @@
 
   </div>
 
-    <!-- ロックされるコンテンツ -->
-    <div id="locked-content" class="locked">
 
     <!-- AirFlyの魅力 #features -->
     <section id="features">
@@ -1058,16 +1026,6 @@
       </div>
     </section>
 
-  <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <div id="gate-container">
-    
-    <!-- ローディング（LIFF初期化中） -->
-    <div id="step-loading" class="gate-card">
-      <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: var(--color-text-secondary);">LINE認証情報を読み込み中...</p>
-    </div>
 
     <!-- ステップ1：LINEログイン画面 (初期非表示) -->
     <div id="step1-login" class="gate-card" style="display: none;">
@@ -1113,8 +1071,6 @@
 
   </div>
 
-    <!-- ロックされるコンテンツ -->
-    <div id="locked-content" class="locked">
 
 
     <!-- 注文フロー #visual-order-flow -->
@@ -1198,16 +1154,6 @@
       </div>
     </section>
 
-  <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <div id="gate-container">
-    
-    <!-- ローディング（LIFF初期化中） -->
-    <div id="step-loading" class="gate-card">
-      <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: var(--color-text-secondary);">LINE認証情報を読み込み中...</p>
-    </div>
 
     <!-- ステップ1：LINEログイン画面 (初期非表示) -->
     <div id="step1-login" class="gate-card" style="display: none;">
@@ -1253,8 +1199,6 @@
 
   </div>
 
-    <!-- ロックされるコンテンツ -->
-    <div id="locked-content" class="locked">
 
     <!-- ローディング用オーバーレイ -->
     <div id="loading-overlay">
@@ -1277,8 +1221,6 @@
         <span>↑</span>
       </a>
     </div>
-
-    </div> <!-- /#locked-content -->
 
   </div> <!-- /#main-content -->
 
@@ -1353,15 +1295,12 @@
     // メインコンテンツを表示し、ビジュアルオーダーフローを初期化する
     function showMainContent(email) {
       document.getElementById('gate-container').style.display = 'none';
-      
-      const lockedContent = document.getElementById('locked-content');
-      if (lockedContent) {
-        lockedContent.classList.remove('locked');
-      }
+      document.getElementById('main-content').style.display = 'block';
       
       // メールアドレスをサマリーにセット
       document.getElementById('summary-email').textContent = email || 'test@example.com';
       
+      initScrollAnimation();
       initVisualOrderFlow();
     }
 
@@ -1609,12 +1548,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // 登録状態チェックの前に一旦 main-content を表示 (ヒーローは常に見えるように)
-      document.getElementById('main-content').style.display = 'block';
-      
-      // 最初から見えている要素のアニメーションを起動
-      initScrollAnimation();
-      
       // LIFF初期化＆ステップ判定スタート
       initLiff();
     });
