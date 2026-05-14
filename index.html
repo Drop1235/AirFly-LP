@@ -675,7 +675,7 @@
     }
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 20px;
       max-width: 960px;
       margin: 0 auto 32px;
@@ -731,21 +731,101 @@
       color: #94a3b8;
       font-size: 0.85rem;
     }
+    .card-product-img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: #f8fafc;
+      padding: 8px;
+    }
     .card-title {
       font-size: 1.15rem;
       font-weight: 800;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       color: var(--color-text-primary);
+    }
+    .card-subtitle {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--color-accent-blue);
+      margin-bottom: 12px;
+      line-height: 1.4;
+      letter-spacing: 0.01em;
     }
     .card-features {
       text-align: left;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--color-text-secondary);
-      padding-left: 20px;
+      padding-left: 0;
       margin-bottom: 0;
-      line-height: 1.6;
+      line-height: 1.65;
+      list-style: none;
     }
-    .card-features li { margin-bottom: 4px; }
+    .card-features li {
+      margin-bottom: 6px;
+      padding-left: 1.2em;
+      position: relative;
+    }
+    .card-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--color-accent-blue);
+      font-weight: 700;
+    }
+    .card-features li.lens-width {
+      padding-left: 0;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      background: #f1f5f9;
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .card-features li.lens-width::before {
+      content: none;
+    }
+    /* カテゴリヘッダー */
+    .category-section {
+      margin-bottom: 40px;
+    }
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--color-accent-blue);
+    }
+    .category-icon {
+      font-size: 1.5rem;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,122,255,0.1);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .category-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--color-text-primary);
+      letter-spacing: 0.03em;
+    }
+    .category-title small {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
     .flow-actions {
       display: flex;
       justify-content: center;
@@ -1017,9 +1097,34 @@
         <!-- ステップ1: モデル選択 -->
         <div id="flow-step-1" class="flow-step active">
           <p class="section-desc">まずはご希望のモデルをお選びください。</p>
-          <div class="card-grid" id="model-cards">
-            <!-- JSで動的に生成 -->
+
+          <!-- 男性向け -->
+          <div class="category-section">
+            <div class="category-header">
+              <div class="category-icon">🏃</div>
+              <div class="category-title">男性向けモデル<small>MEN'S MODEL</small></div>
+            </div>
+            <div class="card-grid" id="model-cards-men"></div>
           </div>
+
+          <!-- 女性（又はジュニア）向け -->
+          <div class="category-section">
+            <div class="category-header">
+              <div class="category-icon">👩</div>
+              <div class="category-title">女性（又はジュニア）向けモデル<small>WOMEN'S / JUNIOR MODEL</small></div>
+            </div>
+            <div class="card-grid" id="model-cards-women"></div>
+          </div>
+
+          <!-- キッズ向け -->
+          <div class="category-section">
+            <div class="category-header">
+              <div class="category-icon">👦</div>
+              <div class="category-title">キッズ向けモデル（4〜10歳）<small>KIDS MODEL</small></div>
+            </div>
+            <div class="card-grid" id="model-cards-kids"></div>
+          </div>
+
           <div class="flow-actions">
             <button class="btn-flow" id="btn-next-1" onclick="nextStep(2)" disabled>次へ進む（レンズ選択）</button>
           </div>
@@ -1261,30 +1366,110 @@
       }
     }
 
+    // モデル情報マスター
+    const MODEL_INFO = {
+      'AF-301-BK': {
+        category: 'men',
+        subtitle: 'バイクモデル：縦横に深い1枚レンズ',
+        features: [
+          '縦横ワイドなレンズで目元全体の紫外線をカット',
+          '顔に沿う深いカーブで、横からの日差しもブロック'
+        ],
+        lensWidth: 'レンズ幅：約136mm',
+        image: 'image/AF-301-BK.jpg'
+      },
+      'AF-301-WV': {
+        category: 'men',
+        subtitle: 'ワイドビューモデル：横に広いレンズ',
+        features: [
+          'シャープでかっこいい印象のレンズデザイン',
+          '頬に干渉しない斜めカットで快適な視界'
+        ],
+        lensWidth: 'レンズ幅：約136mm',
+        image: 'image/AF-301-WV.jpg'
+      },
+      'AF-402': {
+        category: 'men',
+        subtitle: 'スポーツカジュアル：フラットな2眼レンズ',
+        features: [
+          '普段使いもしやすいカジュアルな2眼レンズ',
+          'スポーティすぎないフラットなレンズカーブ'
+        ],
+        lensWidth: 'レンズ幅：約131mm（※左右レンズ＋ブリッジ幅）',
+        image: 'image/AF-402.jpg'
+      },
+      'AF-301': {
+        category: 'women',
+        subtitle: 'スタンダードモデル：ベーシックな1枚レンズ',
+        features: [
+          '大きすぎない絶妙なサイズ感で頬に干渉しない',
+          '視界の歪みを抑えたクセのないスタンダード設計'
+        ],
+        lensWidth: 'レンズ幅：約127mm',
+        image: 'image/AF-301.jpg'
+      },
+      'AF-302-WP': {
+        category: 'women',
+        subtitle: 'ワイドプロテクトモデル：縦に広いレンズ',
+        features: [
+          '縦幅の広いレンズで目元から頬まで覆いUVケア',
+          '上を見上げたときの眩しさをしっかり防ぐ'
+        ],
+        lensWidth: 'レンズ幅：約129mm',
+        image: 'image/AF-302-WP.jpg'
+      },
+      'AF-302-SP': {
+        category: 'women',
+        subtitle: 'スポーツプラスモデル：細身のレンズ',
+        features: [
+          '縦幅を抑えたスリムレンズでシャープな視界',
+          '圧倒的に軽いコンパクトレンズで長丁場でも快適'
+        ],
+        lensWidth: 'レンズ幅：約123mm',
+        image: 'image/AF-302-SP.jpg'
+      },
+      'AF-901': {
+        category: 'kids',
+        subtitle: 'キッズモデル：子供専用レンズ',
+        features: [
+          '小さな顔を隙間なく守るキッズ専用のレンズ形状',
+          'ボールの直撃や転倒でも割れにくい安全な素材'
+        ],
+        lensWidth: 'レンズ幅：約118mm',
+        image: 'image/AF-901.jpg'
+      }
+    };
+
     function initVisualOrderFlow() {
-      const modelContainer = document.getElementById('model-cards');
-      if(modelContainer.children.length > 0) return; // 既に初期化済みの場合はスキップ
-      
-      const models = Object.keys(LENS_OPTIONS);
-      models.forEach(m => {
+      const menContainer = document.getElementById('model-cards-men');
+      if(menContainer.children.length > 0) return; // 既に初期化済みの場合はスキップ
+
+      const containerMap = {
+        'men': document.getElementById('model-cards-men'),
+        'women': document.getElementById('model-cards-women'),
+        'kids': document.getElementById('model-cards-kids')
+      };
+
+      Object.keys(MODEL_INFO).forEach(m => {
+        const info = MODEL_INFO[m];
         const card = document.createElement('div');
         card.className = 'visual-card';
         card.innerHTML = `
-          <div class="card-img-placeholder">NO IMAGE<br>${m}</div>
+          <img src="${info.image}" alt="${m}" class="card-product-img" />
           <h4 class="card-title">${m}</h4>
+          <p class="card-subtitle">（${info.subtitle}）</p>
           <ul class="card-features">
-            <li>特徴1のダミーテキスト</li>
-            <li>特徴2のダミーテキスト</li>
-            <li>特徴3のダミーテキスト</li>
+            ${info.features.map(f => `<li>${f}</li>`).join('')}
+            <li class="lens-width">${info.lensWidth}</li>
           </ul>
         `;
         card.onclick = () => selectModel(m, card);
-        modelContainer.appendChild(card);
+        containerMap[info.category].appendChild(card);
       });
     }
 
     function selectModel(model, cardElement) {
-      document.querySelectorAll('#model-cards .visual-card').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('#model-cards-men .visual-card, #model-cards-women .visual-card, #model-cards-kids .visual-card').forEach(el => el.classList.remove('selected'));
       cardElement.classList.add('selected');
       orderState.model = model;
       const btnNext = document.getElementById('btn-next-1');
