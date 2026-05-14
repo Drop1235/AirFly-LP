@@ -1453,6 +1453,26 @@
           transmittance: '22％',
           isPolarized: false
         }
+      },
+      'AF-301-WV': {
+        'ブルー★偏光': {
+          image: 'image/WV_ブルー★偏光.jpg',
+          desc: '強い日差しをしっかり防ぐ、晴天時の屋外プレーに最適なレンズです。',
+          transmittance: '10％',
+          isPolarized: true
+        },
+        'ゴールド★偏光': {
+          image: 'image/WV_ゴールド★偏光.jpg',
+          desc: '眩しさを抑えつつ、適度な明るさも確保するバランスの良いレンズです。',
+          transmittance: '20％',
+          isPolarized: true
+        },
+        'グレー★偏光': {
+          image: 'image/WV_グレー★偏光.jpg',
+          desc: '裸眼に近い自然な色合いで、曇天時や夕暮れ時でもボールを捉えやすい明るめのレンズです。',
+          transmittance: '30％',
+          isPolarized: true
+        }
       }
     };
 
@@ -1693,9 +1713,9 @@
         lensRoot.appendChild(grid);
       };
 
-      // カテゴリごとに描画
-      renderCategory('偏光レンズ', polarizedLenses, true);
+      // カテゴリごとに描画（通常レンズを上に）
       renderCategory('通常レンズ', regularLenses, false);
+      renderCategory('偏光レンズ', polarizedLenses, true);
 
       // 可視光線透過率の説明ボックスを追加
       const infoBox = document.createElement('div');
