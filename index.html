@@ -1774,8 +1774,19 @@
       const lensOptions = LENS_OPTIONS[model];
       const lensInfoForModel = LENS_INFO[model] || {};
       
-      const polarizedLenses = lensOptions.filter(l => lensInfoForModel[l] && lensInfoForModel[l].isPolarized);
-      const regularLenses = lensOptions.filter(l => !lensInfoForModel[l] || !lensInfoForModel[l].isPolarized);
+      const getSortValue = (l) => {
+        const info = lensInfoForModel[l];
+        if (!info || !info.transmittance) return 999;
+        return parseFloat(info.transmittance.replace('％', ''));
+      };
+
+      const polarizedLenses = lensOptions
+        .filter(l => lensInfoForModel[l] && lensInfoForModel[l].isPolarized)
+        .sort((a, b) => getSortValue(a) - getSortValue(b));
+
+      const regularLenses = lensOptions
+        .filter(l => !lensInfoForModel[l] || !lensInfoForModel[l].isPolarized)
+        .sort((a, b) => getSortValue(a) - getSortValue(b));
 
       const renderCategory = (title, lenses, isPolarizedCategory) => {
         if (lenses.length === 0) return;
