@@ -1891,7 +1891,7 @@
     }
 
     function selectLens(lens, cardElement) {
-      document.querySelectorAll('#lens-cards .visual-card').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('#lens-selection-container .visual-card').forEach(el => el.classList.remove('selected'));
       cardElement.classList.add('selected');
       orderState.lens = lens;
       const btnNext = document.getElementById('btn-next-2');
