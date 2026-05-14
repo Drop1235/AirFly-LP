@@ -731,6 +731,70 @@
       color: #94a3b8;
       font-size: 0.85rem;
     }
+    /* 選択中モデル表示バッジ */
+    .selected-model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #eef7ff 0%, #e0f2fe 100%);
+      border: 1px solid rgba(0, 122, 255, 0.2);
+      color: var(--color-accent-blue);
+      font-size: 0.88rem;
+      font-weight: 800;
+      padding: 8px 18px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
+    }
+    .selected-model-badge i {
+      font-size: 0.75rem;
+    }
+    /* レンズ説明テキスト */
+    .lens-desc {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      text-align: left;
+      margin-top: 8px;
+    }
+    .lens-transmittance {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #1e40af;
+      background: #eff6ff;
+      padding: 3px 12px;
+      border-radius: 20px;
+      border: 1px solid #bfdbfe;
+    }
+    /* 可視光線透過率とは？の説明ボックス */
+    .transmittance-info-box {
+      background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 32px auto 0;
+      max-width: 700px;
+      text-align: left;
+    }
+    .transmittance-info-box .info-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #1e40af;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .transmittance-info-box .info-title i {
+      font-size: 1rem;
+    }
+    .transmittance-info-box .info-desc {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+    }
     .card-product-img {
       width: 100%;
       height: 180px;
@@ -788,6 +852,44 @@
     }
     .card-features li.lens-width::before {
       content: none;
+    }
+    /* レンズカテゴリ用スタイル */
+    .lens-category-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      text-align: left;
+      margin-top: 32px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lens-category-title .price-note {
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: #fff7ed;
+      color: #c2410c;
+      padding: 2px 10px;
+      border-radius: 4px;
+      border: 1px solid #ffedd5;
+    }
+    .lens-category-desc {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.88rem;
+      color: var(--color-text-secondary);
+      text-align: left;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      border-left: 4px solid #cbd5e1;
+    }
+    .lens-category-desc.polarized {
+      border-left-color: var(--color-accent-blue);
+      background: #f0f7ff;
     }
     /* カテゴリヘッダー */
     .category-section {
@@ -1132,10 +1234,14 @@
 
         <!-- ステップ2: レンズ選択 -->
         <div id="flow-step-2" class="flow-step">
-          <p class="section-desc">次に、レンズの種類をお選びください。</p>
-          <div class="card-grid" id="lens-cards">
-            <!-- JSで動的に生成 -->
+          <p class="section-desc">
+            次に、レンズの種類をお選びください。<br>
+            <span style="color: var(--color-accent-blue); font-weight: 700;">※全レンズ、目に有害な紫外線を99％以上カットします。</span>
+          </p>
+          <div id="lens-selection-container">
+            <!-- JSで動的にカテゴリとグリッドを生成 -->
           </div>
+          <div class="card-grid" id="lens-cards" style="display:none;"></div>
           <div class="flow-actions">
             <button class="btn-flow-back" onclick="prevStep(1)">戻る</button>
             <button class="btn-flow" id="btn-next-2" onclick="nextStep(3)" disabled>次へ進む（フレーム選択）</button>
@@ -1314,6 +1420,42 @@
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
 
+    // レンズ情報マスター（モデル別）
+    const LENS_INFO = {
+      'AF-301-BK': {
+        'ブルー★偏光': {
+          image: 'image/ブルー★偏光.jpg',
+          desc: '',
+          transmittance: '10％',
+          isPolarized: true
+        },
+        'ゴールド★偏光': {
+          image: 'image/ゴールド★偏光.jpg',
+          desc: '',
+          transmittance: '20％',
+          isPolarized: true
+        },
+        'ブルー': {
+          image: 'image/ブルー.jpg',
+          desc: '強い日差しをしっかり防ぐ、晴天時の屋外プレーに最適なレンズです。',
+          transmittance: '10％',
+          isPolarized: false
+        },
+        'ゴールド': {
+          image: 'image/ゴールド.jpg',
+          desc: '眩しさを抑えつつ、適度な明るさも確保するバランスの良いレンズです。',
+          transmittance: '20％',
+          isPolarized: false
+        },
+        'ブルーピンク': {
+          image: 'image/ブルーピンク.jpg',
+          desc: '視界が暗くなりすぎず、天候の変化にも対応しやすい明るめのレンズです。',
+          transmittance: '22％',
+          isPolarized: false
+        }
+      }
+    };
+
     const DUMMY_FRAMES = [
       'ホワイトマット',
       'ブラック',
@@ -1477,24 +1619,92 @@
       setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
       
       // レンズカード再生成
-      const lensContainer = document.getElementById('lens-cards');
-      lensContainer.innerHTML = '';
+      // レンズコンテナをリセット
+      const lensRoot = document.getElementById('lens-selection-container');
+      lensRoot.innerHTML = '';
       orderState.lens = '';
       document.getElementById('btn-next-2').disabled = true;
 
-      LENS_OPTIONS[model].forEach(l => {
-        const card = document.createElement('div');
-        card.className = 'visual-card';
-        card.innerHTML = `
-          <div class="card-img-placeholder">NO IMAGE<br>${l}</div>
-          <h4 class="card-title">${l}</h4>
-          <ul class="card-features">
-            <li>レンズの機能特徴ダミー</li>
-          </ul>
-        `;
-        card.onclick = () => selectLens(l, card);
-        lensContainer.appendChild(card);
-      });
+      // 選択中モデル名をステップ2に表示
+      const modelInfo = MODEL_INFO[model];
+      const modelBadgeId = 'selected-model-display';
+      let existingBadge = document.getElementById(modelBadgeId);
+      if (existingBadge) existingBadge.remove();
+      const badge = document.createElement('div');
+      badge.id = modelBadgeId;
+      badge.className = 'selected-model-badge';
+      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${model}（${modelInfo.subtitle}）`;
+      
+      const step2El = document.getElementById('flow-step-2');
+      const step2Desc = step2El.querySelector('.section-desc');
+      step2Desc.insertAdjacentElement('afterend', badge);
+
+      // レンズデータをカテゴリ分け
+      const lensOptions = LENS_OPTIONS[model];
+      const lensInfoForModel = LENS_INFO[model] || {};
+      
+      const polarizedLenses = lensOptions.filter(l => lensInfoForModel[l] && lensInfoForModel[l].isPolarized);
+      const regularLenses = lensOptions.filter(l => !lensInfoForModel[l] || !lensInfoForModel[l].isPolarized);
+
+      const renderCategory = (title, lenses, isPolarizedCategory) => {
+        if (lenses.length === 0) return;
+
+        const catTitle = document.createElement('div');
+        catTitle.className = 'lens-category-title';
+        catTitle.innerHTML = title;
+        if (isPolarizedCategory) {
+          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋4,400円</span>`;
+        }
+        lensRoot.appendChild(catTitle);
+
+        if (isPolarizedCategory) {
+          const catDesc = document.createElement('div');
+          catDesc.className = 'lens-category-desc polarized';
+          catDesc.innerHTML = `<b>※偏光レンズ</b>・・・乱反射を防ぐ偏光レンズを採用。アスファルトやコートの強烈な照り返しをカットし、よりはっきりとした鮮明な視界を実現します。`;
+          lensRoot.appendChild(catDesc);
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
+        
+        lenses.forEach(l => {
+          const info = lensInfoForModel[l];
+          const card = document.createElement('div');
+          card.className = 'visual-card';
+          if (info && info.image) {
+            card.innerHTML = `
+              <img src="${info.image}" alt="${l}" class="card-product-img" />
+              <h4 class="card-title">${l}</h4>
+              ${info.desc ? `<p class="lens-desc">${info.desc.replace(/\\n/g, '<br>')}</p>` : ''}
+              <span class="lens-transmittance">可視光線透過率：${info.transmittance}</span>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="card-img-placeholder">NO IMAGE<br>${l}</div>
+              <h4 class="card-title">${l}</h4>
+              <ul class="card-features">
+                <li>レンズの機能特徴ダミー</li>
+              </ul>
+            `;
+          }
+          card.onclick = () => selectLens(l, card);
+          grid.appendChild(card);
+        });
+        lensRoot.appendChild(grid);
+      };
+
+      // カテゴリごとに描画
+      renderCategory('偏光レンズ', polarizedLenses, true);
+      renderCategory('通常レンズ', regularLenses, false);
+
+      // 可視光線透過率の説明ボックスを追加
+      const infoBox = document.createElement('div');
+      infoBox.className = 'transmittance-info-box';
+      infoBox.innerHTML = `
+        <div class="info-title"><i class="fas fa-info-circle"></i> ※可視光線透過率とは？</div>
+        <p class="info-desc">レンズが自然の光を通す割合のことです。数値が低いほど光を遮断して眩しさを抑え（晴天向き）、数値が高いほど光を通して視界が明るくなります（曇天・ナイター・インドア向き）。</p>
+      `;
+      lensRoot.appendChild(infoBox);
     }
 
     function selectLens(lens, cardElement) {
