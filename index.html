@@ -1661,19 +1661,27 @@
 
     function getPriceData(model, lens) {
       let orig = 0;
+      let sale = 0;
+
       if (model === 'AF-901') {
         orig = 16500;
-      } else {
+        sale = 14850;
+      } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('★偏光')) {
            orig = 26400;
         } else {
            orig = 22000;
         }
+        sale = 23760;
+      } else {
+        if (lens && lens.includes('★偏光')) {
+           orig = 26400;
+           sale = 22000;
+        } else {
+           orig = 22000;
+           sale = 18000;
+        }
       }
-      
-      let rate = (model === 'AF-302-WP' || model === 'AF-901') ? 0.9 : 0.82;
-      // 10円単位は切り下げ
-      let sale = Math.floor((orig * rate) / 10) * 10;
       return { orig: orig, sale: sale };
     }
 
