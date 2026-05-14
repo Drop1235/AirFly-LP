@@ -1416,7 +1416,6 @@
       'AF-301-WV': ['ブルー★偏光', 'ゴールド★偏光', 'グレー★偏光'],
       'AF-302-WP': ['ブルー★偏光', 'ブルーピンク★偏光', 'グレー★偏光', 'ハイコントラストローズ'],
       'AF-302-SP': ['グレー★偏光', 'ハイコントラストローズ★偏光', 'ライトスモーク', 'ゴールド', 'ブルー', 'ライトピンク', 'ブルーピンク'],
-      'AF-402': ['アンバー', 'ブルー', 'ブラックマット', 'クリアアッシュ', 'ブラウン', 'グレー★偏光', 'グリーン★偏光'],
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
 
@@ -1503,35 +1502,24 @@
     function formatPrice(num) { return num.toLocaleString('ja-JP'); }
 
     function getPriceData(model, lens) {
-      if (model === 'AF-402') {
-        if (lens === 'アンバー' || lens === 'ブルー') {
-          return { orig: 18700, sale: 16800 };
-        } else if (lens && lens.includes('★偏光')) {
-          return { orig: 22000, sale: 19800 };
-        } else {
-          return { orig: 17600, sale: 15800 };
-        }
+      let orig = 0;
+      if (model === 'AF-901') {
+        orig = 16500;
       } else {
-        let orig = 0;
-        if (model === 'AF-901') {
-          orig = 16500;
+        if (lens && lens.includes('★偏光')) {
+           orig = 26400;
         } else {
-          if (lens && lens.includes('★偏光')) {
-             orig = 26400;
-          } else {
-             orig = 22000;
-          }
+           orig = 22000;
         }
-        // 10%オフで、10円単位は切り下げ
-        let sale = Math.floor((orig * 0.9) / 100) * 100;
-        return { orig: orig, sale: sale };
       }
+      // 10%オフで、10円単位は切り下げ
+      let sale = Math.floor((orig * 0.9) / 100) * 100;
+      return { orig: orig, sale: sale };
     }
 
     // モデル情報マスター
     const MODEL_INFO = {
       'AF-301-BK': {
-        category: 'men',
         subtitle: 'バイクモデル：縦横に深い1枚レンズ',
         features: [
           '縦横ワイドなレンズで目元全体の紫外線をカット',
@@ -1541,7 +1529,6 @@
         image: 'image/AF-301-BK.jpg'
       },
       'AF-301-WV': {
-        category: 'men',
         subtitle: 'ワイドビューモデル：横に広いレンズ',
         features: [
           'シャープでかっこいい印象のレンズデザイン',
@@ -1550,18 +1537,7 @@
         lensWidth: 'レンズ幅：約136mm',
         image: 'image/AF-301-WV.jpg'
       },
-      'AF-402': {
-        category: 'men',
-        subtitle: 'スポーツカジュアル：フラットな2眼レンズ',
-        features: [
-          '普段使いもしやすいカジュアルな2眼レンズ',
-          'スポーティすぎないフラットなレンズカーブ'
-        ],
-        lensWidth: 'レンズ幅：約131mm（※左右レンズ＋ブリッジ幅）',
-        image: 'image/AF-402.jpg'
-      },
       'AF-301': {
-        category: 'women',
         subtitle: 'スタンダードモデル：ベーシックな1枚レンズ',
         features: [
           '大きすぎない絶妙なサイズ感で頬に干渉しない',
@@ -1571,7 +1547,6 @@
         image: 'image/AF-301.jpg'
       },
       'AF-302-WP': {
-        category: 'women',
         subtitle: 'ワイドプロテクトモデル：縦に広いレンズ',
         features: [
           '縦幅の広いレンズで目元から頬まで覆いUVケア',
@@ -1581,7 +1556,6 @@
         image: 'image/AF-302-WP.jpg'
       },
       'AF-302-SP': {
-        category: 'women',
         subtitle: 'スポーツプラスモデル：細身のレンズ',
         features: [
           '縦幅を抑えたスリムレンズでシャープな視界',
@@ -1591,7 +1565,6 @@
         image: 'image/AF-302-SP.jpg'
       },
       'AF-901': {
-        category: 'kids',
         subtitle: 'キッズモデル：子供専用レンズ',
         features: [
           '小さな顔を隙間なく守るキッズ専用のレンズ形状',
@@ -1605,28 +1578,38 @@
     function initVisualOrderFlow() {
       const menContainer = document.getElementById('model-cards-men');
       if(menContainer.children.length > 0) return; // 既に初期化済みの場合はスキップ
-
+  
       const containerMap = {
         'men': document.getElementById('model-cards-men'),
         'women': document.getElementById('model-cards-women'),
         'kids': document.getElementById('model-cards-kids')
       };
-
-      Object.keys(MODEL_INFO).forEach(m => {
-        const info = MODEL_INFO[m];
-        const card = document.createElement('div');
-        card.className = 'visual-card';
-        card.innerHTML = `
-          <img src="${info.image}" alt="${m}" class="card-product-img" />
-          <h4 class="card-title">${m}</h4>
-          <p class="card-subtitle">（${info.subtitle}）</p>
-          <ul class="card-features">
-            ${info.features.map(f => `<li>${f}</li>`).join('')}
-            <li class="lens-width">${info.lensWidth}</li>
-          </ul>
-        `;
-        card.onclick = () => selectModel(m, card);
-        containerMap[info.category].appendChild(card);
+  
+      // カテゴリごとのモデル表示順を定義
+      const CATEGORY_CONFIG = {
+        men: ['AF-301-BK', 'AF-301-WV', 'AF-301'],
+        women: ['AF-302-WP', 'AF-302-SP', 'AF-301'],
+        kids: ['AF-901']
+      };
+  
+      Object.entries(CATEGORY_CONFIG).forEach(([cat, models]) => {
+        models.forEach(m => {
+          const info = MODEL_INFO[m];
+          if (!info) return;
+          const card = document.createElement('div');
+          card.className = 'visual-card';
+          card.innerHTML = `
+            <img src="${info.image}" alt="${m}" class="card-product-img" />
+            <h4 class="card-title">${m}</h4>
+            <p class="card-subtitle">（${info.subtitle}）</p>
+            <ul class="card-features">
+              ${info.features.map(f => `<li>${f}</li>`).join('')}
+              <li class="lens-width">${info.lensWidth}</li>
+            </ul>
+          `;
+          card.onclick = () => selectModel(m, card);
+          containerMap[cat].appendChild(card);
+        });
       });
     }
 
@@ -1689,12 +1672,13 @@
         
         lenses.forEach(l => {
           const info = lensInfoForModel[l];
+          const displayTitle = isPolarizedCategory ? l.replace('★偏光', '') : l;
           const card = document.createElement('div');
           card.className = 'visual-card';
           if (info && info.image) {
             card.innerHTML = `
               <img src="${info.image}" alt="${l}" class="card-product-img" />
-              <h4 class="card-title">${l}</h4>
+              <h4 class="card-title">${displayTitle}</h4>
               ${info.desc ? `<p class="lens-desc">${info.desc.replace(/\\n/g, '<br>')}</p>` : ''}
               <span class="lens-transmittance">可視光線透過率：${info.transmittance}</span>
             `;
