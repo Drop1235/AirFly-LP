@@ -1952,11 +1952,24 @@
         document.getElementById('summary-price-original').textContent = `¥${formatPrice(priceInfo.orig)}（税込）`;
         document.getElementById('summary-price').textContent = formatPrice(priceInfo.sale);
       }
+
+      // 次のステップのアクションボタンまでスクロール
+      const actions = document.getElementById('flow-step-' + step).querySelector('.flow-actions');
+      if (actions) {
+        setTimeout(() => actions.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      }
     }
 
     function prevStep(step) {
       document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
-      document.getElementById('flow-step-' + step).classList.add('active');
+      const target = document.getElementById('flow-step-' + step);
+      target.classList.add('active');
+
+      // 戻った先のアクションボタンまでスクロール
+      const actions = target.querySelector('.flow-actions');
+      if (actions) {
+        setTimeout(() => actions.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      }
     }
 
     function submitOrder() {
