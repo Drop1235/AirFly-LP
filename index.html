@@ -1858,20 +1858,34 @@
       btnNext.disabled = false;
       setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
 
-      // フレームカード初期化
+      // 選択中情報をステップ3に表示
+      const selectionBadgeId = 'step3-selection-display';
+      let existingBadge = document.getElementById(selectionBadgeId);
+      if (existingBadge) existingBadge.remove();
+      const badge = document.createElement('div');
+      badge.id = selectionBadgeId;
+      badge.className = 'selected-model-badge';
+      const displayLens = orderState.lens.replace('★偏光', '');
+      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${orderState.model} / ${displayLens}`;
+      
+      const step3El = document.getElementById('flow-step-3');
+      const step3Desc = step3El.querySelector('.section-desc');
+      step3Desc.insertAdjacentElement('afterend', badge);
+
+      // フレームカード初期化（画像付きで再生成）
       const frameContainer = document.getElementById('frame-cards');
-      if(frameContainer.children.length === 0) {
-        DUMMY_FRAMES.forEach(f => {
-          const card = document.createElement('div');
-          card.className = 'visual-card';
-          card.innerHTML = `
-            <div class="card-img-placeholder">NO IMAGE<br>${f}</div>
-            <h4 class="card-title">${f}</h4>
-          `;
-          card.onclick = () => selectFrame(f, card);
-          frameContainer.appendChild(card);
-        });
-      }
+      frameContainer.innerHTML = '';
+      DUMMY_FRAMES.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'visual-card';
+        const imgPath = `image/フレーム_${f}.jpg`;
+        card.innerHTML = `
+          <img src="${imgPath}" alt="${f}" class="card-product-img" />
+          <h4 class="card-title">${f}</h4>
+        `;
+        card.onclick = () => selectFrame(f, card);
+        frameContainer.appendChild(card);
+      });
     }
 
     function selectFrame(frame, cardElement) {
