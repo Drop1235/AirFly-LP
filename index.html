@@ -1953,10 +1953,10 @@
         document.getElementById('summary-price').textContent = formatPrice(priceInfo.sale);
       }
 
-      // 次のステップのアクションボタンまでスクロール
-      const actions = document.getElementById('flow-step-' + step).querySelector('.flow-actions');
-      if (actions) {
-        setTimeout(() => actions.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      // 次のステップの冒頭までスクロール
+      const flowSection = document.getElementById('visual-order-flow');
+      if (flowSection) {
+        setTimeout(() => flowSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }
     }
 
