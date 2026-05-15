@@ -1361,7 +1361,7 @@
           </div>
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
             <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
-            <button class="btn-flow" id="btn-submit" onclick="submitOrder()">注文を確定する</button>
+            <button class="btn-flow" id="btn-submit" onclick="submitOrder()"><i class="fas fa-lock"></i> 決済に進む</button>
           </div>
         </div>
 
@@ -2090,40 +2090,34 @@
       
       const payload = {
         email: email,
-        items: cart
+        items: cart.map(item => ({
+          model: item.model,
+          lens: item.lens,
+          frame: item.frame
+        }))
       };
 
-      // プレースホルダ：後でGASのURLに書き換える
-      const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL"; 
-      
-      if(GAS_WEB_APP_URL === "YOUR_GAS_WEB_APP_URL") {
-         setTimeout(() => {
-           document.getElementById('loading-overlay').style.display = 'none';
-           alert('注文データを送信しました！（デモ動作完了）\\n※実際のGAS WebアプリURLを設定すると、スプレッドシートにデータが保存されます。');
-         }, 1000);
-         return;
-      }
-
-      fetch(GAS_WEB_APP_URL, {
+      fetch('/.netlify/functions/create-checkout-session', {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain' // GASの制約上text/plainで送信
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
       })
       .then(response => response.json())
       .then(data => {
-        document.getElementById('loading-overlay').style.display = 'none';
-        if(data.status === 'success') {
-          alert('ご注文ありがとうございました！');
-          window.location.reload();
+        if(data.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
         } else {
-          alert('エラーが発生しました。もう一度お試しください。');
+          document.getElementById('loading-overlay').style.display = 'none';
+          alert('決済セッションの作成に失敗しました: ' + (data.error || '不明なエラー'));
         }
       })
       .catch(err => {
         document.getElementById('loading-overlay').style.display = 'none';
-        alert('通信エラーが発生しました。');
+        console.error('Checkout error:', err);
+        alert('通信エラーが発生しました。もう一度お試しください。');
       });
     }
 
