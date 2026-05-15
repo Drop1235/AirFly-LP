@@ -991,6 +991,52 @@
     }
 
     /* =====================================================
+       カートアイテム用スタイル
+    ===================================================== */
+    .cart-item {
+      background: #f8fafc;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      position: relative;
+    }
+    .cart-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .cart-item-title {
+      font-weight: 800;
+      color: var(--color-accent-blue);
+      font-size: 1.05rem;
+    }
+    .btn-delete-item {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .btn-delete-item:hover {
+      color: #b91c1c;
+    }
+    .cart-item-detail {
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+    .cart-item-detail strong {
+      color: var(--color-text-primary);
+    }
+
+    /* =====================================================
        フッター
     ===================================================== */
     footer { background: var(--color-bg-primary); border-top: 1px solid var(--color-border); padding: 40px 20px; text-align: center; }
@@ -1286,7 +1332,7 @@
           </div>
           <div class="flow-actions">
             <button class="btn-flow-back" onclick="prevStep(2)">戻る</button>
-            <button class="btn-flow" id="btn-next-3" onclick="nextStep(4)" disabled>ご注文の確認へ</button>
+            <button class="btn-flow" id="btn-next-3" onclick="addToCartAndConfirm()" disabled>カートに追加して確認へ</button>
           </div>
         </div>
 
@@ -1298,30 +1344,23 @@
               <span class="summary-label">メールアドレス</span>
               <span class="summary-value" id="summary-email"></span>
             </div>
-            <div class="summary-row">
-              <span class="summary-label">モデル</span>
-              <span class="summary-value" id="summary-model"></span>
+            
+            <div id="cart-items-container">
+              <!-- JSでカートアイテムがここに生成されます -->
             </div>
-            <div class="summary-row">
-              <span class="summary-label">レンズ</span>
-              <span class="summary-value" id="summary-lens"></span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">フレーム</span>
-              <span class="summary-value" id="summary-frame"></span>
-            </div>
+
             <div class="summary-price-row">
-              <span class="price-label">定価参考</span>
+              <span class="price-label">定価参考の合計</span>
               <span class="price-original" id="summary-price-original">¥0（税込）</span>
-              <span class="price-label">TempMachi 特別限定価格</span>
+              <span class="price-label">TempMachi 特別限定価格の合計</span>
               <div class="price-sale-row" style="margin-top: 12px;">
                 <span class="price-sale" id="summary-price">¥0</span>
                 <span class="price-sale-unit">（税込）</span>
               </div>
             </div>
           </div>
-          <div class="flow-actions">
-            <button class="btn-flow-back" onclick="prevStep(3)">戻る</button>
+          <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
+            <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
             <button class="btn-flow" id="btn-submit" onclick="submitOrder()">注文を確定する</button>
           </div>
         </div>
@@ -1654,8 +1693,11 @@
       model: '',
       lens: '',
       frame: '',
-      price: 0
+      price: 0,
+      originalPrice: 0
     };
+    
+    let cart = [];
 
     function formatPrice(num) { return num.toLocaleString('ja-JP'); }
 
@@ -1941,23 +1983,88 @@
       document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
       document.getElementById('flow-step-' + step).classList.add('active');
 
-      if(step === 4) {
-        // 確認画面の描画
-        document.getElementById('summary-model').textContent = orderState.model;
-        document.getElementById('summary-lens').textContent = orderState.lens;
-        document.getElementById('summary-frame').textContent = orderState.frame;
-
-        const priceInfo = getPriceData(orderState.model, orderState.lens);
-        orderState.price = priceInfo.sale;
-        document.getElementById('summary-price-original').textContent = `¥${formatPrice(priceInfo.orig)}（税込）`;
-        document.getElementById('summary-price').textContent = formatPrice(priceInfo.sale);
-      }
-
       // 次のステップの冒頭までスクロール
       const flowSection = document.getElementById('visual-order-flow');
       if (flowSection) {
         setTimeout(() => flowSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }
+    }
+
+    function addToCartAndConfirm() {
+      // Calculate price before adding
+      const priceInfo = getPriceData(orderState.model, orderState.lens);
+      orderState.price = priceInfo.sale;
+      orderState.originalPrice = priceInfo.orig;
+      
+      cart.push({...orderState});
+      
+      // Reset state for next potential item
+      orderState = { model: '', lens: '', frame: '', price: 0, originalPrice: 0 };
+      
+      renderCart();
+      nextStep(4);
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      container.innerHTML = '';
+      
+      let totalOrig = 0;
+      let totalSale = 0;
+      
+      cart.forEach((item, index) => {
+        totalOrig += item.originalPrice || 0;
+        totalSale += item.price || 0;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'cart-item';
+        itemDiv.innerHTML = `
+          <div class="cart-item-header">
+            <span class="cart-item-title"><i class="fas fa-shopping-bag"></i> 商品 ${index + 1}</span>
+            <button class="btn-delete-item" onclick="removeFromCart(${index})" title="削除"><i class="fas fa-trash-alt"></i></button>
+          </div>
+          <div class="cart-item-detail"><strong>モデル：</strong>${item.model}</div>
+          <div class="cart-item-detail"><strong>レンズ：</strong>${item.lens}</div>
+          <div class="cart-item-detail"><strong>フレーム：</strong>${item.frame}</div>
+          <div class="cart-item-detail" style="margin-top:8px; font-weight:700; color:#1e40af;">小計：¥${formatPrice(item.price)}（税込）</div>
+        `;
+        container.appendChild(itemDiv);
+      });
+      
+      document.getElementById('summary-price-original').textContent = `¥${formatPrice(totalOrig)}（税込）`;
+      document.getElementById('summary-price').textContent = formatPrice(totalSale);
+      
+      document.getElementById('btn-submit').disabled = cart.length === 0;
+      if(cart.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding: 20px; color:#64748b; font-weight:700;">カートに商品がありません。</p>';
+        document.getElementById('summary-price-original').textContent = '¥0（税込）';
+        document.getElementById('summary-price').textContent = '0';
+      }
+    }
+
+    function removeFromCart(index) {
+      if(confirm('この商品を削除しますか？')) {
+        cart.splice(index, 1);
+        renderCart();
+      }
+    }
+
+    function addAnotherItem() {
+      // Clear selections visually
+      document.querySelectorAll('.visual-card').forEach(el => el.classList.remove('selected'));
+      document.getElementById('btn-next-1').disabled = true;
+      document.getElementById('btn-next-2').disabled = true;
+      document.getElementById('btn-next-3').disabled = true;
+      
+      let badge1 = document.getElementById('selected-model-display');
+      if (badge1) badge1.remove();
+      let badge2 = document.getElementById('step3-selection-display');
+      if (badge2) badge2.remove();
+      
+      document.getElementById('lens-selection-container').innerHTML = '';
+      document.getElementById('frame-cards').innerHTML = '';
+      
+      nextStep(1);
     }
 
     function prevStep(step) {
@@ -1973,15 +2080,17 @@
     }
 
     function submitOrder() {
+      if (cart.length === 0) {
+        alert('カートに商品がありません。');
+        return;
+      }
+      
       document.getElementById('loading-overlay').style.display = 'flex';
       const email = localStorage.getItem('airfry_registered_email') || '';
       
       const payload = {
         email: email,
-        model: orderState.model,
-        lens: orderState.lens,
-        frame: orderState.frame,
-        price: orderState.price
+        items: cart
       };
 
       // プレースホルダ：後でGASのURLに書き換える
