@@ -1386,7 +1386,7 @@
           </div>
 
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
-            <button class="btn-flow-back" onclick="prevStep(3)"><i class="fas fa-chevron-left"></i> 戻る</button>
+            <button class="btn-flow-back" onclick="backFromSummary()"><i class="fas fa-chevron-left"></i> 戻る</button>
             <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
             <button class="btn-flow" id="btn-submit" onclick="submitOrder()"><i class="fas fa-lock"></i> 決済に進む</button>
           </div>
@@ -2016,6 +2016,14 @@
       if (flowSection) {
         setTimeout(() => flowSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }
+    }
+
+    function backFromSummary() {
+      // 「戻る」を押した場合、直前に追加したカートの中身を未確定状態（orderState）に戻す
+      if (cart.length > 0) {
+        orderState = cart.pop();
+      }
+      nextStep(3);
     }
 
     function addToCartAndConfirm() {
