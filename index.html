@@ -1372,8 +1372,8 @@
               <input type="text" id="shipping-name" placeholder="山田 太郎" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span></label>
-              <input type="text" id="shipping-zip" placeholder="123-4567" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+              <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
+              <input type="text" id="shipping-zip" placeholder="1234567" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
               <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;">住所 <span style="color: red; font-size: 0.8rem;">必須</span></label>
@@ -1386,6 +1386,7 @@
           </div>
 
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
+            <button class="btn-flow-back" onclick="prevStep(3)"><i class="fas fa-chevron-left"></i> 戻る</button>
             <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
             <button class="btn-flow" id="btn-submit" onclick="submitOrder()"><i class="fas fa-lock"></i> 決済に進む</button>
           </div>
@@ -1737,10 +1738,11 @@
       } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('★偏光')) {
            orig = 26400;
+           sale = 23760;
         } else {
            orig = 22000;
+           sale = 19800;
         }
-        sale = 23760;
       } else {
         if (lens && lens.includes('★偏光')) {
            orig = 26400;
@@ -2119,12 +2121,26 @@
       
       // バリデーション
       const name = document.getElementById('shipping-name').value.trim();
-      const zip = document.getElementById('shipping-zip').value.trim();
+      let zip = document.getElementById('shipping-zip').value.trim();
       const address = document.getElementById('shipping-address').value.trim();
-      const phone = document.getElementById('shipping-phone').value.trim();
+      let phone = document.getElementById('shipping-phone').value.trim();
       
       if(!name || !zip || !address || !phone) {
         alert('お届け先情報の必須項目をすべて入力してください。');
+        return;
+      }
+
+      // 郵便番号のクレンジングとチェック（ハイフン除去、半角数字7桁）
+      zip = zip.replace(/[-ー]/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+      if (!/^\d{7}$/.test(zip)) {
+        alert('郵便番号はハイフンなしの半角数字7桁で入力してください。');
+        return;
+      }
+
+      // 電話番号のクレンジングとチェック（ハイフン除去、半角数字10〜11桁）
+      phone = phone.replace(/[-ー]/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+      if (!/^\d{10,11}$/.test(phone)) {
+        alert('電話番号はハイフンなしの半角数字10桁または11桁で入力してください。');
         return;
       }
       

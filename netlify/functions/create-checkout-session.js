@@ -43,10 +43,11 @@ exports.handler = async (event, context) => {
       } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('★偏光')) {
            orig = 26400;
+           sale = 23760;
         } else {
            orig = 22000;
+           sale = 19800;
         }
-        sale = 23760;
       } else {
         if (lens && lens.includes('★偏光')) {
            orig = 26400;
