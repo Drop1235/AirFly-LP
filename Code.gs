@@ -25,6 +25,7 @@ function doPost(e) {
       var item = items[i];
       itemsString += "[" + (i + 1) + "] モデル: " + item.model + " / レンズ: " + item.lens + " / フレーム: " + item.frame + "\n";
     }
+    itemsString = itemsString.trim();
     
     // スプレッドシートIDとシート名を指定
     var SPREADSHEET_ID = "1oEODWeCC1Tr7oZ3fFhylvm8MTbEuQjcWyF2YT4ruFOk";
@@ -39,9 +40,9 @@ function doPost(e) {
       customerName,
       email,
       itemsString,
-      zip,
+      "'" + zip,
       address,
-      phone,
+      "'" + phone,
       totalAmount
     ]);
     
