@@ -43,7 +43,7 @@ function doPost(e) {
       "'" + zip,
       address,
       "'" + phone,
-      totalAmount
+      "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     ]);
     
     // --- メール自動送信処理 ---
