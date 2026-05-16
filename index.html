@@ -1349,16 +1349,42 @@
               <!-- JSでカートアイテムがここに生成されます -->
             </div>
 
+            <div class="summary-row" style="border-top: 2px solid var(--color-border); margin-top: 16px; padding-top: 16px; border-bottom: none;">
+              <span class="summary-label">送料（全国一律）</span>
+              <span class="summary-value">¥600（税込）</span>
+            </div>
+
             <div class="summary-price-row">
               <span class="price-label">定価参考の合計</span>
               <span class="price-original" id="summary-price-original">¥0（税込）</span>
-              <span class="price-label">TempMachi 特別限定価格の合計</span>
+              <span class="price-label">TempMachi 特別限定価格の合計（送料込）</span>
               <div class="price-sale-row" style="margin-top: 12px;">
                 <span class="price-sale" id="summary-price">¥0</span>
                 <span class="price-sale-unit">（税込）</span>
               </div>
             </div>
           </div>
+
+          <div id="shipping-form-box" style="background: #fff; border: 1px solid var(--color-border); border-radius: 16px; padding: 32px; max-width: 600px; margin: 0 auto 32px; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.04);">
+            <h4 style="margin-bottom: 20px; color: var(--color-text-primary); border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;"><i class="fas fa-truck"></i> お届け先情報</h4>
+            <div style="margin-bottom: 16px;">
+              <label for="shipping-name" style="display: block; font-weight: 700; margin-bottom: 8px;">お名前 <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <input type="text" id="shipping-name" placeholder="山田 太郎" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <input type="text" id="shipping-zip" placeholder="123-4567" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;">住所 <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <input type="text" id="shipping-address" placeholder="東京都渋谷区〇〇 1-2-3 マンション101" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;">電話番号 <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <input type="tel" id="shipping-phone" placeholder="090-1234-5678" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+            </div>
+          </div>
+
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
             <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
             <button class="btn-flow" id="btn-submit" onclick="submitOrder()"><i class="fas fa-lock"></i> 決済に進む</button>
@@ -2031,6 +2057,12 @@
         container.appendChild(itemDiv);
       });
       
+      const SHIPPING_FEE = 600;
+      
+      if(cart.length > 0) {
+        totalSale += SHIPPING_FEE;
+      }
+      
       document.getElementById('summary-price-original').textContent = `¥${formatPrice(totalOrig)}（税込）`;
       document.getElementById('summary-price').textContent = formatPrice(totalSale);
       
@@ -2085,11 +2117,26 @@
         return;
       }
       
+      // バリデーション
+      const name = document.getElementById('shipping-name').value.trim();
+      const zip = document.getElementById('shipping-zip').value.trim();
+      const address = document.getElementById('shipping-address').value.trim();
+      const phone = document.getElementById('shipping-phone').value.trim();
+      
+      if(!name || !zip || !address || !phone) {
+        alert('お届け先情報の必須項目をすべて入力してください。');
+        return;
+      }
+      
       document.getElementById('loading-overlay').style.display = 'flex';
       const email = localStorage.getItem('airfry_registered_email') || '';
       
       const payload = {
         email: email,
+        customer_name: name,
+        customer_zip: zip,
+        customer_address: address,
+        customer_phone: phone,
         items: cart.map(item => ({
           model: item.model,
           lens: item.lens,

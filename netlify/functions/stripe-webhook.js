@@ -26,7 +26,13 @@ exports.handler = async (event, context) => {
     const session = stripeEvent.data.object;
 
     try {
-      const email = session.metadata.customer_email || session.customer_details.email;
+      const email = session.metadata.customer_email || session.customer_details.email || '';
+      const customer_name = session.metadata.customer_name || '';
+      const customer_zip = session.metadata.customer_zip || '';
+      const customer_address = session.metadata.customer_address || '';
+      const customer_phone = session.metadata.customer_phone || '';
+      const total_amount = session.metadata.total_amount || '0';
+      
       let items = [];
       
       if (session.metadata.order_items) {
@@ -40,6 +46,11 @@ exports.handler = async (event, context) => {
       if (gasUrl && items.length > 0) {
         const payload = {
           email: email,
+          customer_name: customer_name,
+          customer_zip: customer_zip,
+          customer_address: customer_address,
+          customer_phone: customer_phone,
+          total_amount: total_amount,
           items: items
         };
 

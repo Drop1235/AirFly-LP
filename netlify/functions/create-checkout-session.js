@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { email, items } = JSON.parse(event.body);
+    const { email, customer_name, customer_zip, customer_address, customer_phone, items } = JSON.parse(event.body);
 
     if (!items || items.length === 0) {
       return {
@@ -61,6 +61,8 @@ exports.handler = async (event, context) => {
 
     // Convert cart items to Stripe line_items format using securely calculated prices
     const secureItems = [];
+    let totalSale = 0;
+    
     const line_items = items.map(item => {
       const productName = `AirFly ${item.model}`;
       const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}`;
@@ -68,6 +70,7 @@ exports.handler = async (event, context) => {
       // Calculate secure price
       const priceInfo = getPriceData(item.model, item.lens);
       const securePrice = priceInfo.sale;
+      totalSale += securePrice;
       
       // Store secure item for metadata
       secureItems.push({
@@ -91,6 +94,20 @@ exports.handler = async (event, context) => {
       };
     });
 
+    // 送料の追加
+    const SHIPPING_FEE = 600;
+    line_items.push({
+      price_data: {
+        currency: 'jpy',
+        product_data: {
+          name: '送料（全国一律）',
+        },
+        unit_amount: SHIPPING_FEE,
+      },
+      quantity: 1,
+    });
+    totalSale += SHIPPING_FEE;
+
     // Create Stripe Checkout Session
     const origin = event.headers.origin || process.env.URL || 'http://localhost:8888';
     
@@ -105,8 +122,13 @@ exports.handler = async (event, context) => {
       success_url: `${origin}?success=true`,
       cancel_url: `${origin}?canceled=true`,
       metadata: {
-        customer_email: email,
-        order_items: itemsJson.length <= 500 ? itemsJson : JSON.stringify([{ error: "items too long to store in metadata" }])
+        customer_email: email || '',
+        customer_name: customer_name || '',
+        customer_zip: customer_zip || '',
+        customer_address: customer_address || '',
+        customer_phone: customer_phone || '',
+        total_amount: totalSale.toString(),
+        order_items: itemsJson.length <= 400 ? itemsJson : JSON.stringify([{ error: "items too long" }])
       }
     });
 
