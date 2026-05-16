@@ -61,10 +61,13 @@ function doPost(e) {
       + "〒" + zip + "\n"
       + address + "\n"
       + "電話番号: " + phone + "\n\n"
-      + "商品の発送まで今しばらくお待ちくださいませ。\n"
-      + "引き続きよろしくお願いいたします。\n\n"
+      + "商品は通常、2日～1週間程度でお届けいたします。\n"
+      + "なお、在庫状況によっては2週間～1ヶ月ほどお時間をいただく場合がございます。\n"
+      + "商品の到着まで、楽しみにお待ちくださいませ。\n\n"
       + "------------------------\n"
-      + "TempMachi\n"
+      + "株式会社TempMachi\n"
+      + "Email:kazunori.matsunaga@tempmachi.com\n"
+      + "URL:https://www.tempmachi.com/\n"
       + "------------------------";
       
     var subjectAdmin = "【新規注文通知】Stripe決済が完了しました";
