@@ -2151,6 +2151,16 @@
       // LIFF初期化＆ステップ判定スタート
       initLiff();
     });
+window.addEventListener('pageshow', function(event) {
+  // ブラウザの履歴から（戻るボタンなどで）ページが読み込まれた場合
+  if (event.persisted) {
+    // 1. ぐるぐる（ローディング）を非表示にする
+    document.getElementById('loading-overlay').style.display = 'none';
+    
+    // 2. 決済ボタンをもう一度押せる状態に戻す
+    document.getElementById('btn-submit').disabled = false;
+  }
+});
   </script>
 </body>
 </html>
