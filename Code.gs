@@ -96,8 +96,7 @@ function doPost(e) {
     }
     
     // 管理者宛メール送信
-    // GmailApp.sendEmail(adminEmail, subjectAdmin, bodyAdmin); // ★★★運用時はコメントアウトを外してください★★★
-    
+    GmailApp.sendEmail(adminEmail, subjectAdmin, bodyAdmin);
     // 成功レスポンス
     return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Order saved and emails sent successfully" }))
       .setMimeType(ContentService.MimeType.JSON)

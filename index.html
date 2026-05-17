@@ -645,13 +645,6 @@
       background: #1a202c; box-shadow: 0 6px 16px rgba(45, 55, 72, 0.3);
     }
 
-    #floating-cta {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; padding: 12px 20px 20px;
-      background: linear-gradient(to top, rgba(255,255,255,0.98) 60%, transparent); display: flex; justify-content: center;
-      transition: transform 0.4s ease; transform: translateY(150%);
-    }
-    #floating-cta.visible { transform: translateY(0); }
-
     /* =====================================================
        ビジュアル・オーダーフロー用スタイル
     ===================================================== */
@@ -1532,13 +1525,6 @@
       </p>
     </footer>
 
-    <div id="floating-cta">
-      <a href="#visual-order-flow" class="btn-cta" id="floating-cta-btn">
-        🛒 商品を選んで注文する
-        <span>↑</span>
-      </a>
-    </div>
-
   </div> <!-- /#main-content -->
 
   <!-- =====================================================
@@ -2335,16 +2321,6 @@
       }, { threshold: 0.12 });
 
       document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
-
-      const hero = document.getElementById('hero');
-      const floatingCta = document.getElementById('floating-cta');
-      window.addEventListener('scroll', function() {
-        if (window.scrollY > (hero ? hero.offsetHeight * 0.8 : 500)) {
-          floatingCta.classList.add('visible');
-        } else {
-          floatingCta.classList.remove('visible');
-        }
-      });
     }
 
 window.addEventListener('pageshow', function(event) {
