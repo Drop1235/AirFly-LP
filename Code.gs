@@ -73,8 +73,8 @@ function doPost(e) {
       + "商品の到着まで、楽しみにお待ちくださいませ。\n\n"
       + "------------------------\n"
       + "株式会社TempMachi\n"
-      + "Email:hanks@tempmachi.com\n"
-      + "URL:https://www.tempmachi.com/\n"
+      + "Email: hanks@tempmachi.com\n"
+      + "URL: https://www.tempmachi.com/\n"
       + "------------------------";
       
     var subjectAdmin = "【新規注文通知】Stripe決済が完了しました";
