@@ -1082,9 +1082,126 @@
       display: inline-block;
       margin-bottom: 12px;
     }
+
+    /* =====================================================
+       注文完了画面（サンクスページ）
+    ===================================================== */
+    #order-complete-screen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #ffffff;
+      z-index: 10000;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+    #order-complete-screen.visible {
+      display: block;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .complete-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--color-bg-surface);
+      border-radius: 16px;
+      padding: 40px 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+    .complete-icon {
+      font-size: 64px;
+      color: #06C755;
+      margin-bottom: 24px;
+    }
+    .complete-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--color-text-primary);
+      margin-bottom: 16px;
+    }
+    .complete-desc {
+      font-size: 1rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .complete-details {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+    .complete-details-title {
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--color-accent-blue);
+      padding-bottom: 8px;
+    }
+    .complete-item {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--color-border);
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+    .complete-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .complete-total {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--color-accent-blue);
+      margin-top: 16px;
+      text-align: right;
+    }
+    .complete-note {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      background: #fff7ed;
+      border: 1px solid #ffedd5;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: left;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
+
+  <!-- =====================================================
+       注文完了画面（サンクスページ）
+  ===================================================== -->
+  <div id="order-complete-screen">
+    <div class="complete-container">
+      <div class="complete-icon"><i class="fas fa-check-circle"></i></div>
+      <h2 class="complete-title">ご注文ありがとうございます</h2>
+      <p class="complete-desc">以下の内容でご注文を承りました。</p>
+      
+      <div class="complete-details">
+        <div class="complete-details-title">【ご注文内容】</div>
+        <div id="complete-items-list">
+          <!-- JSで動的生成 -->
+        </div>
+        <div class="complete-total">
+          決済金額（送料込）: <span id="complete-total-amount">¥0</span>
+        </div>
+      </div>
+      
+      <div class="complete-note">
+        商品は通常、2日～1週間程度でお届けいたします。<br>
+        なお、在庫状況によっては2週間～1ヶ月ほどお時間をいただく場合がございます。<br>
+        商品の到着まで、楽しみにお待ちくださいませ。
+      </div>
+      
+      <button class="btn-flow" onclick="closeOrderCompleteScreen()">OK（トップへ戻る）</button>
+    </div>
+  </div>
 
 
 
@@ -2161,6 +2278,12 @@
       document.getElementById('loading-overlay').style.display = 'flex';
       const email = localStorage.getItem('airfry_registered_email') || '';
       
+      // 決済後に完了画面を出すための情報保存（個人情報を含まない）
+      localStorage.setItem('airfry_pending_order', JSON.stringify({
+        items: cart,
+        total_amount: document.getElementById('summary-price').textContent
+      }));
+      
       const payload = {
         email: email,
         customer_name: name,
@@ -2224,10 +2347,6 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      // LIFF初期化＆ステップ判定スタート
-      initLiff();
-    });
 window.addEventListener('pageshow', function(event) {
   // ブラウザの履歴から（戻るボタンなどで）ページが読み込まれた場合
   if (event.persisted) {
@@ -2238,6 +2357,73 @@ window.addEventListener('pageshow', function(event) {
     document.getElementById('btn-submit').disabled = false;
   }
 });
+
+function checkOrderSuccess() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success') === 'true') {
+    // URLからクエリパラメータを削除
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({path:newUrl}, '', newUrl);
+
+    const pendingOrderStr = localStorage.getItem('airfry_pending_order');
+    if (pendingOrderStr) {
+      try {
+        const orderData = JSON.parse(pendingOrderStr);
+        const listContainer = document.getElementById('complete-items-list');
+        listContainer.innerHTML = '';
+        
+        orderData.items.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'complete-item';
+          div.innerHTML = `<strong>[${index + 1}]</strong> モデル: ${item.model} / レンズ: ${item.lens} / フレーム: ${item.frame}`;
+          listContainer.appendChild(div);
+        });
+        
+        document.getElementById('complete-total-amount').textContent = orderData.total_amount;
+        
+        // メインコンテンツ・ゲートを隠して完了画面を表示
+        const gate = document.getElementById('gate-container');
+        if (gate) gate.style.display = 'none';
+        
+        const main = document.getElementById('main-content');
+        if (main) main.style.display = 'none';
+        
+        document.getElementById('order-complete-screen').classList.add('visible');
+        return true; // 完了画面を表示中
+      } catch (e) {
+        console.error('完了画面データのパースエラー', e);
+      }
+    }
+  }
+  return false;
+}
+
+function closeOrderCompleteScreen() {
+  localStorage.removeItem('airfry_pending_order');
+  
+  // カートを空にする
+  cart = [];
+  renderCart();
+  
+  // 配送先フォームをクリアする
+  document.getElementById('shipping-name').value = '';
+  document.getElementById('shipping-zip').value = '';
+  document.getElementById('shipping-address').value = '';
+  document.getElementById('shipping-phone').value = '';
+
+  document.getElementById('order-complete-screen').classList.remove('visible');
+  
+  // 再度通常の初期化フローへ戻す
+  initLiff();
+}
+
+// 初期実行
+if (!checkOrderSuccess()) {
+  // 完了画面が出ない場合はLIFFを通常通り初期化
+  document.addEventListener('DOMContentLoaded', function() {
+    initLiff();
+  });
+}
   </script>
 </body>
 </html>
