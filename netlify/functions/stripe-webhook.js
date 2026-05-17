@@ -51,7 +51,8 @@ exports.handler = async (event, context) => {
           customer_address: customer_address,
           customer_phone: customer_phone,
           total_amount: total_amount,
-          items: items
+          items: items,
+          secret_token: process.env.GAS_SECRET_TOKEN
         };
 
         // Send data to Google Apps Script

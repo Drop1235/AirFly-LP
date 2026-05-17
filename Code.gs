@@ -11,6 +11,12 @@ function doPost(e) {
     // リクエストボディのパース
     var params = JSON.parse(e.postData.contents);
     
+    // セキュリティトークンの検証
+    var expectedToken = "TEMPMACHI_AIRFLY_SECURE_HOOK_2026";
+    if (params.secret_token !== expectedToken) {
+      throw new Error("Unauthorized request");
+    }
+    
     var email = params.email || "";
     var customerName = params.customer_name || "未入力";
     var zip = params.customer_zip || "未入力";
