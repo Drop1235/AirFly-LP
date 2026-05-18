@@ -92,21 +92,22 @@ function doPost(e) {
 
     // 購入者宛メール送信（メールアドレスが入力されている場合のみ）
     if (email) {
-      GmailApp.sendEmail(email, subjectBuyer, bodyBuyer);
+      GmailApp.sendEmail(email, subjectBuyer, bodyBuyer, {
+        from: adminEmail,
+        name: "株式会社TempMachi"
+      });
     }
     
     // 管理者宛メール送信
     GmailApp.sendEmail(adminEmail, subjectAdmin, bodyAdmin);
     // 成功レスポンス
     return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Order saved and emails sent successfully" }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+      .setMimeType(ContentService.MimeType.JSON);
       
   } catch(error) {
     // エラーレスポンス
     return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.message }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -118,6 +119,5 @@ function doOptions(e) {
     "Access-Control-Allow-Headers": "Content-Type",
   };
   return ContentService.createTextOutput("")
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeaders(headers);
+    .setMimeType(ContentService.MimeType.TEXT);
 }
