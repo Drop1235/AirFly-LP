@@ -1538,6 +1538,14 @@
 
     // LIFF初期化と認証状態チェック
     async function initLiff() {
+      // 開発・テスト環境（dev-- や localhost）では、LINEログインを自動スキップしてテスト可能にする
+      if (window.location.hostname.includes('dev--') || window.location.hostname.includes('localhost')) {
+        console.log('Test environment detected. Bypassing LIFF authentication.');
+        const testEmail = localStorage.getItem('airfry_registered_email') || 'test@example.com';
+        showMainContent(testEmail);
+        return;
+      }
+
       try {
         await liff.init({ liffId: LIFF_ID });
 
