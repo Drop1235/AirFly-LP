@@ -33,6 +33,29 @@ function doPost(e) {
     }
     itemsString = itemsString.trim();
     
+    // --- 郵便番号のハイフン自動整形ロジック ---
+    var formattedZip = zip;
+    var cleanZip = String(zip).replace(/\D/g, ''); // 数字だけを抽出
+    if (cleanZip.length === 7) {
+      formattedZip = cleanZip.slice(0, 3) + '-' + cleanZip.slice(3);
+    }
+    
+    // --- 電話番号のハイフン自動整形ロジック ---
+    var formattedPhone = phone;
+    var cleanPhone = String(phone).replace(/\D/g, ''); // 数字だけを抽出
+    if (cleanPhone.length === 11) {
+      // 携帯電話などの11桁 (090-1234-5678)
+      formattedPhone = cleanPhone.slice(0, 3) + '-' + cleanPhone.slice(3, 7) + '-' + cleanPhone.slice(7);
+    } else if (cleanPhone.length === 10) {
+      if (cleanPhone.indexOf('03') === 0 || cleanPhone.indexOf('06') === 0) {
+        // 東京・大阪などの10桁 (03-1234-5678)
+        formattedPhone = cleanPhone.slice(0, 2) + '-' + cleanPhone.slice(2, 6) + '-' + cleanPhone.slice(6);
+      } else {
+        // その他の地域の10桁 (045-123-4567)
+        formattedPhone = cleanPhone.slice(0, 3) + '-' + cleanPhone.slice(3, 6) + '-' + cleanPhone.slice(6);
+      }
+    }
+    
     // スプレッドシートIDとシート名を指定
     var SPREADSHEET_ID = "1oEODWeCC1Tr7oZ3fFhylvm8MTbEuQjcWyF2YT4ruFOk";
     var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // 最初のシート
@@ -46,9 +69,9 @@ function doPost(e) {
       customerName,
       email,
       itemsString,
-      "'" + zip,
+      "'" + formattedZip,
       address,
-      "'" + phone,
+      "'" + formattedPhone,
       "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     ]);
     
@@ -65,9 +88,9 @@ function doPost(e) {
       + itemsString + "\n"
       + "決済金額（送料込）: ¥" + parseInt(totalAmount).toLocaleString() + "\n\n"
       + "【お届け先】\n"
-      + "〒" + zip + "\n"
+      + "〒" + formattedZip + "\n"
       + address + "\n"
-      + "電話番号: " + phone + "\n\n"
+      + "電話番号: " + formattedPhone + "\n\n"
       + "商品は通常、2日～1週間程度でお届けいたします。\n"
       + "なお、在庫状況によっては2週間～1ヶ月ほどお時間をいただく場合がございます。\n"
       + "商品の到着まで、楽しみにお待ちくださいませ。\n\n"
@@ -82,9 +105,9 @@ function doPost(e) {
       + "【お客様情報】\n"
       + "お名前: " + customerName + "\n"
       + "メール: " + email + "\n"
-      + "〒" + zip + "\n"
+      + "〒" + formattedZip + "\n"
       + address + "\n"
-      + "電話番号: " + phone + "\n\n"
+      + "電話番号: " + formattedPhone + "\n\n"
       + "【ご注文内容】\n"
       + itemsString + "\n"
       + "決済金額（送料込）: ¥" + parseInt(totalAmount).toLocaleString() + "\n\n"
@@ -120,4 +143,156 @@ function doOptions(e) {
   };
   return ContentService.createTextOutput("")
     .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// スプレッドシートが開かれたときにカスタムメニューを自動で追加する
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('TempMachi メニュー')
+    .addItem('選択した注文を代理店へメール送信', 'sendToAgent')
+    .addToUi();
+}
+
+// 選択された注文データを綺麗なHTML表形式にして代理店へメール送信する
+function sendToAgent() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  
+  if (lastRow < 2) {
+    ui.alert('エラー', 'データが登録されていません。', ui.ButtonSet.OK);
+    return;
+  }
+  
+  // 2行目から最終行までのデータを一括取得 (A列〜J列)
+  // A=1, B=2(名前), C=3(メール), D=4(注文内容), E=5(郵便番号), F=6(住所), G=7(電話番号), H=8(金額), I=9(チェックボックス), J=10(ステータス)
+  var range = sheet.getRange(2, 1, lastRow - 1, 10);
+  var values = range.getValues();
+  
+  var targets = [];
+  
+  for (var i = 0; i < values.length; i++) {
+    var rowNum = i + 2;
+    var rowData = values[i];
+    var isChecked = rowData[8]; // I列 (9列目, 0-indexedなので 8)
+    var status = rowData[9];    // J列 (10列目, 0-indexedなので 9)
+    
+    // チェックが入っており、かつステータスが「送信済」を含まない場合を対象にする
+    if (isChecked === true && (!status || String(status).indexOf('送信済') === -1)) {
+      targets.push({
+        rowNum: rowNum,
+        name: rowData[1],       // B列
+        email: rowData[2],      // C列
+        items: rowData[3],      // D列
+        zip: rowData[4],        // E列
+        address: rowData[5],    // F列
+        phone: rowData[6],      // G列
+        totalAmount: rowData[7] // H列
+      });
+    }
+  }
+  
+  if (targets.length === 0) {
+    ui.alert('確認', '「代理店へ送信」にチェックが入っており、かつ未送信の注文が見つかりませんでした。\n\n※すでに「送信済」になっている注文は自動的にスキップされます。', ui.ButtonSet.OK);
+    return;
+  }
+  
+  // 送信の最終確認ポップアップ
+  var confirmResponse = ui.alert(
+    '送信確認',
+    '選択された ' + targets.length + ' 件の注文を1通のメールにまとめて代理店へメール送信します。よろしいですか？',
+    ui.ButtonSet.YES_NO
+  );
+  
+  if (confirmResponse !== ui.Button.YES) {
+    ui.alert('キャンセル', '送信をキャンセルしました。', ui.ButtonSet.OK);
+    return;
+  }
+  
+  // ★★★ 代理店様の宛先メールアドレスを設定してください ★★★
+  // 複数人に送りたい場合は、カンマ区切りで指定できます（例: "aaa@example.com,bbb@example.com"）
+  var agentEmail = "agent@example.com"; 
+  var adminEmail = "hanks@tempmachi.com"; // 送信元 (kazunori.matsunaga@tempmachi.com のGmail設定でエイリアス登録されたもの)
+  
+  // --- HTMLメール本文の構築 ---
+  var subject = "【注文転送】新規注文手配依頼（計 " + targets.length + " 件）";
+  
+  var htmlBody = "<div style='font-family: sans-serif; font-size: 14px; line-height: 1.5; color: #333; max-width: 900px;'>"
+    + "<p>代理店 担当者様</p>"
+    + "<p>いつもお世話になっております。株式会社TempMachiの松永です。<br>"
+    + "AirFlyの新規注文が <strong>" + targets.length + " 件</strong> 入りましたので、手配をお願いいたします。</p>"
+    + "<br>"
+    + "<table style='border-collapse: collapse; width: 100%; font-size: 13px; margin: 20px 0; border: 1px solid #ddd;'>"
+    + "  <thead>"
+    + "    <tr style='background-color: #2c3e50; color: #ffffff; text-align: left;'>"
+    + "      <th style='padding: 10px; border: 1px solid #ddd; width: 40px; text-align: center;'>No.</th>"
+    + "      <th style='padding: 10px; border: 1px solid #ddd; width: 120px;'>お名前</th>"
+    + "      <th style='padding: 10px; border: 1px solid #ddd;'>注文内容</th>"
+    + "      <th style='padding: 10px; border: 1px solid #ddd; width: 320px;'>お届け先情報</th>"
+    + "      <th style='padding: 10px; border: 1px solid #ddd; width: 90px; text-align: right;'>金額</th>"
+    + "    </tr>"
+    + "  </thead>"
+    + "  <tbody>";
+  
+  for (var j = 0; j < targets.length; j++) {
+    var t = targets[j];
+    var bgStyle = (j % 2 === 1) ? "background-color: #fcfcfc;" : "";
+    
+    htmlBody += "    <tr style='" + bgStyle + "'>"
+      + "      <td style='padding: 10px; border: 1px solid #ddd; text-align: center; vertical-align: top;'>" + (j + 1) + "</td>"
+      + "      <td style='padding: 10px; border: 1px solid #ddd; font-weight: bold; vertical-align: top;'>" + t.name + " 様</td>"
+      + "      <td style='padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; vertical-align: top;'>" + t.items + "</td>"
+      + "      <td style='padding: 10px; border: 1px solid #ddd; line-height: 1.4; vertical-align: top;'>"
+      + "        〒" + t.zip + "<br>"
+      + "        " + t.address + "<br>"
+      + "        <strong>TEL:</strong> " + t.phone
+      + "      </td>"
+      + "      <td style='padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: right; vertical-align: top;'>" + t.totalAmount + "</td>"
+      + "    </tr>";
+  }
+  
+  htmlBody += "  </tbody>"
+    + "</table>"
+    + "<br>"
+    + "<p>以上、よろしくお願い申し上げます。</p>"
+    + "<hr style='border: 0; border-top: 1px solid #ccc; margin: 30px 0 20px 0;'>"
+    + "<p style='font-size: 12px; color: #7f8c8d;'>"
+    + "  <strong>株式会社TempMachi</strong><br>"
+    + "  Email: hanks@tempmachi.com<br>"
+    + "  URL: https://www.tempmachi.com/"
+    + "</p>"
+    + "</div>";
+
+  // テキストメールのフォールバック用（HTML未対応メールソフト用）
+  var textBody = "代理店 担当者様\n\nいつもお世話になっております。株式会社TempMachiの松永です。\nAirFlyの新規注文が " + targets.length + " 件入りましたので手配をお願いいたします。\n\n"
+    + "※HTML形式のメールが表示できるメールソフトでご確認ください。";
+
+  var successCount = 0;
+  
+  try {
+    // 代理店へメール送信 (HTMLメール)
+    GmailApp.sendEmail(agentEmail, subject, textBody, {
+      from: adminEmail,
+      name: "株式会社TempMachi",
+      htmlBody: htmlBody
+    });
+    
+    // スプレッドシート側のステータスを一括更新
+    var now = new Date();
+    var formattedDate = Utilities.formatDate(now, 'Asia/Tokyo', 'MM/dd HH:mm');
+    
+    for (var k = 0; k < targets.length; k++) {
+      var target = targets[k];
+      sheet.getRange(target.rowNum, 9).setValue(false); // チェックボックスを OFF に戻す
+      sheet.getRange(target.rowNum, 10).setValue("送信済 (" + formattedDate + ")"); // ステータスに記録
+      successCount++;
+    }
+    
+  } catch (e) {
+    ui.alert('エラー', 'メール送信中にエラーが発生しました:\n' + e.message, ui.ButtonSet.OK);
+    return;
+  }
+  
+  // 完了報告ポップアップ
+  ui.alert('送信完了', successCount + ' 件の注文を代理店へ美しい表形式で一括メール送信し、ステータスを「送信済」に更新しました！', ui.ButtonSet.OK);
 }
