@@ -1583,10 +1583,7 @@
 
     // LINEでログイン
     function loginWithLine() {
-      let redirectUrl = window.location.href;
-      // URLにクエリパラメータやハッシュが含まれている場合はベースURLのみにするかそのままにするか。
-      // 基本はそのままのURL（window.location.href）をredirectUriに指定する。
-      liff.login({ redirectUri: redirectUrl });
+      liff.login();
     }
 
     function toggleSubmitButton() {
