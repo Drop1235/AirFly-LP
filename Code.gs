@@ -218,7 +218,7 @@ function sendToAgent() {
   var subject = "【注文転送】新規注文手配依頼（計 " + targets.length + " 件）";
   
   var htmlBody = "<div style='font-family: sans-serif; font-size: 14px; line-height: 1.5; color: #333; max-width: 900px;'>"
-    + "<p>代理店 担当者様</p>"
+    + "<p>株式会社ウェルゴジャパン　小西 忠彦様</p>"
     + "<p>いつもお世話になっております。株式会社TempMachiの松永です。<br>"
     + "AirFlyの新規注文が <strong>" + targets.length + " 件</strong> 入りましたので、手配をお願いいたします。</p>"
     + "<br>"
@@ -264,7 +264,7 @@ function sendToAgent() {
     + "</div>";
 
   // テキストメールのフォールバック用（HTML未対応メールソフト用）
-  var textBody = "代理店 担当者様\n\nいつもお世話になっております。株式会社TempMachiの松永です。\nAirFlyの新規注文が " + targets.length + " 件入りましたので手配をお願いいたします。\n\n"
+  var textBody = "株式会社ウェルゴジャパン　小西 忠彦様\n\nいつもお世話になっております。株式会社TempMachiの松永です。\nAirFlyの新規注文が " + targets.length + " 件入りましたので手配をお願いいたします。\n\n"
     + "※HTML形式のメールが表示できるメールソフトでご確認ください。";
 
   var successCount = 0;
