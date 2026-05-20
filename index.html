@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>AirFly × TempMachi | LINE会員限定シークレットセール</title>
-  <link rel="icon" type="image/png" href="AirFry_faviconV2.png" />
+  <link rel="icon" type="image/png" href="AirFly_faviconV2.png" />
   <meta name="description" content="TempMachi LINE登録者限定。世界初・鼻パッドなしのスポーツサングラス「AirFly（エアフライ）」を特別割引でご提供。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1246,7 +1246,7 @@
         </div>
 
         <div class="gate-terms-box">
-          ご登録いただいたメールアドレス宛に、AirFryの限定価格でのご案内やシークレットセールの情報をお送りします。また、弊社が提供・取り扱う各種サービスや商品に関する特別なお知らせも合わせてお届けいたします。
+          ご登録いただいたメールアドレス宛に、AirFlyの限定価格でのご案内やシークレットセールの情報をお送りします。また、弊社が提供・取り扱う各種サービスや商品に関する特別なお知らせも合わせてお届けいたします。
         </div>
 
         <div class="gate-checkbox-group">
@@ -1544,7 +1544,7 @@
       // 開発・テスト環境（dev-- や localhost）では、LINEログインを自動スキップしてテスト可能にする
       if (window.location.hostname.includes('dev--') || window.location.hostname.includes('localhost')) {
         console.log('Test environment detected. Bypassing LIFF authentication.');
-        const testEmail = localStorage.getItem('airfry_registered_email') || 'test@example.com';
+        const testEmail = localStorage.getItem('airfly_registered_email') || 'test@example.com';
         showMainContent(testEmail);
         return;
       }
@@ -1552,7 +1552,7 @@
       try {
         await liff.init({ liffId: LIFF_ID });
 
-        const savedEmail = localStorage.getItem('airfry_registered_email');
+        const savedEmail = localStorage.getItem('airfly_registered_email');
         
         if (liff.isLoggedIn() && savedEmail) {
            showMainContent(savedEmail);
@@ -1600,7 +1600,7 @@
       if (!emailInput) return;
 
       // 状態を保存してリロード時もスキップできるようにする (任意)
-      localStorage.setItem('airfry_registered_email', emailInput);
+      localStorage.setItem('airfly_registered_email', emailInput);
 
       showMainContent(emailInput, true);
     }
@@ -2283,10 +2283,10 @@
       }
       
       document.getElementById('loading-overlay').style.display = 'flex';
-      const email = localStorage.getItem('airfry_registered_email') || '';
+      const email = localStorage.getItem('airfly_registered_email') || '';
       
       // 決済後に完了画面を出すための情報保存（個人情報を含まない）
-      localStorage.setItem('airfry_pending_order', JSON.stringify({
+      localStorage.setItem('airfly_pending_order', JSON.stringify({
         items: cart,
         total_amount: document.getElementById('summary-price').textContent
       }));
@@ -2362,7 +2362,7 @@ function checkOrderSuccess() {
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
     window.history.replaceState({path:newUrl}, '', newUrl);
 
-    const pendingOrderStr = localStorage.getItem('airfry_pending_order');
+    const pendingOrderStr = localStorage.getItem('airfly_pending_order');
     if (pendingOrderStr) {
       try {
         const orderData = JSON.parse(pendingOrderStr);
@@ -2396,7 +2396,7 @@ function checkOrderSuccess() {
 }
 
 function closeOrderCompleteScreen() {
-  localStorage.removeItem('airfry_pending_order');
+  localStorage.removeItem('airfly_pending_order');
   
   // カートを空にする
   cart = [];

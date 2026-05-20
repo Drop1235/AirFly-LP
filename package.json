@@ -1,5 +1,5 @@
 {
-  "name": "airfry-lp",
+  "name": "airfly-lp",
   "version": "1.0.0",
   "description": "AirFly Landing Page with Stripe Integration",
   "main": "index.js",
