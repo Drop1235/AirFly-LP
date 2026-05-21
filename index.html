@@ -885,6 +885,10 @@
       border-left-color: var(--color-accent-blue);
       background: #f0f7ff;
     }
+    .lens-category-desc.photochromic {
+      border-left-color: #8b5cf6;
+      background: #f5f3ff;
+    }
     /* カテゴリヘッダー */
     .category-section {
       margin-bottom: 40px;
@@ -1636,9 +1640,9 @@
     ============================================== */
     const LENS_OPTIONS = {
       'AF-301': ['グレー★偏光', 'ライトスモーク', 'ゴールド', 'ブルーピンク', 'ブルー'],
-      'AF-301-BK': ['ブルー★偏光', 'ゴールド★偏光', 'ブルー', 'ゴールド', 'ブルーピンク'],
+      'AF-301-BK': ['ブルー★偏光', 'ゴールド★偏光', 'ブルー', 'ゴールド', 'ブルーピンク', 'ゴールド■調光', 'ブルー■調光', 'グレー■調光'],
       'AF-301-WV': ['ブルー★偏光', 'ゴールド★偏光', 'グレー★偏光'],
-      'AF-302-WP': ['ブルー★偏光', 'ブルーピンク★偏光', 'グレー★偏光', 'ハイコントラストローズ'],
+      'AF-302-WP': ['ブルー★偏光', 'ブルーピンク★偏光', 'グレー★偏光', 'ハイコントラストローズ', 'ピンク■調光', 'グレー■調光'],
       'AF-302-SP': ['グレー★偏光', 'ハイコントラストローズ★偏光', 'ライトスモーク', 'ゴールド', 'ブルー', 'ライトピンク', 'ブルーピンク'],
       'AF-901': ['ゴールド', 'ライトスモーク', 'ブルー', 'スモーク']
     };
@@ -1675,6 +1679,24 @@
           desc: '視界が暗くなりすぎず、天候の変化にも対応しやすい明るめのレンズです。',
           transmittance: '22％',
           isPolarized: false
+        },
+        'ゴールド■調光': {
+          image: 'image/BK_ゴールド■調光.jpg',
+          desc: '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。',
+          transmittance: '20％〜90％',
+          isPhotochromic: true
+        },
+        'ブルー■調光': {
+          image: 'image/BK_ブルー■調光.jpg',
+          desc: '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。',
+          transmittance: '20％〜90％',
+          isPhotochromic: true
+        },
+        'グレー■調光': {
+          image: 'image/BK_グレー■調光.jpg',
+          desc: '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。',
+          transmittance: '20％〜90％',
+          isPhotochromic: true
         }
       },
       'AF-301-WV': {
@@ -1753,6 +1775,18 @@
           desc: '裸眼に近い自然な色合いで、曇天時や夕暮れ時など少し暗い環境でも景色を捉えやすい明るめのレンズです。',
           transmittance: '30％',
           isPolarized: true
+        },
+        'ピンク■調光': {
+          image: 'image/WP_ピンク■調光.jpg',
+          desc: '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。',
+          transmittance: '20％〜90％',
+          isPhotochromic: true
+        },
+        'グレー■調光': {
+          image: 'image/WP_グレー■調光1.JPG',
+          desc: '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。',
+          transmittance: '20％〜90％',
+          isPhotochromic: true
         }
       },
       'AF-302-SP': {
@@ -1864,7 +1898,10 @@
         orig = 16500;
         sale = 14850;
       } else if (model === 'AF-302-WP') {
-        if (lens && lens.includes('★偏光')) {
+        if (lens && lens.includes('■調光')) {
+           orig = 28600;
+           sale = 25740;
+        } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
            sale = 23760;
         } else {
@@ -1872,7 +1909,10 @@
            sale = 19800;
         }
       } else {
-        if (lens && lens.includes('★偏光')) {
+        if (lens && lens.includes('■調光')) {
+           orig = 28600;
+           sale = 24000;
+        } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
            sale = 22000;
         } else {
@@ -2022,25 +2062,36 @@
         .filter(l => lensInfoForModel[l] && lensInfoForModel[l].isPolarized)
         .sort((a, b) => getSortValue(a) - getSortValue(b));
 
-      const regularLenses = lensOptions
-        .filter(l => !lensInfoForModel[l] || !lensInfoForModel[l].isPolarized)
+      const photochromicLenses = lensOptions
+        .filter(l => lensInfoForModel[l] && lensInfoForModel[l].isPhotochromic)
         .sort((a, b) => getSortValue(a) - getSortValue(b));
 
-      const renderCategory = (title, lenses, isPolarizedCategory) => {
+      const regularLenses = lensOptions
+        .filter(l => !lensInfoForModel[l] || (!lensInfoForModel[l].isPolarized && !lensInfoForModel[l].isPhotochromic))
+        .sort((a, b) => getSortValue(a) - getSortValue(b));
+
+      const renderCategory = (title, lenses, categoryType) => {
         if (lenses.length === 0) return;
 
         const catTitle = document.createElement('div');
         catTitle.className = 'lens-category-title';
         catTitle.innerHTML = title;
-        if (isPolarizedCategory) {
+        if (categoryType === 'polarized') {
           catTitle.innerHTML += ` <span class="price-note">通常レンズの＋4,400円</span>`;
+        } else if (categoryType === 'photochromic') {
+          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋6,600円</span>`;
         }
         lensRoot.appendChild(catTitle);
 
-        if (isPolarizedCategory) {
+        if (categoryType === 'polarized') {
           const catDesc = document.createElement('div');
           catDesc.className = 'lens-category-desc polarized';
           catDesc.innerHTML = `<b>※偏光レンズ</b>・・・乱反射を防ぐ偏光レンズを採用。アスファルトやコートの強烈な照り返しをカットし、よりはっきりとした鮮明な視界を実現します。`;
+          lensRoot.appendChild(catDesc);
+        } else if (categoryType === 'photochromic') {
+          const catDesc = document.createElement('div');
+          catDesc.className = 'lens-category-desc photochromic';
+          catDesc.innerHTML = `<b>※調光レンズ</b>・・・紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。<br><span style="font-size: 0.9em; color: #e53e3e;">※UVカットガラスの車内では色は変わりません。</span>`;
           lensRoot.appendChild(catDesc);
         }
 
@@ -2049,7 +2100,7 @@
         
         lenses.forEach(l => {
           const info = lensInfoForModel[l];
-          const displayTitle = isPolarizedCategory ? l.replace('★偏光', '') : l;
+          const displayTitle = (categoryType === 'polarized') ? l.replace('★偏光', '') : (categoryType === 'photochromic' ? l.replace('■調光', '') : l);
           const card = document.createElement('div');
           card.className = 'visual-card';
           if (info && info.image) {
@@ -2075,8 +2126,9 @@
       };
 
       // カテゴリごとに描画（通常レンズを上に）
-      renderCategory('通常レンズ', regularLenses, false);
-      renderCategory('偏光レンズ', polarizedLenses, true);
+      renderCategory('通常レンズ', regularLenses, 'regular');
+      renderCategory('偏光レンズ', polarizedLenses, 'polarized');
+      renderCategory('調光レンズ', photochromicLenses, 'photochromic');
 
       // 可視光線透過率の説明ボックスを追加
       const infoBox = document.createElement('div');
@@ -2103,7 +2155,7 @@
       const badge = document.createElement('div');
       badge.id = selectionBadgeId;
       badge.className = 'selected-model-badge';
-      const displayLens = orderState.lens.replace('★偏光', '');
+      const displayLens = orderState.lens.replace('★偏光', '').replace('■調光', '');
       badge.innerHTML = `<i class="fas fa-check-circle"></i> ${orderState.model} / ${displayLens}`;
       
       const step3El = document.getElementById('flow-step-3');

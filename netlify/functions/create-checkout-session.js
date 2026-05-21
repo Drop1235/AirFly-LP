@@ -41,7 +41,10 @@ exports.handler = async (event, context) => {
         orig = 16500;
         sale = 14850;
       } else if (model === 'AF-302-WP') {
-        if (lens && lens.includes('★偏光')) {
+        if (lens && lens.includes('■調光')) {
+           orig = 28600;
+           sale = 25740;
+        } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
            sale = 23760;
         } else {
@@ -49,7 +52,10 @@ exports.handler = async (event, context) => {
            sale = 19800;
         }
       } else {
-        if (lens && lens.includes('★偏光')) {
+        if (lens && lens.includes('■調光')) {
+           orig = 28600;
+           sale = 24000;
+        } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
            sale = 22000;
         } else {
