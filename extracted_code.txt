@@ -1,0 +1,76 @@
+LINEの起動、メッセージ内容の構築ともに一歩前進しましたね！
+
+ご指摘いただいた点について、以下の**3つの改善**を完璧に行いました。
+
+1. **コメントを入力しなくても「トーク」ボタンが押せるように改善**
+   - LINEの仕様上、「共有するWEBページのURL」が空っぽだとコメントの入力を強制される仕組みになっていました。そこで、ダミーの共有URLとして自社サイト（`https://www.tempmachi.com/`）を自動的にセットするように改良しました。これにより、**上のコメント欄が空っぽのままでも、最初から「トーク」ボタンが押せる**ようになります。
+2. **冒頭の文面をご指定のものに変更**
+   - ご提示いただいた以下の文面で出力されるように修正しました。
+     > 【手配依頼】
+     > 新規注文が ○ 件入りました。
+     > 発注手配をお願い致します。
+3. **「モデル名の重複」と「調光調光ブルー」の表示崩れを修正**
+   - 「フレームマスタ」の変換後の文字にすでにモデル名が含まれているため、モデル名が2重（`AF-302-WP AF-301 C-3...`）に出現していた部分をスッキリ1つに修正しました。
+   - 「調光」という言葉が2重（`■調光調光ブルー`）になっていたのを、綺麗な表記（`■調光ブルー`）に修正しました。
+
+再度、以下の**全文コード**をコピーし、GASエディタの中身をすべて消して貼り付け（上書き保存）してください。
+
+---
+
+### 全文上書き用の改善版GASコード（コメント不要・文字崩れ修正版）
+
+```javascript
+function doPost(e) {
+  // CORS対策: ブラウザからのアクセスを許可するヘッダーを設定
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type":
+<truncated 13423 bytes>
+ + '    \n'
+    + '    // 別ウィンドウ（ブラウザ内）でLINE送信画面を起動\n'
+    + '    window.open(url, "_blank", "width=600,height=600");\n'
+    + '    \n'
+    + '    // サーバー側のスプレッドシート更新関数を呼び出し、完了したらポップアップを閉じる\n'
+    + '    google.script.run\n'
+    + '      .withSuccessHandler(function() {\n'
+    + '        google.script.host.close();\n'
+    + '      })\n'
+    + '      .withFailureHandler(function(err) {\n'
+    + '        alert("スプレッドシートの更新に失敗しました: " + err.message);\n'
+    + '        google.script.host.close();\n'
+    + '      })\n'
+    + '      .completeLineStatusUpdate(rowNums);\n'
+    + '  }\n'
+    + '</script>'
+    + '</body>'
+    + '</html>';
+  
+  var htmlOutput = HtmlService.createHtmlOutput(html)
+    .setWidth(380)
+    .setHeight(190);
+  SpreadsheetApp.getUi().showModalDialog(htmlOutput, "LINEで注文手配");
+}
+
+// LINE起動ボタンが実際に押された後に呼び出されるステータス更新関数
+function completeLineStatusUpdate(rowNums) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+  var now = new Date();
+  var formattedDate = Utilities.formatDate(now, 'Asia/Tokyo', 'MM/dd HH:mm');
+  
+  for (var i = 0; i < rowNums.length; i++) {
+    var row = rowNums[i];
+    sheet.getRange(row, 9).setValue(false); // チェックボックスを OFF に戻す
+    sheet.getRange(row, 10).setValue("送信済 (" + formattedDate + ")"); // ステータスに記録
+  }
+}
+```
+
+---
+
+### テスト時の注意点
+先ほど「送信済」になってしまったテスト行は、**J列の文字（送信済...）を一度デリートキー等で消去してから**、再度I列にチェックを入れてお試しください！
+
+これで、ポップアップが表示された後、**コメント欄が空欄のままですぐに一番下の「トーク」ボタンが押せるようになっているはず**です。ぜひご確認ください！

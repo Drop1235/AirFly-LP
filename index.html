@@ -812,6 +812,51 @@
       line-height: 1.4;
       letter-spacing: 0.01em;
     }
+    .card-price-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 10px;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .card-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      line-height: 1.2;
+    }
+    .card-price-orig {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+    .card-price-arrow {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    .card-price-sale {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #e11d48;
+    }
+    .card-price-discount {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #e11d48;
+      background: #fff1f2;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #ffe4e6;
+    }
+    .card-price-suffix {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+    }
     .card-features {
       text-align: left;
       font-size: 0.82rem;
@@ -1933,7 +1978,10 @@
           '顔に沿う深いカーブで、横からの日差しもブロック'
         ],
         lensWidth: 'レンズ幅：約136mm',
-        image: 'image/AF-301-BK.jpg'
+        image: 'image/AF-301-BK.jpg',
+        priceOrig: 22000,
+        priceSale: 18000,
+        discount: 18
       },
       'AF-301-WV': {
         subtitle: 'ワイドビューモデル：横に広いレンズ',
@@ -1942,7 +1990,10 @@
           '頬に干渉しない斜めカットで快適な視界'
         ],
         lensWidth: 'レンズ幅：約136mm',
-        image: 'image/AF-301-WV.jpg'
+        image: 'image/AF-301-WV.jpg',
+        priceOrig: 22000,
+        priceSale: 18000,
+        discount: 18
       },
       'AF-301': {
         subtitle: 'スタンダードモデル：ベーシックな1枚レンズ',
@@ -1951,7 +2002,10 @@
           '視界の歪みを抑えたクセのないスタンダード設計'
         ],
         lensWidth: 'レンズ幅：約127mm',
-        image: 'image/AF-301.jpg'
+        image: 'image/AF-301.jpg',
+        priceOrig: 22000,
+        priceSale: 18000,
+        discount: 18
       },
       'AF-302-WP': {
         subtitle: 'ワイドプロテクトモデル：縦に広いレンズ',
@@ -1960,7 +2014,10 @@
           '上を見上げたときの眩しさをしっかり防ぐ'
         ],
         lensWidth: 'レンズ幅：約129mm',
-        image: 'image/AF-302-WP.jpg'
+        image: 'image/AF-302-WP.jpg',
+        priceOrig: 22000,
+        priceSale: 19800,
+        discount: 10
       },
       'AF-302-SP': {
         subtitle: 'スポーツプラスモデル：細身のレンズ',
@@ -1969,7 +2026,10 @@
           '圧倒的に軽いコンパクトレンズで長丁場でも快適'
         ],
         lensWidth: 'レンズ幅：約123mm',
-        image: 'image/AF-302-SP.jpg'
+        image: 'image/AF-302-SP.jpg',
+        priceOrig: 22000,
+        priceSale: 18000,
+        discount: 18
       },
       'AF-901': {
         subtitle: 'キッズモデル：子供専用レンズ',
@@ -1978,7 +2038,10 @@
           'ボールの直撃や転倒でも割れにくい安全な素材'
         ],
         lensWidth: 'レンズ幅：約118mm',
-        image: 'image/AF-901.jpg'
+        image: 'image/AF-901.jpg',
+        priceOrig: 16500,
+        priceSale: 14850,
+        discount: 10
       }
     };
 
@@ -2009,6 +2072,15 @@
             <img src="${info.image}" alt="${m}" class="card-product-img" />
             <h4 class="card-title">${m}</h4>
             <p class="card-subtitle">（${info.subtitle}）</p>
+            <div class="card-price-container">
+              <div class="card-price-row">
+                <span class="card-price-orig">¥${formatPrice(info.priceOrig)}</span>
+                <span class="card-price-arrow">→</span>
+                <span class="card-price-sale">¥${formatPrice(info.priceSale)}～</span>
+                <span class="card-price-discount">[${info.discount}％OFF]</span>
+                <span class="card-price-suffix">より(税込)</span>
+              </div>
+            </div>
             <ul class="card-features">
               ${info.features.map(f => `<li>${f}</li>`).join('')}
               <li class="lens-width">${info.lensWidth}</li>
