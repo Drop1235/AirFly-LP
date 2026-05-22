@@ -1288,10 +1288,11 @@
       <span class="step-badge">STEP 2 / 2</span>
       <h2 class="gate-subtitle">メールアドレスをご登録いただくと、AirFlyを【限定特別価格】でご購入いただけます！</h2>
       
-      <form id="gate-email-form" onsubmit="submitEmail(event)">
+      <form id="gate-email-form" name="gate-email" data-netlify="true" onsubmit="submitEmail(event)">
+        <input type="hidden" name="form-name" value="gate-email" />
         <div class="gate-input-group">
           <label for="user-email">メールアドレス</label>
-          <input type="email" id="user-email" class="gate-input" placeholder="例: sample@example.com" required>
+          <input type="email" name="email" id="user-email" class="gate-input" placeholder="例: sample@example.com" required>
         </div>
 
         <div class="gate-terms-box">
@@ -1642,11 +1643,25 @@
     }
 
     // ステップ2からステップ3への移行
-    function submitEmail(event) {
+    async function submitEmail(event) {
       event.preventDefault();
       
+      const form = document.getElementById('gate-email-form');
+      const formData = new FormData(form);
       const emailInput = document.getElementById('user-email').value;
       if (!emailInput) return;
+
+      // NetlifyにAjaxで送信して保存
+      try {
+        await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(formData).toString()
+        });
+        console.log('Email successfully saved to Netlify Forms');
+      } catch (error) {
+        console.error('Netlify Form Error:', error);
+      }
 
       // 状態を保存してリロード時もスキップできるようにする (任意)
       localStorage.setItem('airfly_registered_email', emailInput);
