@@ -1,4 +1,4 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
@@ -12,7 +12,11 @@ exports.handler = async (event, context) => {
 
   try {
     // Verify webhook signature
-    stripeEvent = stripe.webhooks.constructEvent(event.body, sig, endpointSecret);
+    let rawBody = event.body;
+    if (event.isBase64Encoded) {
+      rawBody = Buffer.from(event.body, 'base64').toString('utf8');
+    }
+    stripeEvent = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return {
