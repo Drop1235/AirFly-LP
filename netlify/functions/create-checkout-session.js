@@ -37,7 +37,10 @@ exports.handler = async (event, context) => {
       let orig = 0;
       let sale = 0;
 
-      if (model === 'AF-901') {
+      if (model === 'TEST-50') {
+        orig = 50;
+        sale = 50;
+      } else if (model === 'AF-901') {
         orig = 16500;
         sale = 14850;
       } else if (model === 'AF-302-WP') {
@@ -102,18 +105,21 @@ exports.handler = async (event, context) => {
     });
 
     // 送料の追加
-    const SHIPPING_FEE = 600;
-    line_items.push({
-      price_data: {
-        currency: 'jpy',
-        product_data: {
-          name: '送料（全国一律）',
+    const isTest50 = items.some(item => item.model === 'TEST-50');
+    const SHIPPING_FEE = isTest50 ? 0 : 600;
+    if (SHIPPING_FEE > 0) {
+      line_items.push({
+        price_data: {
+          currency: 'jpy',
+          product_data: {
+            name: '送料（全国一律）',
+          },
+          unit_amount: SHIPPING_FEE,
         },
-        unit_amount: SHIPPING_FEE,
-      },
-      quantity: 1,
-    });
-    totalSale += SHIPPING_FEE;
+        quantity: 1,
+      });
+      totalSale += SHIPPING_FEE;
+    }
 
     // Create Stripe Checkout Session
     const origin = event.headers.origin || process.env.URL || 'http://localhost:8888';
