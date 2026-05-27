@@ -82,8 +82,6 @@ function doPost(e) {
     var bodyBuyer = customerName + " 様\n\n"
       + "この度はTempMachiよりAirFlyをご注文いただき、誠にありがとうございます。\n"
       + "以下の内容でご注文を承りました。\n\n"
-      + "※誠に恐れ入りますが、システムトラブルにより、数日前に頂戴いたしました決済の注文受付処理が本日となってしまいました。\n"
-      + "ご心配をおかけしましたこと、深くお詫び申し上げます。現在は正常に受付が完了しております。\n\n"
       + "【ご注文内容】\n"
       + itemsString + "\n"
       + "決済金額（送料込）: ¥" + parseInt(totalAmount).toLocaleString() + "\n\n"
