@@ -1332,7 +1332,7 @@
     <!-- ファーストビュー #hero -->
     <section id="hero">
       <div class="hero-content fade-in-up">
-        <div class="hero-badge">Secret Sale：最大18％OFF</div>
+        <div class="hero-badge">Secret Sale</div>
         <h1 class="hero-title">
           Beyond
           <span>the Limit</span>
@@ -1433,7 +1433,7 @@
     <section id="visual-order-flow">
       <div class="inner">
         <span class="section-label fade-in-up">ORDER FORM</span>
-        <div class="sale-badge-main">TempMachi限定シークレットセール開催中：最大18％OFF</div>
+        <div class="sale-badge-main">TempMachi限定シークレットセール開催中</div>
         <h2 class="section-title fade-in-up">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
         
@@ -2088,12 +2088,14 @@
             <h4 class="card-title">${m}</h4>
             <p class="card-subtitle">（${info.subtitle}）</p>
             <div class="card-price-container">
-              <div class="card-price-row">
-                <span class="card-price-orig">¥${formatPrice(info.priceOrig)}</span>
-                <span class="card-price-arrow">→</span>
-                <span class="card-price-sale">¥${formatPrice(info.priceSale)}～</span>
-                <span class="card-price-discount">[${info.discount}％OFF]</span>
-                <span class="card-price-suffix">より(税込)</span>
+              <div class="card-price-row" style="flex-direction: column; gap: 8px;">
+                <div>
+                  <span class="card-price-sale" style="color: #1a1a1a;">¥${formatPrice(info.priceOrig)}</span>
+                  <span class="card-price-suffix"> (税込)</span>
+                </div>
+                <div style="font-size: 0.8rem; color: #e11d48; font-weight: bold; background: #fff1f2; padding: 4px 8px; border-radius: 4px; line-height: 1.3;">
+                  割引額は注文確定前に表示されます。<br>お楽しみに！
+                </div>
               </div>
             </div>
             <ul class="card-features">
