@@ -2070,10 +2070,14 @@
       }
       
       // メールアドレスをサマリーにセット
-      document.getElementById('summary-email').textContent = email || 'test@example.com';
+      const emailEl = document.getElementById('summary-email');
+      if (emailEl) {
+        emailEl.textContent = email || 'test@example.com';
+      }
       
       initScrollAnimation();
       initVisualOrderFlow();
+      checkAdminStatus();
 
       if (shouldScrollToFlow) {
         setTimeout(() => {
