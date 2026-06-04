@@ -2805,11 +2805,21 @@
           <div class="cart-item-detail"><strong>モデル：</strong>${item.model}</div>
           <div class="cart-item-detail"><strong>レンズ：</strong>${item.lens}</div>
           <div class="cart-item-detail"><strong>フレーム：</strong>${item.frame}</div>
-          <div class="cart-item-detail" style="margin-top:8px; font-size:0.85rem; color:#64748b; text-decoration:line-through;">定価参考：¥${formatPrice(item.originalPrice)}（税込）</div>
-          <div class="cart-item-detail" style="font-weight:700; color:#1e40af;">小計：¥${formatPrice(item.price)}（税込）</div>
+          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">小計：¥${formatPrice(item.price)}（税込）</div>
         `;
         container.appendChild(itemDiv);
       });
+      
+      let discountAmount = 0;
+      if (appliedDiscount > 0) {
+        discountAmount = Math.round(totalSale * appliedDiscount);
+        totalSale -= discountAmount;
+        
+        document.getElementById('coupon-discount-row').style.display = 'block';
+        document.getElementById('coupon-discount-row').innerHTML = `クーポン割引 (${Math.round(appliedDiscount * 100)}%OFF): -¥${formatPrice(discountAmount)}`;
+      } else {
+        document.getElementById('coupon-discount-row').style.display = 'none';
+      }
       
       const SHIPPING_FEE = 600;
       
