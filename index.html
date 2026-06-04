@@ -1659,13 +1659,16 @@
           <div id="admin-pw-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
         </div>
 
-        <!-- クーポン管理セクション -->
+         <!-- クーポン管理セクション -->
         <div class="admin-section">
           <h3>クーポンコードの新規作成 (一律10%OFF)</h3>
           <div class="admin-grid">
             <div>
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">クーポンコード</label>
-              <input type="text" id="new-coupon-code" placeholder="例: SALE10" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="new-coupon-code" placeholder="例: SALE10" style="flex: 1; min-width: 0; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+                <button type="button" class="btn-admin-action" style="padding: 8px 12px; background: #64748b; font-size: 0.85rem; white-space: nowrap;" onclick="generateRandomCouponCode()">自動生成</button>
+              </div>
             </div>
             <div>
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
@@ -1875,6 +1878,16 @@
         msgEl.style.color = '#ef4444';
         msgEl.textContent = '現在のパスワードが正しくないか、エラーが発生しました。';
       }
+    }
+
+    // クーポンコードの自動生成
+    function generateRandomCouponCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = 'AF-';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('new-coupon-code').value = code;
     }
 
     // クーポンコード新規作成
