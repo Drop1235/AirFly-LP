@@ -1661,8 +1661,8 @@
 
          <!-- クーポン管理セクション -->
         <div class="admin-section">
-          <h3>クーポンコードの新規作成 (一律10%OFF)</h3>
-          <div class="admin-grid">
+          <h3>クーポンコードの新規作成</h3>
+          <div class="admin-grid" style="grid-template-columns: 1.2fr 1fr 1fr;">
             <div>
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">クーポンコード</label>
               <div style="display: flex; gap: 8px;">
@@ -1671,8 +1671,16 @@
               </div>
             </div>
             <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">割引率</label>
+              <select id="new-coupon-discount" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; height: 38px; cursor: pointer;">
+                <option value="5">5% OFF</option>
+                <option value="10" selected>10% OFF</option>
+                <option value="15">15% OFF</option>
+              </select>
+            </div>
+            <div>
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
-              <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+              <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; height: 38px;">
             </div>
           </div>
           <button class="btn-admin-action" onclick="createCoupon()">クーポン作成</button>
@@ -1687,6 +1695,7 @@
               <thead>
                 <tr>
                   <th>コード</th>
+                  <th>割引率</th>
                   <th>有効期限</th>
                   <th>ステータス</th>
                   <th>操作</th>
@@ -1744,7 +1753,8 @@
           couponList.push({
             code: doc.id,
             expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null,
-            isUsed: data.isUsed || false
+            isUsed: data.isUsed || false,
+            discountRate: data.discountRate || 10
           });
         });
         localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
@@ -1904,16 +1914,20 @@
       }
 
       const expiresAt = expiryVal ? new Date(expiryVal) : null;
+      const discountSelect = document.getElementById('new-coupon-discount');
+      const discountRate = discountSelect ? parseInt(discountSelect.value, 10) : 10;
 
       const newCoupon = {
         expiresAt: expiresAt,
-        isUsed: false
+        isUsed: false,
+        discountRate: discountRate
       };
 
       try {
         await db.collection('coupons').doc(code).set({
           expiresAt: expiresAt ? firebase.firestore.Timestamp.fromDate(expiresAt) : null,
-          isUsed: false
+          isUsed: false,
+          discountRate: discountRate
         });
         console.log('Coupon saved to Firebase');
       } catch (e) {
@@ -1959,7 +1973,7 @@
       tbody.innerHTML = '';
 
       if (couponList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">発行済みのクーポンはありません。</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">発行済みのクーポンはありません。</td></tr>';
         return;
       }
 
@@ -1967,8 +1981,10 @@
         const tr = document.createElement('tr');
         const expiryText = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('ja-JP') : '無期限';
         const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
+        const discountRate = c.discountRate || 10;
         tr.innerHTML = `
           <td style="font-weight:700;">${c.code}</td>
+          <td><span style="font-weight:700; color:var(--color-accent-blue);">${discountRate}% OFF</span></td>
           <td>${expiryText}</td>
           <td>${statusText}</td>
           <td>
@@ -2021,10 +2037,11 @@
         }
         
         appliedCouponCode = codeInput;
-        appliedDiscount = 0.10; // 10%OFF
+        const rate = (data.discountRate !== undefined) ? parseInt(data.discountRate, 10) : 10;
+        appliedDiscount = rate / 100;
         
         msgEl.style.color = '#10b981';
-        msgEl.textContent = 'クーポン（10%OFF）が適用されました！';
+        msgEl.textContent = `クーポン（${rate}%OFF）が適用されました！`;
         
         renderCart();
 

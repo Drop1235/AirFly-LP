@@ -60,7 +60,17 @@ exports.handler = async (event, context) => {
             }
           }
           if (isValid) {
-            appliedDiscount = 0.10; // 10%OFF
+            if (doc.fields && doc.fields.discountRate) {
+              const rateVal = doc.fields.discountRate.integerValue || doc.fields.discountRate.doubleValue || doc.fields.discountRate.stringValue;
+              if (rateVal) {
+                const rate = parseFloat(rateVal);
+                appliedDiscount = rate >= 1 ? rate / 100 : rate;
+              } else {
+                appliedDiscount = 0.10;
+              }
+            } else {
+              appliedDiscount = 0.10; // デフォルト10%
+            }
           }
         }
       } catch (e) {
