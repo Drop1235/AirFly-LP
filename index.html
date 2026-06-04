@@ -2796,20 +2796,8 @@ function checkOrderSuccess() {
 function closeOrderCompleteScreen() {
   localStorage.removeItem('airfly_pending_order');
   
-  // カートを空にする
-  cart = [];
-  renderCart();
-  
-  // 配送先フォームをクリアする
-  document.getElementById('shipping-name').value = '';
-  document.getElementById('shipping-zip').value = '';
-  document.getElementById('shipping-address').value = '';
-  document.getElementById('shipping-phone').value = '';
-
-  document.getElementById('order-complete-screen').classList.remove('visible');
-  
-  // 再度通常の初期化フローへ戻す
-  initApp();
+  // TOP画面（初期状態）に確実に戻すためにリロードする
+  window.location.href = window.location.pathname;
 }
 
 // 初期実行
