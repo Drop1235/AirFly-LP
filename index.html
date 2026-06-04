@@ -1510,7 +1510,7 @@
               <div style="display: flex; align-items: flex-start; gap: 8px;">
                 <input type="checkbox" id="newsletter-opt-in" checked style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;">
                 <label for="newsletter-opt-in" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; font-weight: 500;">
-                  ご登録いただいたメールアドレス宛に、TempMachiから本当にお得な情報だけお届けします。メールを受けとりますか？
+                  ご登録いただいたメールアドレス宛に、TempMachiからお得な情報などお届けします。メールを受けとりますか？
                 </label>
               </div>
             </div>
@@ -2428,35 +2428,27 @@
 
     function getPriceData(model, lens) {
       let orig = 0;
-      let sale = 0;
 
       if (model === 'AF-901') {
         orig = 16500;
-        sale = 14850;
       } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 25740;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 23760;
         } else {
            orig = 22000;
-           sale = 19800;
         }
       } else {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 24000;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 22000;
         } else {
            orig = 22000;
-           sale = 18000;
         }
       }
-      return { orig: orig, sale: sale };
+      return { orig: orig, sale: orig };
     }
 
     // モデル情報マスター
