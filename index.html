@@ -1502,9 +1502,10 @@
         <!-- クーポン一覧セクション -->
         <div class="admin-section">
           <h3>発行済みクーポン一覧</h3>
-          <div class="coupon-tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div class="coupon-tabs" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
             <button id="tab-unused" onclick="switchCouponTab('unused')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #2563eb; color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold;">未使用</button>
             <button id="tab-used" onclick="switchCouponTab('used')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 6px; cursor: pointer; font-weight: normal;">使用済</button>
+            <button id="btn-delete-all-used" onclick="deleteAllUsedCoupons()" style="display: none; padding: 8px 16px; background: #ef4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; font-size: 0.85rem;">使用済を全削除</button>
           </div>
           <div style="overflow-x: auto;">
             <table class="admin-table">
@@ -1513,6 +1514,7 @@
                   <th>コード</th>
                   <th>割引率</th>
                   <th>有効期限</th>
+                  <th>作成日</th>
                   <th>ステータス</th>
                   <th>操作</th>
                 </tr>
@@ -1564,6 +1566,8 @@
       currentCouponTab = tab;
       const btnUnused = document.getElementById('tab-unused');
       const btnUsed = document.getElementById('tab-used');
+      const btnDeleteAll = document.getElementById('btn-delete-all-used');
+      
       if (tab === 'unused') {
         btnUnused.style.background = '#2563eb';
         btnUnused.style.color = '#fff';
@@ -1571,6 +1575,7 @@
         btnUsed.style.background = '#f8fafc';
         btnUsed.style.color = '#475569';
         btnUsed.style.fontWeight = 'normal';
+        if (btnDeleteAll) btnDeleteAll.style.display = 'none';
       } else {
         btnUsed.style.background = '#2563eb';
         btnUsed.style.color = '#fff';
@@ -1578,6 +1583,7 @@
         btnUnused.style.background = '#f8fafc';
         btnUnused.style.color = '#475569';
         btnUnused.style.fontWeight = 'normal';
+        if (btnDeleteAll) btnDeleteAll.style.display = 'block';
       }
       renderAdminCoupons();
     }
@@ -1811,6 +1817,35 @@
       renderAdminCoupons();
     }
 
+    // 使用済みクーポンの全削除
+    async function deleteAllUsedCoupons() {
+      const usedCoupons = couponList.filter(c => c.isUsed);
+      if (usedCoupons.length === 0) {
+        alert('削除する使用済みクーポンがありません。');
+        return;
+      }
+      
+      if (!confirm(`本当に使用済みクーポンを全て削除してよろしいですか？\\n(対象: ${usedCoupons.length}件)`)) return;
+      
+      let errorCount = 0;
+      for (const coupon of usedCoupons) {
+        try {
+          await db.collection('coupons').doc(coupon.code).delete();
+        } catch (e) {
+          console.warn('Firebase delete failed for:', coupon.code, e);
+          errorCount++;
+        }
+      }
+      
+      if (errorCount > 0) {
+        alert(`${errorCount}件の削除に失敗しました（一部のみ削除されました）。`);
+      }
+      
+      couponList = couponList.filter(c => !c.isUsed);
+      localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
+      renderAdminCoupons();
+    }
+
     // クーポン一覧表示のレンダリング
     function renderAdminCoupons() {
       const tbody = document.getElementById('admin-coupon-list-body');
@@ -1820,19 +1855,27 @@
       displayCoupons.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       if (displayCoupons.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">${currentCouponTab === 'used' ? '使用済み' : '未使用'}のクーポンはありません。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">${currentCouponTab === 'used' ? '使用済み' : '未使用'}のクーポンはありません。</td></tr>`;
         return;
       }
 
       displayCoupons.forEach(c => {
         const tr = document.createElement('tr');
         const expiryText = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('ja-JP') : '無期限';
+        
+        let createdText = '-';
+        if (c.createdAt) {
+          const createdDate = (c.createdAt.toDate) ? c.createdAt.toDate() : new Date(c.createdAt);
+          createdText = createdDate.toLocaleDateString('ja-JP');
+        }
+
         const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
         const discountRate = c.discountRate || 10;
         tr.innerHTML = `
           <td style="font-weight:700;">${c.code}</td>
           <td><span style="font-weight:700; color:var(--color-accent-blue);">${discountRate}% OFF</span></td>
           <td>${expiryText}</td>
+          <td>${createdText}</td>
           <td>${statusText}</td>
           <td>
             <button onclick="deleteCoupon('${c.code}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
