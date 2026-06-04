@@ -1690,6 +1690,10 @@
         <!-- クーポン一覧セクション -->
         <div class="admin-section">
           <h3>発行済みクーポン一覧</h3>
+          <div class="coupon-tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="tab-unused" onclick="switchCouponTab('unused')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #2563eb; color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold;">未使用</button>
+            <button id="tab-used" onclick="switchCouponTab('used')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 6px; cursor: pointer; font-weight: normal;">使用済</button>
+          </div>
           <div style="overflow-x: auto;">
             <table class="admin-table">
               <thead>
@@ -1742,6 +1746,29 @@
     let couponList = [];
     let appliedCouponCode = '';
     let appliedDiscount = 0;
+    let currentCouponTab = 'unused';
+
+    function switchCouponTab(tab) {
+      currentCouponTab = tab;
+      const btnUnused = document.getElementById('tab-unused');
+      const btnUsed = document.getElementById('tab-used');
+      if (tab === 'unused') {
+        btnUnused.style.background = '#2563eb';
+        btnUnused.style.color = '#fff';
+        btnUnused.style.fontWeight = 'bold';
+        btnUsed.style.background = '#f8fafc';
+        btnUsed.style.color = '#475569';
+        btnUsed.style.fontWeight = 'normal';
+      } else {
+        btnUsed.style.background = '#2563eb';
+        btnUsed.style.color = '#fff';
+        btnUsed.style.fontWeight = 'bold';
+        btnUnused.style.background = '#f8fafc';
+        btnUnused.style.color = '#475569';
+        btnUnused.style.fontWeight = 'normal';
+      }
+      renderAdminCoupons();
+    }
 
     // Firebaseからクーポンをロード、失敗時はLocalStorageを使用
     async function loadCouponsFromFirebase() {
@@ -1754,7 +1781,8 @@
             code: doc.id,
             expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null,
             isUsed: data.isUsed || false,
-            discountRate: data.discountRate || 10
+            discountRate: data.discountRate || 10,
+            createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().getTime() : new Date(data.createdAt).getTime()) : 0
           });
         });
         localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
@@ -1766,7 +1794,8 @@
           try {
             couponList = JSON.parse(cached).map(c => ({
               ...c,
-              expiresAt: c.expiresAt ? new Date(c.expiresAt) : null
+              expiresAt: c.expiresAt ? new Date(c.expiresAt) : null,
+              createdAt: c.createdAt || 0
             }));
           } catch (err) {
             couponList = [];
@@ -1917,17 +1946,20 @@
       const discountSelect = document.getElementById('new-coupon-discount');
       const discountRate = discountSelect ? parseInt(discountSelect.value, 10) : 10;
 
+      const now = Date.now();
       const newCoupon = {
         expiresAt: expiresAt,
         isUsed: false,
-        discountRate: discountRate
+        discountRate: discountRate,
+        createdAt: now
       };
 
       try {
         await db.collection('coupons').doc(code).set({
           expiresAt: expiresAt ? firebase.firestore.Timestamp.fromDate(expiresAt) : null,
           isUsed: false,
-          discountRate: discountRate
+          discountRate: discountRate,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         console.log('Coupon saved to Firebase');
       } catch (e) {
@@ -1972,12 +2004,15 @@
       const tbody = document.getElementById('admin-coupon-list-body');
       tbody.innerHTML = '';
 
-      if (couponList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">発行済みのクーポンはありません。</td></tr>';
+      let displayCoupons = couponList.filter(c => currentCouponTab === 'used' ? c.isUsed : !c.isUsed);
+      displayCoupons.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if (displayCoupons.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">${currentCouponTab === 'used' ? '使用済み' : '未使用'}のクーポンはありません。</td></tr>`;
         return;
       }
 
-      couponList.forEach(c => {
+      displayCoupons.forEach(c => {
         const tr = document.createElement('tr');
         const expiryText = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('ja-JP') : '無期限';
         const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
