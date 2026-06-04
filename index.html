@@ -1505,19 +1505,10 @@
               <div id="coupon-message" style="margin-top: 8px; font-size: 0.9rem; display: none;"></div>
             </div>
 
-            <!-- メルマガ購読許諾 -->
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--color-border);">
-              <div style="display: flex; align-items: flex-start; gap: 8px;">
-                <input type="checkbox" id="newsletter-opt-in" checked style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;">
-                <label for="newsletter-opt-in" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; font-weight: 500;">
-                  ご登録いただいたメールアドレス宛に、TempMachiからお得な情報などお届けします。メールを受けとりますか？
-                </label>
-              </div>
-            </div>
           </div>
 
           <div style="font-size: 0.85rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 24px;">
-            入力いただいた個人情報は商品の発送およびサポートにのみ使用し、<a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>に基づき適切に管理します。
+            入力いただいた個人情報は、<a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>に基づき適切に管理します。
           </div>
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
             <button class="btn-flow-back" onclick="backFromSummary()"><i class="fas fa-chevron-left"></i> 戻る</button>
@@ -2952,9 +2943,8 @@
       document.getElementById('loading-overlay').style.display = 'flex';
       const email = shippingEmail || localStorage.getItem('airfly_registered_email') || '';
       
-      // メルマガ購読の保存
-      const optIn = document.getElementById('newsletter-opt-in') && document.getElementById('newsletter-opt-in').checked;
-      if (optIn && shippingEmail) {
+      // メルマガ等の案内用にメールアドレスを保存（プライバシーポリシーに基づく）
+      if (shippingEmail) {
         try {
           db.collection('mail_list').doc(shippingEmail).set({
             email: shippingEmail,
