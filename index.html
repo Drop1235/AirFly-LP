@@ -2910,11 +2910,12 @@
       
       // バリデーション
       const name = document.getElementById('shipping-name').value.trim();
+      const shippingEmail = document.getElementById('shipping-email').value.trim();
       let zip = document.getElementById('shipping-zip').value.trim();
       const address = document.getElementById('shipping-address').value.trim();
       let phone = document.getElementById('shipping-phone').value.trim();
       
-      if(!name || !zip || !address || !phone) {
+      if(!name || !shippingEmail || !zip || !address || !phone) {
         alert('お届け先情報の必須項目をすべて入力してください。');
         return;
       }
@@ -2949,7 +2950,20 @@
       }
       
       document.getElementById('loading-overlay').style.display = 'flex';
-      const email = localStorage.getItem('airfly_registered_email') || '';
+      const email = shippingEmail || localStorage.getItem('airfly_registered_email') || '';
+      
+      // メルマガ購読の保存
+      const optIn = document.getElementById('newsletter-opt-in') && document.getElementById('newsletter-opt-in').checked;
+      if (optIn && shippingEmail) {
+        try {
+          db.collection('mail_list').doc(shippingEmail).set({
+            email: shippingEmail,
+            subscribedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Failed to save to mail_list:', e);
+        }
+      }
       
       // 決済後に完了画面を出すための情報保存（個人情報を含まない）
       localStorage.setItem('airfly_pending_order', JSON.stringify({
