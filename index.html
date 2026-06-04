@@ -2061,7 +2061,10 @@
 
     // メインコンテンツを表示し、ビジュアルオーダーフローを初期化する
     function showMainContent(email, shouldScrollToFlow = false) {
-      document.getElementById('gate-container').style.display = 'none';
+      const gateEl = document.getElementById('gate-container');
+      if (gateEl) {
+        gateEl.style.display = 'none';
+      }
       document.getElementById('main-content').style.display = 'block';
       
       const lockedContent = document.getElementById('locked-content');
