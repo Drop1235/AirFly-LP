@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { email, customer_name, customer_zip, customer_address, customer_phone, items } = JSON.parse(event.body);
+    const { email, customer_name, customer_zip, customer_address, customer_phone, items, coupon_code, projectId } = JSON.parse(event.body);
 
     if (!items || items.length === 0) {
       return {
@@ -32,38 +32,66 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 価格計算ロジック（フロントエンドと同じものをバックエンドで保持）
+    // クーポン検証 (Firestore REST API)
+    let appliedDiscount = 0;
+    if (coupon_code && projectId) {
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/coupons/${coupon_code.toUpperCase()}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const doc = await res.json();
+          let isValid = true;
+          
+          if (doc.fields) {
+            // Check if used
+            if (doc.fields.isUsed && doc.fields.isUsed.booleanValue === true) {
+              isValid = false;
+            }
+            // Check if expired
+            if (doc.fields.expiresAt) {
+              const expiresAtVal = doc.fields.expiresAt.timestampValue || doc.fields.expiresAt.stringValue;
+              if (expiresAtVal) {
+                const expiry = new Date(expiresAtVal);
+                expiry.setHours(23, 59, 59, 999);
+                if (new Date() > expiry) {
+                  isValid = false;
+                }
+              }
+            }
+          }
+          if (isValid) {
+            appliedDiscount = 0.10; // 10%OFF
+          }
+        }
+      } catch (e) {
+        console.error('Firestore REST validation error:', e);
+      }
+    }
+
+    // 価格計算ロジック（通常は定価販売）
     function getPriceData(model, lens) {
       let orig = 0;
-      let sale = 0;
 
       if (model === 'AF-901') {
         orig = 16500;
-        sale = 14850;
       } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 25740;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 23760;
         } else {
            orig = 22000;
-           sale = 19800;
         }
       } else {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 24000;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 22000;
         } else {
            orig = 22000;
-           sale = 18000;
         }
       }
-      return { orig: orig, sale: sale };
+      return { orig: orig, sale: orig };
     }
 
     // Convert cart items to Stripe line_items format using securely calculated prices
@@ -71,13 +99,18 @@ exports.handler = async (event, context) => {
     let totalSale = 0;
     
     const line_items = items.map(item => {
-      const productName = `AirFly ${item.model}`;
-      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}`;
-      
-      // Calculate secure price
       const priceInfo = getPriceData(item.model, item.lens);
-      const securePrice = priceInfo.sale;
+      let securePrice = priceInfo.sale;
+      
+      // クーポン割引適用 (各商品の単価を10%オフにする)
+      if (appliedDiscount > 0) {
+        securePrice = Math.floor(securePrice * (1 - appliedDiscount));
+      }
+      
       totalSale += securePrice;
+      
+      const productName = `AirFly ${item.model}`;
+      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ' (クーポン10%OFF適用済み)' : '');
       
       // Store secure item for metadata
       secureItems.push({
