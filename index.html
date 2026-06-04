@@ -2898,8 +2898,15 @@
         return;
       }
       
-            // クーポン適用時の確認ダイアログ
-      if (appliedCouponCode) {
+            // 入力が空の場合は適用状態をクリア
+      const currentCouponInput = document.getElementById('coupon-code').value.trim();
+      if (!currentCouponInput) {
+        appliedCouponCode = '';
+        appliedDiscount = 0;
+      }
+
+      // クーポン適用時の確認ダイアログ
+      if (appliedCouponCode && currentCouponInput.toUpperCase() === appliedCouponCode) {
         const confirmMsg = "適用されたクーポンは、決済画面に進むと「使用済み」となり、決済をキャンセルしても再利用できなくなります。\n決済画面へ進んでよろしいですか？";
         if (!confirm(confirmMsg)) {
           return; // いいえを選択した場合は中断して画面に戻る
