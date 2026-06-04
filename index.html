@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>AirFly × TempMachi | LINE会員限定シークレットセール</title>
+  <title>AirFly × TempMachi | スポーツサングラス</title>
   <link rel="icon" type="image/png" href="AirFly_faviconV2.png" />
-  <meta name="description" content="TempMachi LINE登録者限定。世界初・鼻パッドなしのスポーツサングラス「AirFly（エアフライ）」を特別割引でご提供。" />
+  <meta name="description" content="世界初・鼻パッドなしのスポーツサングラス「AirFly（エアフライ）」をご提供。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -14,7 +14,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- LIFF SDK -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     /* =====================================================
@@ -54,187 +57,6 @@
     }
     img { display: block; max-width: 100%; height: auto; }
     a { color: inherit; text-decoration: none; }
-
-    /* =====================================================
-       ゲート機能 (LINE / メール登録) のスタイル
-    ===================================================== */
-    #gate-container {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .gate-card {
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      max-width: 400px;
-      width: 100%;
-      padding: 40px 30px;
-      text-align: center;
-    }
-    .liff-gate-icon {
-      font-size: 60px;
-      color: #06C755;
-      margin-bottom: 24px;
-    }
-    .liff-logo-img {
-      height: 64px;
-      width: auto;
-      object-fit: contain;
-      margin-bottom: 20px;
-      display: inline-block;
-    }
-    .step-badge {
-      display: inline-block;
-      background: #eef7ff;
-      color: #0066cc;
-      font-size: 0.85rem;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 16px;
-      letter-spacing: 0.05em;
-    }
-    .gate-title {
-      font-size: 24px;
-      font-weight: 900;
-      margin-bottom: 16px;
-      color: #1a1a1a;
-      line-height: 1.4;
-    }
-    .gate-description {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-    .gate-subtitle {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--color-accent-blue);
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .btn-line {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      background: #06C755;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 16px;
-      padding: 16px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-    .btn-line:hover {
-      background: #05b14c;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
-    }
-    .btn-email-submit {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--color-accent-blue);
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 1.05rem;
-      padding: 16px 24px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-      transition: all var(--transition-fast);
-      margin-top: 24px;
-    }
-    .btn-email-submit:disabled {
-      background: #a0aec0;
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .btn-email-submit:not(:disabled):hover {
-      background: #0066cc;
-      transform: translateY(-2px);
-    }
-    .gate-input-group {
-      text-align: left;
-      margin-bottom: 24px;
-    }
-    .gate-input-group label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .gate-input {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-    }
-    .gate-input:focus {
-      outline: none;
-      border-color: var(--color-accent-blue);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-    }
-    .gate-terms-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      color: var(--color-text-secondary);
-      text-align: left;
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-    .gate-checkbox-group {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      text-align: left;
-    }
-    .gate-checkbox {
-      margin-top: 4px;
-      width: 18px;
-      height: 18px;
-      accent-color: var(--color-accent-blue);
-      cursor: pointer;
-    }
-    .gate-checkbox-label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* ローディングスピナー */
-    .loading-spinner {
-      border: 4px solid rgba(0,0,0,0.1);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border-left-color: var(--color-accent-blue);
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     /* =====================================================
        スクロールフェードインアニメーション
@@ -1249,90 +1071,21 @@
 
 
   <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <div id="gate-container">
-    
-    <!-- ローディング（LIFF初期化中） -->
-    <div id="step-loading" class="gate-card">
-      <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: var(--color-text-secondary);">LINE認証情報を読み込み中...</p>
-    </div>
-
-    <!-- ステップ1：LINEログイン画面 (初期非表示) -->
-    <div id="step1-login" class="gate-card" style="display: none;">
-      <span class="step-badge">STEP 1 / 2</span>
-      <div class="liff-gate-icon">
-        <img src="エアフライロゴ2024 .png" alt="AirFly Logo" class="liff-logo-img">
-      </div>
-      <h2 class="gate-title" style="font-size: 22px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.02em;">【TempMachi特別企画】<br>シークレットセールへのご招待</h2>
-      <p class="gate-description" style="text-align: center; margin-bottom: 0;">
-        本サイトは、特別なシークレットセールへご案内するためのページです。<br>
-        以下の簡単な2つのステップだけで、セール会場へアクセスできます：
-      </p>
-      <div style="text-align:left; background:#f8fafc; padding:16px 20px; border-radius:12px; margin-top:16px; margin-bottom:16px; font-size:0.92rem; border:1px solid #e2e8f0; width: 100%; box-sizing: border-box;">
-        <b style="color:#06C755; display:block; margin-bottom:6px;">① LINEログイン（友だち認証＆追加）</b>
-        <b style="color:var(--color-text-secondary); display:block;">② メールアドレスの登録（セール情報等のご案内用）</b>
-      </div>
-      <p class="gate-description" style="text-align: center; margin-bottom: 24px;">
-        まずはLINEでログインして、次のステップへお進みください。
-      </p>
-      <button type="button" class="btn-line" onclick="loginWithLine()">
-        <i class="fab fa-line" style="font-size: 1.2em;"></i>
-        LINEでログインして次へ
-      </button>
-    </div>
-
-    <!-- ステップ2：メールアドレス登録画面 (初期非表示) -->
-    <div id="step2-email" class="gate-card" style="display: none;">
-      <span class="step-badge">STEP 2 / 2</span>
-      <h2 class="gate-subtitle">メールアドレスをご登録いただくと、AirFlyを【限定特別価格】でご購入いただけます！</h2>
-      
-      <form id="gate-email-form" name="gate-email" method="POST" data-netlify="true" onsubmit="submitEmail(event)">
-        <input type="hidden" name="form-name" value="gate-email" />
-        <div class="gate-input-group">
-          <label for="user-email">メールアドレス</label>
-          <input type="email" name="email" id="user-email" class="gate-input" placeholder="例: sample@example.com" required>
-        </div>
-
-        <div class="gate-terms-box">
-          ご登録いただいたメールアドレス宛に、AirFlyの限定価格でのご案内やシークレットセールの情報をお送りします。また、弊社が提供・取り扱う各種サービスや商品に関する特別なお知らせも合わせてお届けいたします。
-        </div>
-
-        <div class="gate-checkbox-group">
-          <input type="checkbox" id="agree-check" class="gate-checkbox" onchange="toggleSubmitButton()">
-          <label for="agree-check" class="gate-checkbox-label">
-            <a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>を確認し、同意して特別価格で購入する
-          </label>
-        </div>
-
-        <button type="submit" id="btn-email-submit" class="btn-email-submit" disabled>
-          同意して特別価格で購入する
-        </button>
-      </form>
-    </div>
-
-  </div>
-
-  <!-- =====================================================
        メインコンテンツ (全画面)
   ===================================================== -->
-  <div id="main-content" style="display: none;">
+  <div id="main-content">
 
-    <div id="discount-banner">
-      <span class="banner-icon">🔥</span>
-      <span id="banner-text">【TempMachi限定】LINEお友だちだけの特別シークレットセール</span>
-    </div>
+
 
     <nav id="nav">
       <img src="エアフライロゴ2024 .png" alt="AirFly Logo" class="nav-logo-img" />
-      <span class="nav-badge">✓ TempMachi会員限定</span>
+      <button id="admin-menu-btn" class="nav-badge" onclick="openAdminModal()" style="display: none; border: none; cursor: pointer; background: var(--color-accent-blue); color: #fff; padding: 6px 12px; border-radius: 99px; font-weight: 700; font-size: 0.85rem;">管理者メニュー</button>
     </nav>
 
     <!-- ファーストビュー #hero -->
     <section id="hero">
       <div class="hero-content fade-in-up">
-        <div class="hero-badge">Secret Sale：最大18％OFF</div>
+        
         <h1 class="hero-title">
           Beyond
           <span>the Limit</span>
@@ -1342,7 +1095,7 @@
           商品を選んで注文する
           <span>↓</span>
         </a>
-        <p class="hero-line-note">※ このページはTempMachi LINE登録者限定の特別ページです</p>
+        
       </div>
       <div class="scroll-indicator" aria-hidden="true">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1433,7 +1186,8 @@
     <section id="visual-order-flow">
       <div class="inner">
         <span class="section-label fade-in-up">ORDER FORM</span>
-        <div class="sale-badge-main">TempMachi限定シークレットセール開催中：最大18％OFF</div>
+        
+        
         <h2 class="section-title fade-in-up">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
         
@@ -1505,27 +1259,26 @@
         <div id="flow-step-4" class="flow-step">
           <p class="section-desc">以下の内容で注文を確定します。</p>
           <div id="order-summary-box">
-            <div class="summary-row">
-              <span class="summary-label">メールアドレス</span>
-              <span class="summary-value" id="summary-email"></span>
-            </div>
             
             <div id="cart-items-container">
               <!-- JSでカートアイテムがここに生成されます -->
             </div>
-
+ 
             <div class="summary-row" style="border-top: 2px solid var(--color-border); margin-top: 16px; padding-top: 16px; border-bottom: none;">
               <span class="summary-label">送料（全国一律）</span>
               <span class="summary-value">¥600（税込）</span>
             </div>
-
+ 
             <div class="summary-price-row">
-              <span class="price-label">定価参考の合計</span>
-              <span class="price-original" id="summary-price-original">¥0（税込）</span>
-              <span class="price-label">TempMachi 特別限定価格の合計（送料込）</span>
+              <span class="price-label" style="display:none;">定価参考の合計</span>
+              <span class="price-original" id="summary-price-original" style="display:none;">¥0（税込）</span>
+              <span class="price-label">合計金額（送料込）</span>
               <div class="price-sale-row" style="margin-top: 12px;">
                 <span class="price-sale" id="summary-price">¥0</span>
                 <span class="price-sale-unit">（税込）</span>
+              </div>
+              <div id="coupon-discount-row" style="display: none; margin-top: 8px; font-size: 0.95rem; color: #e11d48; font-weight: bold; text-align: right;">
+                クーポン割引 (10%OFF): -<span id="coupon-discount-amount">¥0</span>
               </div>
             </div>
           </div>
@@ -1535,6 +1288,10 @@
             <div style="margin-bottom: 16px;">
               <label for="shipping-name" style="display: block; font-weight: 700; margin-bottom: 8px;">お名前 <span style="color: red; font-size: 0.8rem;">必須</span></label>
               <input type="text" id="shipping-name" placeholder="山田 太郎" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label for="shipping-email" style="display: block; font-weight: 700; margin-bottom: 8px;">メールアドレス <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <input type="email" id="shipping-email" placeholder="sample@example.com" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
               <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
@@ -1548,10 +1305,30 @@
               <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;">電話番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
               <input type="tel" id="shipping-phone" placeholder="09012345678" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
+
+            <!-- クーポン入力欄 -->
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--color-border);">
+              <label for="coupon-code" style="display: block; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-ticket-alt"></i> クーポンコード（任意）</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="coupon-code" placeholder="例: SPECIAL10" style="flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+                <button type="button" onclick="applyCoupon()" style="padding: 12px 24px; background: var(--color-text-primary); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;">適用</button>
+              </div>
+              <div id="coupon-message" style="margin-top: 8px; font-size: 0.9rem; display: none;"></div>
+            </div>
+
+            <!-- メルマガ購読許諾 -->
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--color-border);">
+              <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <input type="checkbox" id="newsletter-opt-in" checked style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;">
+                <label for="newsletter-opt-in" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; font-weight: 500;">
+                  ご登録いただいたメールアドレス宛に、TempMachiからお得な情報などお届けします。メールを受けとりますか？
+                </label>
+              </div>
+            </div>
           </div>
 
           <div style="font-size: 0.85rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 24px;">
-            入力いただいた個人情報は商品の発送およびサポートにのみ使用し、<a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>に基づき適切に管理します。
+            入力いただいた個人情報は、<a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>に基づき適切に管理・利用します。
           </div>
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
             <button class="btn-flow-back" onclick="backFromSummary()"><i class="fas fa-chevron-left"></i> 戻る</button>
@@ -1578,6 +1355,177 @@
       </p>
     </footer>
 
+  <!-- Styles for Admin Modal -->
+  <style>
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.visible {
+      display: flex;
+    }
+    .admin-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      padding: 28px;
+      position: relative;
+      color: #2d3748;
+      text-align: left;
+    }
+    .admin-modal-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      background: none; border: none;
+      font-size: 1.5rem; cursor: pointer; color: #64748b;
+    }
+    .admin-section {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .admin-section:last-child {
+      margin-bottom: 0; padding-bottom: 0; border-bottom: none;
+    }
+    .admin-section h3 {
+      font-size: 1.1rem; margin-bottom: 12px; color: var(--color-text-primary);
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    .admin-table th, .admin-table td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .admin-table th {
+      background: #f8fafc;
+      font-weight: 700;
+    }
+    .btn-admin-action {
+      padding: 8px 16px;
+      background: var(--color-accent-blue);
+      color: #fff; border: none; border-radius: 6px;
+      font-weight: 700; cursor: pointer;
+    }
+  </style>
+
+  <!-- Admin Modal Markup -->
+  <div id="admin-modal-overlay" class="modal-overlay" onclick="closeAdminModalOutside(event)">
+    <div class="admin-modal">
+      <button class="admin-modal-close" onclick="closeAdminModal()">&times;</button>
+      
+      <!-- ログイン用ビュー -->
+      <div id="admin-login-view" style="display: none;">
+        <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者ログイン</h2>
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:4px;">メールアドレス</label>
+          <input type="email" id="admin-login-email" value="hanks@tempmachi.com" readonly style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; color:#64748b; cursor:not-allowed;">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:4px;">パスワード</label>
+          <input type="password" id="admin-login-password" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px;" onkeydown="if(event.key === 'Enter') submitAdminLogin()">
+        </div>
+        <button class="btn-admin-action" style="width:100%; padding:12px; font-size:1rem;" onclick="submitAdminLogin()">ログイン</button>
+        <div id="admin-login-msg" style="margin-top: 12px; font-size: 0.9rem; font-weight: bold;"></div>
+      </div>
+
+      <!-- 管理者ダッシュボードビュー -->
+      <div id="admin-dashboard-view" style="display: none;">
+        <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者メニュー</h2>
+        
+        <!-- パスワード変更セクション -->
+        <div class="admin-section">
+          <h3>管理者パスワードの変更</h3>
+          <div class="admin-grid">
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">現在のパスワード</label>
+              <input type="password" id="admin-current-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">新しいパスワード</label>
+              <input type="password" id="admin-new-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+          </div>
+          <button class="btn-admin-action" onclick="changeAdminPassword()">パスワード変更</button>
+          <div id="admin-pw-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
+        </div>
+
+         <!-- クーポン管理セクション -->
+        <div class="admin-section">
+          <h3>クーポンコードの新規作成</h3>
+          <div class="admin-grid" style="grid-template-columns: 1.2fr 1fr 1fr;">
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">クーポンコード</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="new-coupon-code" placeholder="例: SALE10" style="flex: 1; min-width: 0; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+                <button type="button" class="btn-admin-action" style="padding: 8px 12px; background: #64748b; font-size: 0.85rem; white-space: nowrap;" onclick="generateRandomCouponCode()">自動生成</button>
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">割引率</label>
+              <select id="new-coupon-discount" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; height: 38px; cursor: pointer;">
+                <option value="5">5% OFF</option>
+                <option value="10" selected>10% OFF</option>
+                <option value="15">15% OFF</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
+              <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; height: 38px;">
+            </div>
+          </div>
+          <button class="btn-admin-action" onclick="createCoupon()">クーポン作成</button>
+          <div id="admin-coupon-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
+        </div>
+
+        <!-- クーポン一覧セクション -->
+        <div class="admin-section">
+          <h3>発行済みクーポン一覧</h3>
+          <div class="coupon-tabs" style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="tab-unused" onclick="switchCouponTab('unused')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #2563eb; color: #fff; border-radius: 6px; cursor: pointer; font-weight: bold;">未使用</button>
+            <button id="tab-used" onclick="switchCouponTab('used')" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 6px; cursor: pointer; font-weight: normal;">使用済</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>コード</th>
+                  <th>割引率</th>
+                  <th>有効期限</th>
+                  <th>ステータス</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-coupon-list-body">
+                <!-- JSで動的生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div> <!-- /#main-content -->
 
   <!-- =====================================================
@@ -1585,117 +1533,386 @@
   ===================================================== -->
   <script>
     /* ==============================================
-       LIFF & ゲート機能 (ステップ遷移ロジック)
+       Firebase & クーポン・管理者機能
+       (Firestore連携 & LocalStorageフォールバック)
     ============================================== */
-    const LIFF_ID = "2009896448-XrAcBh1l";
+    
+    // Firebase初期設定 (後から実際の接続情報に書き換えてください)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDD5x3mhhjmejYhzfmKv9SK3EXnAnK7FVU",
+      authDomain: "airfly-lp.firebaseapp.com",
+      projectId: "airfly-lp",
+      storageBucket: "airfly-lp.firebasestorage.app",
+      messagingSenderId: "503976546089",
+      appId: "1:503976546089:web:a2123f6090e01f1ac5f138",
+      measurementId: "G-9SGJ6DRPVF"
+    };
 
-    // LIFF初期化と認証状態チェック
-    async function initLiff() {
-      // 開発・テスト環境（dev-- や localhost）では、LINEログインを自動スキップしてテスト可能にする
-      if (window.location.hostname.includes('dev--') || window.location.hostname.includes('localhost')) {
-        console.log('Test environment detected. Bypassing LIFF authentication.');
-        const testEmail = localStorage.getItem('airfly_registered_email') || 'test@example.com';
-        showMainContent(testEmail);
+    // Firebaseの初期化
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let couponList = [];
+    let appliedCouponCode = '';
+    let appliedDiscount = 0;
+    let currentCouponTab = 'unused';
+
+    function switchCouponTab(tab) {
+      currentCouponTab = tab;
+      const btnUnused = document.getElementById('tab-unused');
+      const btnUsed = document.getElementById('tab-used');
+      if (tab === 'unused') {
+        btnUnused.style.background = '#2563eb';
+        btnUnused.style.color = '#fff';
+        btnUnused.style.fontWeight = 'bold';
+        btnUsed.style.background = '#f8fafc';
+        btnUsed.style.color = '#475569';
+        btnUsed.style.fontWeight = 'normal';
+      } else {
+        btnUsed.style.background = '#2563eb';
+        btnUsed.style.color = '#fff';
+        btnUsed.style.fontWeight = 'bold';
+        btnUnused.style.background = '#f8fafc';
+        btnUnused.style.color = '#475569';
+        btnUnused.style.fontWeight = 'normal';
+      }
+      renderAdminCoupons();
+    }
+
+    // Firebaseからクーポンをロード、失敗時はLocalStorageを使用
+    async function loadCouponsFromFirebase() {
+      try {
+        const snapshot = await db.collection('coupons').get();
+        couponList = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          couponList.push({
+            code: doc.id,
+            expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null,
+            isUsed: data.isUsed || false,
+            discountRate: data.discountRate || 10,
+            createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().getTime() : new Date(data.createdAt).getTime()) : 0
+          });
+        });
+        localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
+        console.log('Coupons loaded from Firebase:', couponList);
+      } catch (e) {
+        console.warn('Firebase connection failed, reading coupons from local cache:', e);
+        const cached = localStorage.getItem('airfly_coupons');
+        if (cached) {
+          try {
+            couponList = JSON.parse(cached).map(c => ({
+              ...c,
+              expiresAt: c.expiresAt ? new Date(c.expiresAt) : null,
+              createdAt: c.createdAt || 0
+            }));
+          } catch (err) {
+            couponList = [];
+          }
+        }
+      }
+      renderAdminCoupons();
+    }
+
+    // Firebase Auth logic handles password instead of custom Firestore config
+    
+    // URLパラメータのチェックと管理者ボタン表示
+
+    // URLパラメータのチェックと管理者ボタン表示
+    function checkAdminStatus() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('admin') === 'true') {
+        document.getElementById('admin-menu-btn').style.display = 'inline-block';
+      } else {
+        document.getElementById('admin-menu-btn').style.display = 'none';
+      }
+    }
+
+    // 管理者モーダルを開く
+    async function openAdminModal() {
+      document.getElementById('admin-modal-overlay').classList.add('visible');
+      
+      // 既にログインしているかチェック
+      if (firebase.auth().currentUser) {
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('admin-dashboard-view').style.display = 'block';
+        loadCouponsFromFirebase();
+        return;
+      }
+      
+      // 未ログインの場合はログイン画面を表示
+      document.getElementById('admin-login-view').style.display = 'block';
+      document.getElementById('admin-dashboard-view').style.display = 'none';
+      document.getElementById('admin-login-password').value = '';
+      document.getElementById('admin-login-msg').style.display = 'none';
+    }
+
+    // ログイン処理を実行する
+    async function submitAdminLogin() {
+      const email = 'hanks@tempmachi.com';
+      const password = document.getElementById('admin-login-password').value;
+      const msgEl = document.getElementById('admin-login-msg');
+      
+      if (!password) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'パスワードを入力してください。';
+        return;
+      }
+      
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#4a5568';
+      msgEl.textContent = 'ログイン中...';
+      
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        msgEl.style.display = 'none';
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('admin-dashboard-view').style.display = 'block';
+        loadCouponsFromFirebase();
+      } catch (error) {
+        console.error('Auth error:', error);
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'ログインに失敗しました。パスワードをご確認ください。';
+      }
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal-overlay').classList.remove('visible');
+      // クリア
+      document.getElementById('admin-current-pw').value = '';
+      document.getElementById('admin-new-pw').value = '';
+      document.getElementById('new-coupon-code').value = '';
+      document.getElementById('new-coupon-expiry').value = '';
+      document.getElementById('admin-pw-msg').style.display = 'none';
+      document.getElementById('admin-coupon-msg').style.display = 'none';
+      document.getElementById('admin-login-password').value = '';
+      document.getElementById('admin-login-msg').style.display = 'none';
+    }
+
+    function closeAdminModalOutside(e) {
+      if (e.target.id === 'admin-modal-overlay') {
+        closeAdminModal();
+      }
+    }
+
+    // パスワード変更処理
+    async function changeAdminPassword() {
+      const currentPw = document.getElementById('admin-current-pw').value;
+      const newPw = document.getElementById('admin-new-pw').value;
+      const msgEl = document.getElementById('admin-pw-msg');
+      
+      msgEl.style.display = 'block';
+      if (!currentPw || !newPw) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'すべてのフィールドを入力してください。';
         return;
       }
 
       try {
-        await liff.init({ liffId: LIFF_ID });
-
-        const savedEmail = localStorage.getItem('airfly_registered_email');
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error('Not logged in');
         
-        if (liff.isLoggedIn() && savedEmail) {
-           showMainContent(savedEmail);
-           return;
-        }
-
-        if (liff.isLoggedIn()) {
-          // ====== ステップ2: ログイン成功してるのでメール登録へ ======
-          document.getElementById('step-loading').style.display = 'none';
-          document.getElementById('step1-login').style.display = 'none';
-          document.getElementById('step2-email').style.display = 'block';
-        } else {
-          // ====== ステップ1: 未ログインなのでLINEログインボタン表示 ======
-          if (liff.isInClient() || navigator.userAgent.indexOf("Line") !== -1) {
-            liff.login();
-          } else {
-            document.getElementById('step-loading').style.display = 'none';
-            document.getElementById('step1-login').style.display = 'block';
-            document.getElementById('step2-email').style.display = 'none';
-          }
-        }
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPw);
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPw);
+        
+        msgEl.style.color = '#10b981';
+        msgEl.textContent = 'パスワードを変更しました。';
+        document.getElementById('admin-current-pw').value = '';
+        document.getElementById('admin-new-pw').value = '';
       } catch (error) {
-        console.error('LIFF initialization failed:', error);
-        document.getElementById('step-loading').style.display = 'none';
-        document.getElementById('step1-login').style.display = 'block';
+        console.error('Password change error:', error);
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '現在のパスワードが正しくないか、エラーが発生しました。';
       }
     }
 
-    // LINEでログイン
-    function loginWithLine() {
-      liff.login();
+    // クーポンコードの自動生成
+    function generateRandomCouponCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = 'AF-';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('new-coupon-code').value = code;
     }
 
-    function toggleSubmitButton() {
-      const checkbox = document.getElementById('agree-check');
-      const btn = document.getElementById('btn-email-submit');
-      btn.disabled = !checkbox.checked;
-    }
+    // クーポンコード新規作成
+    async function createCoupon() {
+      const code = document.getElementById('new-coupon-code').value.trim().toUpperCase();
+      const expiryVal = document.getElementById('new-coupon-expiry').value;
+      const msgEl = document.getElementById('admin-coupon-msg');
 
-    // ステップ2からステップ3への移行
-    async function submitEmail(event) {
-      event.preventDefault();
-      
-      const form = document.getElementById('gate-email-form');
-      const formData = new FormData(form);
-      const emailInput = document.getElementById('user-email').value;
-      if (!emailInput) return;
+      msgEl.style.display = 'block';
+      if (!code) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'クーポンコードを入力してください。';
+        return;
+      }
 
-      // NetlifyにAjaxで送信して保存
+      const expiresAt = expiryVal ? new Date(expiryVal) : null;
+      const discountSelect = document.getElementById('new-coupon-discount');
+      const discountRate = discountSelect ? parseInt(discountSelect.value, 10) : 10;
+
+      const now = Date.now();
+      const newCoupon = {
+        expiresAt: expiresAt,
+        isUsed: false,
+        discountRate: discountRate,
+        createdAt: now
+      };
+
       try {
-        await fetch('/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams(formData).toString()
+        await db.collection('coupons').doc(code).set({
+          expiresAt: expiresAt ? firebase.firestore.Timestamp.fromDate(expiresAt) : null,
+          isUsed: false,
+          discountRate: discountRate,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        console.log('Email successfully saved to Netlify Forms');
-      } catch (error) {
-        console.error('Netlify Form Error:', error);
+        console.log('Coupon saved to Firebase');
+      } catch (e) {
+        console.warn('Firebase save failed, coupon stored locally only:', e);
       }
 
-      // 状態を保存してリロード時もスキップできるようにする (任意)
-      localStorage.setItem('airfly_registered_email', emailInput);
+      // ローカルメモリおよびキャッシュ更新
+      const existingIdx = couponList.findIndex(c => c.code === code);
+      if (existingIdx > -1) {
+        couponList[existingIdx] = { code, ...newCoupon };
+      } else {
+        couponList.push({ code, ...newCoupon });
+      }
+      localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
 
-      showMainContent(emailInput, true);
+      msgEl.style.color = '#10b981';
+      msgEl.textContent = `クーポン「${code}」を作成しました。`;
+      document.getElementById('new-coupon-code').value = '';
+      document.getElementById('new-coupon-expiry').value = '';
+      
+      renderAdminCoupons();
     }
 
-    // メインコンテンツを表示し、ビジュアルオーダーフローを初期化する
-    function showMainContent(email, shouldScrollToFlow = false) {
-      document.getElementById('gate-container').style.display = 'none';
-      document.getElementById('main-content').style.display = 'block';
-      
-      const lockedContent = document.getElementById('locked-content');
-      if (lockedContent) {
-        lockedContent.classList.remove('locked');
-      }
-      
-      // メールアドレスをサマリーにセット
-      document.getElementById('summary-email').textContent = email || 'test@example.com';
-      
-      initScrollAnimation();
-      initVisualOrderFlow();
+    // クーポン削除
+    async function deleteCoupon(code) {
+      if (!confirm(`クーポン「${code}」を削除しますか？`)) return;
 
-      if (shouldScrollToFlow) {
-        setTimeout(() => {
-          const flowEl = document.getElementById('visual-order-flow');
-          if (flowEl) {
-            flowEl.scrollIntoView({ behavior: 'smooth' });
+      try {
+        await db.collection('coupons').doc(code).delete();
+        console.log('Coupon deleted from Firebase');
+      } catch (e) {
+        console.warn('Firebase delete failed:', e);
+      }
+
+      couponList = couponList.filter(c => c.code !== code);
+      localStorage.setItem('airfly_coupons', JSON.stringify(couponList));
+      renderAdminCoupons();
+    }
+
+    // クーポン一覧表示のレンダリング
+    function renderAdminCoupons() {
+      const tbody = document.getElementById('admin-coupon-list-body');
+      tbody.innerHTML = '';
+
+      let displayCoupons = couponList.filter(c => currentCouponTab === 'used' ? c.isUsed : !c.isUsed);
+      displayCoupons.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if (displayCoupons.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">${currentCouponTab === 'used' ? '使用済み' : '未使用'}のクーポンはありません。</td></tr>`;
+        return;
+      }
+
+      displayCoupons.forEach(c => {
+        const tr = document.createElement('tr');
+        const expiryText = c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('ja-JP') : '無期限';
+        const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
+        const discountRate = c.discountRate || 10;
+        tr.innerHTML = `
+          <td style="font-weight:700;">${c.code}</td>
+          <td><span style="font-weight:700; color:var(--color-accent-blue);">${discountRate}% OFF</span></td>
+          <td>${expiryText}</td>
+          <td>${statusText}</td>
+          <td>
+            <button onclick="deleteCoupon('${c.code}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // クーポンコードの検証
+    async function applyCoupon() {
+      const codeInput = document.getElementById('coupon-code').value.trim().toUpperCase();
+      const msgEl = document.getElementById('coupon-message');
+      
+      if (!codeInput) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'クーポンコードを入力してください。';
+        return;
+      }
+
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#4a5568';
+      msgEl.textContent = '確認中...';
+
+      try {
+        const doc = await db.collection('coupons').doc(codeInput).get();
+        if (!doc.exists) {
+          msgEl.style.color = '#ef4444';
+          msgEl.textContent = '有効なクーポンコードではありません。';
+          return;
+        }
+
+        const data = doc.data();
+        if (data.isUsed) {
+          msgEl.style.color = '#ef4444';
+          msgEl.textContent = 'このクーポンコードはすでに使用されています。';
+          return;
+        }
+
+        if (data.expiresAt) {
+          const expiry = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+          expiry.setHours(23, 59, 59, 999);
+          if (new Date() > expiry) {
+            msgEl.style.color = '#ef4444';
+            msgEl.textContent = 'このクーポンコードは有効期限が切れています。';
+            return;
           }
-        }, 100);
+        }
+        
+        appliedCouponCode = codeInput;
+        const rate = (data.discountRate !== undefined) ? parseInt(data.discountRate, 10) : 10;
+        appliedDiscount = rate / 100;
+        
+        msgEl.style.color = '#10b981';
+        msgEl.textContent = `クーポン（${rate}%OFF）が適用されました！`;
+        
+        renderCart();
+
+      } catch (e) {
+        console.error("Coupon fetch error:", e);
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '通信エラーが発生しました。再度お試しください。';
       }
     }
 
     /* ==============================================
+       アプリ初期化ロジック
+    ============================================== */
+    function initApp() {
+      const lockedContent = document.getElementById('locked-content');
+      if (lockedContent) {
+        lockedContent.classList.remove('locked');
+      }
+
+      initScrollAnimation();
+      initVisualOrderFlow();
+      checkAdminStatus();
+    }
+
+        /* ==============================================
        ビジュアル・オーダーフロー ロジック
     ============================================== */
     const LENS_OPTIONS = {
@@ -1953,35 +2170,27 @@
 
     function getPriceData(model, lens) {
       let orig = 0;
-      let sale = 0;
 
       if (model === 'AF-901') {
         orig = 16500;
-        sale = 14850;
       } else if (model === 'AF-302-WP') {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 25740;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 23760;
         } else {
            orig = 22000;
-           sale = 19800;
         }
       } else {
         if (lens && lens.includes('■調光')) {
            orig = 28600;
-           sale = 24000;
         } else if (lens && lens.includes('★偏光')) {
            orig = 26400;
-           sale = 22000;
         } else {
            orig = 22000;
-           sale = 18000;
         }
       }
-      return { orig: orig, sale: sale };
+      return { orig: orig, sale: orig };
     }
 
     // モデル情報マスター
@@ -2089,11 +2298,11 @@
             <p class="card-subtitle">（${info.subtitle}）</p>
             <div class="card-price-container">
               <div class="card-price-row">
-                <span class="card-price-orig">¥${formatPrice(info.priceOrig)}</span>
-                <span class="card-price-arrow">→</span>
-                <span class="card-price-sale">¥${formatPrice(info.priceSale)}～</span>
-                <span class="card-price-discount">[${info.discount}％OFF]</span>
-                <span class="card-price-suffix">より(税込)</span>
+                <div>
+                  <span style="font-size: 0.85rem; color: #64748b; font-weight: normal; margin-right: 4px;">定価</span>
+                  <span class="card-price-sale" style="color: #1a1a1a;">¥${formatPrice(info.priceOrig)}</span>
+                  <span class="card-price-suffix"> (税込)</span>
+                </div>
               </div>
             </div>
             <ul class="card-features">
@@ -2330,11 +2539,21 @@
           <div class="cart-item-detail"><strong>モデル：</strong>${item.model}</div>
           <div class="cart-item-detail"><strong>レンズ：</strong>${item.lens}</div>
           <div class="cart-item-detail"><strong>フレーム：</strong>${item.frame}</div>
-          <div class="cart-item-detail" style="margin-top:8px; font-size:0.85rem; color:#64748b; text-decoration:line-through;">定価参考：¥${formatPrice(item.originalPrice)}（税込）</div>
-          <div class="cart-item-detail" style="font-weight:700; color:#1e40af;">小計：¥${formatPrice(item.price)}（税込）</div>
+          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">小計：¥${formatPrice(item.price)}（税込）</div>
         `;
         container.appendChild(itemDiv);
       });
+      
+      let discountAmount = 0;
+      if (appliedDiscount > 0) {
+        discountAmount = Math.round(totalSale * appliedDiscount);
+        totalSale -= discountAmount;
+        
+        document.getElementById('coupon-discount-row').style.display = 'block';
+        document.getElementById('coupon-discount-row').innerHTML = `クーポン割引 (${Math.round(appliedDiscount * 100)}%OFF): -¥${formatPrice(discountAmount)}`;
+      } else {
+        document.getElementById('coupon-discount-row').style.display = 'none';
+      }
       
       const SHIPPING_FEE = 600;
       
@@ -2398,11 +2617,12 @@
       
       // バリデーション
       const name = document.getElementById('shipping-name').value.trim();
+      const shippingEmail = document.getElementById('shipping-email').value.trim();
       let zip = document.getElementById('shipping-zip').value.trim();
       const address = document.getElementById('shipping-address').value.trim();
       let phone = document.getElementById('shipping-phone').value.trim();
       
-      if(!name || !zip || !address || !phone) {
+      if(!name || !shippingEmail || !zip || !address || !phone) {
         alert('お届け先情報の必須項目をすべて入力してください。');
         return;
       }
@@ -2421,8 +2641,36 @@
         return;
       }
       
+            // 入力が空の場合は適用状態をクリア
+      const currentCouponInput = document.getElementById('coupon-code').value.trim();
+      if (!currentCouponInput) {
+        appliedCouponCode = '';
+        appliedDiscount = 0;
+      }
+
+      // クーポン適用時の確認ダイアログ
+      if (appliedCouponCode && currentCouponInput.toUpperCase() === appliedCouponCode) {
+        const confirmMsg = "適用されたクーポンは、決済画面に進むと「使用済み」となり、決済をキャンセルしても再利用できなくなります。\n決済画面へ進んでよろしいですか？";
+        if (!confirm(confirmMsg)) {
+          return; // いいえを選択した場合は中断して画面に戻る
+        }
+      }
+      
       document.getElementById('loading-overlay').style.display = 'flex';
-      const email = localStorage.getItem('airfly_registered_email') || '';
+      const email = shippingEmail || localStorage.getItem('airfly_registered_email') || '';
+      
+      // メルマガ購読の保存
+      const optIn = document.getElementById('newsletter-opt-in') && document.getElementById('newsletter-opt-in').checked;
+      if (optIn && shippingEmail) {
+        try {
+          db.collection('mail_list').doc(shippingEmail).set({
+            email: shippingEmail,
+            subscribedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Failed to save to mail_list:', e);
+        }
+      }
       
       // 決済後に完了画面を出すための情報保存（個人情報を含まない）
       localStorage.setItem('airfly_pending_order', JSON.stringify({
@@ -2440,7 +2688,9 @@
           model: item.model,
           lens: item.lens,
           frame: item.frame
-        }))
+        })),
+        coupon_code: appliedCouponCode || null,
+        projectId: firebaseConfig.projectId
       };
 
       fetch('/.netlify/functions/create-checkout-session', {
@@ -2451,8 +2701,16 @@
         body: JSON.stringify(payload)
       })
       .then(response => response.json())
-      .then(data => {
+      .then(async data => {
         if(data.url) {
+          // 決済画面へ遷移する前に、クーポンを利用済みにマークする
+          if (appliedCouponCode) {
+            try {
+              await db.collection('coupons').doc(appliedCouponCode).update({ isUsed: true });
+            } catch (e) {
+              console.error('Failed to mark coupon as used:', e);
+            }
+          }
           // Redirect to Stripe Checkout
           window.location.href = data.url;
         } else {
@@ -2550,14 +2808,14 @@ function closeOrderCompleteScreen() {
   document.getElementById('order-complete-screen').classList.remove('visible');
   
   // 再度通常の初期化フローへ戻す
-  initLiff();
+  initApp();
 }
 
 // 初期実行
 if (!checkOrderSuccess()) {
   // 完了画面が出ない場合はLIFFを通常通り初期化
   document.addEventListener('DOMContentLoaded', function() {
-    initLiff();
+    initApp();
   });
 }
   </script>
