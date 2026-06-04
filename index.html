@@ -1622,59 +1622,78 @@
   <div id="admin-modal-overlay" class="modal-overlay" onclick="closeAdminModalOutside(event)">
     <div class="admin-modal">
       <button class="admin-modal-close" onclick="closeAdminModal()">&times;</button>
-      <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者メニュー</h2>
       
-      <!-- パスワード変更セクション -->
-      <div class="admin-section">
-        <h3>管理者パスワードの変更</h3>
-        <div class="admin-grid">
-          <div>
-            <label style="display:block; font-size:0.85rem; margin-bottom:4px;">現在のパスワード</label>
-            <input type="password" id="admin-current-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:0.85rem; margin-bottom:4px;">新しいパスワード</label>
-            <input type="password" id="admin-new-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
-          </div>
+      <!-- ログイン用ビュー -->
+      <div id="admin-login-view" style="display: none;">
+        <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者ログイン</h2>
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:4px;">メールアドレス</label>
+          <input type="email" id="admin-login-email" value="hanks@tempmachi.com" readonly style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px; background:#f8fafc; color:#64748b; cursor:not-allowed;">
         </div>
-        <button class="btn-admin-action" onclick="changeAdminPassword()">パスワード変更</button>
-        <div id="admin-pw-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
+        <div style="margin-bottom: 20px;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:4px;">パスワード</label>
+          <input type="password" id="admin-login-password" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px;" onkeydown="if(event.key === 'Enter') submitAdminLogin()">
+        </div>
+        <button class="btn-admin-action" style="width:100%; padding:12px; font-size:1rem;" onclick="submitAdminLogin()">ログイン</button>
+        <div id="admin-login-msg" style="margin-top: 12px; font-size: 0.9rem; font-weight: bold;"></div>
       </div>
 
-      <!-- クーポン管理セクション -->
-      <div class="admin-section">
-        <h3>クーポンコードの新規作成 (一律10%OFF)</h3>
-        <div class="admin-grid">
-          <div>
-            <label style="display:block; font-size:0.85rem; margin-bottom:4px;">クーポンコード</label>
-            <input type="text" id="new-coupon-code" placeholder="例: SALE10" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+      <!-- 管理者ダッシュボードビュー -->
+      <div id="admin-dashboard-view" style="display: none;">
+        <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者メニュー</h2>
+        
+        <!-- パスワード変更セクション -->
+        <div class="admin-section">
+          <h3>管理者パスワードの変更</h3>
+          <div class="admin-grid">
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">現在のパスワード</label>
+              <input type="password" id="admin-current-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">新しいパスワード</label>
+              <input type="password" id="admin-new-pw" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
           </div>
-          <div>
-            <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
-            <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
-          </div>
+          <button class="btn-admin-action" onclick="changeAdminPassword()">パスワード変更</button>
+          <div id="admin-pw-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
         </div>
-        <button class="btn-admin-action" onclick="createCoupon()">クーポン作成</button>
-        <div id="admin-coupon-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
-      </div>
 
-      <!-- クーポン一覧セクション -->
-      <div class="admin-section">
-        <h3>発行済みクーポン一覧</h3>
-        <div style="overflow-x: auto;">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>コード</th>
-                <th>有効期限</th>
-                <th>ステータス</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="admin-coupon-list-body">
-              <!-- JSで動的生成 -->
-            </tbody>
-          </table>
+        <!-- クーポン管理セクション -->
+        <div class="admin-section">
+          <h3>クーポンコードの新規作成 (一律10%OFF)</h3>
+          <div class="admin-grid">
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">クーポンコード</label>
+              <input type="text" id="new-coupon-code" placeholder="例: SALE10" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
+              <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+          </div>
+          <button class="btn-admin-action" onclick="createCoupon()">クーポン作成</button>
+          <div id="admin-coupon-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
+        </div>
+
+        <!-- クーポン一覧セクション -->
+        <div class="admin-section">
+          <h3>発行済みクーポン一覧</h3>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>コード</th>
+                  <th>有効期限</th>
+                  <th>ステータス</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-coupon-list-body">
+                <!-- JSで動的生成 -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1758,25 +1777,52 @@
       }
     }
 
-    // 管理者モーダルを開く (パスワード認証あり)
+    // 管理者モーダルを開く
     async function openAdminModal() {
+      document.getElementById('admin-modal-overlay').classList.add('visible');
+      
       // 既にログインしているかチェック
       if (firebase.auth().currentUser) {
-        document.getElementById('admin-modal-overlay').classList.add('visible');
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('admin-dashboard-view').style.display = 'block';
         loadCouponsFromFirebase();
         return;
       }
       
-      const inputPw = prompt('管理者パスワードを入力してください (hanks@tempmachi.com):');
-      if (inputPw === null) return; // キャンセル
+      // 未ログインの場合はログイン画面を表示
+      document.getElementById('admin-login-view').style.display = 'block';
+      document.getElementById('admin-dashboard-view').style.display = 'none';
+      document.getElementById('admin-login-password').value = '';
+      document.getElementById('admin-login-msg').style.display = 'none';
+    }
 
+    // ログイン処理を実行する
+    async function submitAdminLogin() {
+      const email = 'hanks@tempmachi.com';
+      const password = document.getElementById('admin-login-password').value;
+      const msgEl = document.getElementById('admin-login-msg');
+      
+      if (!password) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'パスワードを入力してください。';
+        return;
+      }
+      
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#4a5568';
+      msgEl.textContent = 'ログイン中...';
+      
       try {
-        await firebase.auth().signInWithEmailAndPassword('hanks@tempmachi.com', inputPw);
-        document.getElementById('admin-modal-overlay').classList.add('visible');
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        msgEl.style.display = 'none';
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('admin-dashboard-view').style.display = 'block';
         loadCouponsFromFirebase();
       } catch (error) {
-        alert('ログインに失敗しました。パスワードをご確認ください。');
         console.error('Auth error:', error);
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'ログインに失敗しました。パスワードをご確認ください。';
       }
     }
 
@@ -1789,6 +1835,8 @@
       document.getElementById('new-coupon-expiry').value = '';
       document.getElementById('admin-pw-msg').style.display = 'none';
       document.getElementById('admin-coupon-msg').style.display = 'none';
+      document.getElementById('admin-login-password').value = '';
+      document.getElementById('admin-login-msg').style.display = 'none';
     }
 
     function closeAdminModalOutside(e) {
