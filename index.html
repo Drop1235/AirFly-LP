@@ -59,187 +59,6 @@
     a { color: inherit; text-decoration: none; }
 
     /* =====================================================
-       ゲート機能 (LINE / メール登録) のスタイル
-    ===================================================== */
-    #gate-container {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .gate-card {
-      background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      max-width: 400px;
-      width: 100%;
-      padding: 40px 30px;
-      text-align: center;
-    }
-    .liff-gate-icon {
-      font-size: 60px;
-      color: #06C755;
-      margin-bottom: 24px;
-    }
-    .liff-logo-img {
-      height: 64px;
-      width: auto;
-      object-fit: contain;
-      margin-bottom: 20px;
-      display: inline-block;
-    }
-    .step-badge {
-      display: inline-block;
-      background: #eef7ff;
-      color: #0066cc;
-      font-size: 0.85rem;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 16px;
-      letter-spacing: 0.05em;
-    }
-    .gate-title {
-      font-size: 24px;
-      font-weight: 900;
-      margin-bottom: 16px;
-      color: #1a1a1a;
-      line-height: 1.4;
-    }
-    .gate-description {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-    .gate-subtitle {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--color-accent-blue);
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .btn-line {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      background: #06C755;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 16px;
-      padding: 16px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-    .btn-line:hover {
-      background: #05b14c;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
-    }
-    .btn-email-submit {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--color-accent-blue);
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 1.05rem;
-      padding: 16px 24px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-      transition: all var(--transition-fast);
-      margin-top: 24px;
-    }
-    .btn-email-submit:disabled {
-      background: #a0aec0;
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .btn-email-submit:not(:disabled):hover {
-      background: #0066cc;
-      transform: translateY(-2px);
-    }
-    .gate-input-group {
-      text-align: left;
-      margin-bottom: 24px;
-    }
-    .gate-input-group label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .gate-input {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-    }
-    .gate-input:focus {
-      outline: none;
-      border-color: var(--color-accent-blue);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-    }
-    .gate-terms-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      color: var(--color-text-secondary);
-      text-align: left;
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-    .gate-checkbox-group {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      text-align: left;
-    }
-    .gate-checkbox {
-      margin-top: 4px;
-      width: 18px;
-      height: 18px;
-      accent-color: var(--color-accent-blue);
-      cursor: pointer;
-    }
-    .gate-checkbox-label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* ローディングスピナー */
-    .loading-spinner {
-      border: 4px solid rgba(0,0,0,0.1);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border-left-color: var(--color-accent-blue);
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* =====================================================
        スクロールフェードインアニメーション
     ===================================================== */
     .fade-in-up {
@@ -1252,14 +1071,6 @@
 
 
   <!-- =====================================================
-       ゲート機能 (ステップ1・ステップ2)
-  ===================================================== -->
-  <!-- Hidden Netlify form to register 'gate-email' for Netlify Form submissions -->
-  <form name="gate-email" data-netlify="true" hidden>
-    <input type="email" name="email" />
-  </form>
-  
-  <!-- =====================================================
        メインコンテンツ (全画面)
   ===================================================== -->
   <div id="main-content">
@@ -2088,124 +1899,20 @@
     }
 
     /* ==============================================
-       LIFF & ゲート機能 (ステップ遷移ロジック)
+       アプリ初期化ロジック
     ============================================== */
-    const LIFF_ID = "2009896448-XrAcBh1l";
-
-    // LIFF初期化と認証状態チェック
-    async function initLiff() {
-      // 開発・テスト環境（dev-- や localhost）では、LINEログインを自動スキップしてテスト可能にする
-      if (window.location.hostname.includes('dev--') || window.location.hostname.includes('localhost')) {
-        console.log('Test environment detected. Bypassing LIFF authentication.');
-        const testEmail = localStorage.getItem('airfly_registered_email') || 'test@example.com';
-        showMainContent(testEmail);
-        return;
-      }
-
-      try {
-        await liff.init({ liffId: LIFF_ID });
-
-        const savedEmail = localStorage.getItem('airfly_registered_email');
-        
-        if (liff.isLoggedIn() && savedEmail) {
-           showMainContent(savedEmail);
-           return;
-        }
-
-        if (liff.isLoggedIn()) {
-          // ====== ステップ2: ログイン成功してるのでメール登録へ ======
-          document.getElementById('step-loading').style.display = 'none';
-          document.getElementById('step1-login').style.display = 'none';
-          document.getElementById('step2-email').style.display = 'block';
-        } else {
-          // ====== ステップ1: 未ログインなのでLINEログインボタン表示 ======
-          if (liff.isInClient() || navigator.userAgent.indexOf("Line") !== -1) {
-            liff.login();
-          } else {
-            document.getElementById('step-loading').style.display = 'none';
-            document.getElementById('step1-login').style.display = 'block';
-            document.getElementById('step2-email').style.display = 'none';
-          }
-        }
-      } catch (error) {
-        console.error('LIFF initialization failed:', error);
-        document.getElementById('step-loading').style.display = 'none';
-        document.getElementById('step1-login').style.display = 'block';
-      }
-    }
-
-    // LINEでログイン
-    function loginWithLine() {
-      liff.login();
-    }
-
-    function toggleSubmitButton() {
-      const checkbox = document.getElementById('agree-check');
-      const btn = document.getElementById('btn-email-submit');
-      btn.disabled = !checkbox.checked;
-    }
-
-    // ステップ2からステップ3への移行
-    async function submitEmail(event) {
-      event.preventDefault();
-      
-      const form = document.getElementById('gate-email-form');
-      const formData = new FormData(form);
-      const emailInput = document.getElementById('user-email').value;
-      if (!emailInput) return;
-
-      // NetlifyにAjaxで送信して保存
-      try {
-        await fetch('/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams(formData).toString()
-        });
-        console.log('Email successfully saved to Netlify Forms');
-      } catch (error) {
-        console.error('Netlify Form Error:', error);
-      }
-
-      // 状態を保存してリロード時もスキップできるようにする (任意)
-      localStorage.setItem('airfly_registered_email', emailInput);
-
-      showMainContent(emailInput, true);
-    }
-
-    // メインコンテンツを表示し、ビジュアルオーダーフローを初期化する
-    function showMainContent(email, shouldScrollToFlow = false) {
-      const gateEl = document.getElementById('gate-container');
-      if (gateEl) {
-        gateEl.style.display = 'none';
-      }
-      document.getElementById('main-content').style.display = 'block';
-      
+    function initApp() {
       const lockedContent = document.getElementById('locked-content');
       if (lockedContent) {
         lockedContent.classList.remove('locked');
       }
-      
-      // メールアドレスをサマリーにセット
-      const emailEl = document.getElementById('summary-email');
-      if (emailEl) {
-        emailEl.textContent = email || 'test@example.com';
-      }
-      
+
       initScrollAnimation();
       initVisualOrderFlow();
       checkAdminStatus();
-
-      if (shouldScrollToFlow) {
-        setTimeout(() => {
-          const flowEl = document.getElementById('visual-order-flow');
-          if (flowEl) {
-            flowEl.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      }
     }
 
-    /* ==============================================
+        /* ==============================================
        ビジュアル・オーダーフロー ロジック
     ============================================== */
     const LENS_OPTIONS = {
@@ -3101,14 +2808,14 @@ function closeOrderCompleteScreen() {
   document.getElementById('order-complete-screen').classList.remove('visible');
   
   // 再度通常の初期化フローへ戻す
-  initLiff();
+  initApp();
 }
 
 // 初期実行
 if (!checkOrderSuccess()) {
   // 完了画面が出ない場合はLIFFを通常通り初期化
   document.addEventListener('DOMContentLoaded', function() {
-    initLiff();
+    initApp();
   });
 }
   </script>
