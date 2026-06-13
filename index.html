@@ -1609,6 +1609,7 @@
             expiresAt: data.expiresAt ? (data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt)) : null,
             isUsed: data.isUsed || false,
             discountRate: data.discountRate || 10,
+            isUnlimited: data.isUnlimited === true,
             createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().getTime() : new Date(data.createdAt).getTime()) : 0
           });
         });
