@@ -2715,8 +2715,8 @@
         appliedDiscount = 0;
       }
 
-      // クーポン適用時の確認ダイアログ
-      if (appliedCouponCode && currentCouponInput.toUpperCase() === appliedCouponCode) {
+      // クーポン適用時の確認ダイアログ（1回のみクーポンの場合）
+      if (appliedCouponCode && currentCouponInput.toUpperCase() === appliedCouponCode && !appliedCouponUnlimited) {
         const confirmMsg = "適用されたクーポンは、決済画面に進むと「使用済み」となり、決済をキャンセルしても再利用できなくなります。\n決済画面へ進んでよろしいですか？";
         if (!confirm(confirmMsg)) {
           return; // いいえを選択した場合は中断して画面に戻る
