@@ -36,6 +36,7 @@ exports.handler = async (event, context) => {
       const customer_address = session.metadata.customer_address || '';
       const customer_phone = session.metadata.customer_phone || '';
       const total_amount = session.metadata.total_amount || '0';
+      const opt_in = session.metadata.opt_in === 'true';
       
       let items = [];
       
@@ -54,6 +55,7 @@ exports.handler = async (event, context) => {
           customer_zip: customer_zip,
           customer_address: customer_address,
           customer_phone: customer_phone,
+          opt_in: opt_in,
           total_amount: total_amount,
           items: items,
           secret_token: process.env.GAS_SECRET_TOKEN

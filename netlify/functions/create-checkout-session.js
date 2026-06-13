@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { email, customer_name, customer_zip, customer_address, customer_phone, items, coupon_code, projectId } = JSON.parse(event.body);
+    const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code, projectId } = JSON.parse(event.body);
 
     if (!items || items.length === 0) {
       return {
@@ -178,6 +178,7 @@ exports.handler = async (event, context) => {
         customer_zip: customer_zip || '',
         customer_address: customer_address || '',
         customer_phone: customer_phone || '',
+        opt_in: opt_in ? 'true' : 'false',
         total_amount: totalSale.toString(),
         order_items: itemsJson.length <= 400 ? itemsJson : JSON.stringify([{ error: "items too long" }])
       }
