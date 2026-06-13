@@ -43,8 +43,9 @@ exports.handler = async (event, context) => {
           let isValid = true;
           
           if (doc.fields) {
-            // Check if used
-            if (doc.fields.isUsed && doc.fields.isUsed.booleanValue === true) {
+            // Check if used and NOT unlimited
+            const isUnlimited = doc.fields.isUnlimited && doc.fields.isUnlimited.booleanValue === true;
+            if (!isUnlimited && doc.fields.isUsed && doc.fields.isUsed.booleanValue === true) {
               isValid = false;
             }
             // Check if expired

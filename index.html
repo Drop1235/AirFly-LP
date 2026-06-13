@@ -1491,8 +1491,15 @@
               </select>
             </div>
             <div>
-              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限</label>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">有効期限（必須）</label>
               <input type="date" id="new-coupon-expiry" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; height: 38px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">使用回数</label>
+              <select id="new-coupon-usage" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; height: 38px; cursor: pointer;">
+                <option value="single" selected>1回のみ</option>
+                <option value="unlimited">無制限</option>
+              </select>
             </div>
           </div>
           <button class="btn-admin-action" onclick="createCoupon()">クーポン作成</button>
@@ -1515,6 +1522,7 @@
                   <th>割引率</th>
                   <th>作成日</th>
                   <th>有効期限</th>
+                  <th>回数</th>
                   <th>ステータス</th>
                   <th>操作</th>
                 </tr>
@@ -1560,6 +1568,7 @@
     let couponList = [];
     let appliedCouponCode = '';
     let appliedDiscount = 0;
+    let appliedCouponUnlimited = false;
     let currentCouponTab = 'unused';
 
     function switchCouponTab(tab) {
@@ -1759,24 +1768,35 @@
         msgEl.textContent = 'クーポンコードを入力してください。';
         return;
       }
+      
+      if (!expiryVal) {
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = '有効期限を必ず設定してください。';
+        return;
+      }
 
-      const expiresAt = expiryVal ? new Date(expiryVal) : null;
+      const expiresAt = new Date(expiryVal);
       const discountSelect = document.getElementById('new-coupon-discount');
       const discountRate = discountSelect ? parseInt(discountSelect.value, 10) : 10;
+      
+      const usageSelect = document.getElementById('new-coupon-usage');
+      const isUnlimited = usageSelect && usageSelect.value === 'unlimited';
 
       const now = Date.now();
       const newCoupon = {
         expiresAt: expiresAt,
         isUsed: false,
         discountRate: discountRate,
+        isUnlimited: isUnlimited,
         createdAt: now
       };
 
       try {
         await db.collection('coupons').doc(code).set({
-          expiresAt: expiresAt ? firebase.firestore.Timestamp.fromDate(expiresAt) : null,
+          expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
           isUsed: false,
           discountRate: discountRate,
+          isUnlimited: isUnlimited,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         console.log('Coupon saved to Firebase');
@@ -1869,6 +1889,7 @@
           createdText = createdDate.toLocaleDateString('ja-JP');
         }
 
+        const usageText = c.isUnlimited ? '<span style="color:#8b5cf6; font-weight:bold;">無制限</span>' : '1回のみ';
         const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
         const discountRate = c.discountRate || 10;
         tr.innerHTML = `
@@ -1876,6 +1897,7 @@
           <td><span style="font-weight:700; color:var(--color-accent-blue);">${discountRate}% OFF</span></td>
           <td>${createdText}</td>
           <td>${expiryText}</td>
+          <td>${usageText}</td>
           <td>${statusText}</td>
           <td>
             <button onclick="deleteCoupon('${c.code}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
@@ -1910,7 +1932,7 @@
         }
 
         const data = doc.data();
-        if (data.isUsed) {
+        if (!data.isUnlimited && data.isUsed) {
           msgEl.style.color = '#ef4444';
           msgEl.textContent = 'このクーポンコードはすでに使用されています。';
           return;
@@ -1927,6 +1949,7 @@
         }
         
         appliedCouponCode = codeInput;
+        appliedCouponUnlimited = data.isUnlimited === true;
         const rate = (data.discountRate !== undefined) ? parseInt(data.discountRate, 10) : 10;
         appliedDiscount = rate / 100;
         
@@ -2747,8 +2770,8 @@
       .then(response => response.json())
       .then(async data => {
         if(data.url) {
-          // 決済画面へ遷移する前に、クーポンを利用済みにマークする
-          if (appliedCouponCode) {
+          // 決済画面へ遷移する前に、クーポンを利用済みにマークする（無制限以外の場合）
+          if (appliedCouponCode && !appliedCouponUnlimited) {
             try {
               await db.collection('coupons').doc(appliedCouponCode).update({ isUsed: true });
             } catch (e) {
