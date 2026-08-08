@@ -2721,6 +2721,12 @@
       if (!currentCouponInput) {
         appliedCouponCode = '';
         appliedDiscount = 0;
+      } else {
+        // クーポンコードが入力されているが、適用されていない場合のアラート
+        if (currentCouponInput.toUpperCase() !== appliedCouponCode) {
+          alert('クーポンコードが入力されていますが、適用されていません。\n「適用」ボタンを押して割引後の金額をご確認の上、決済画面へお進みください。');
+          return;
+        }
       }
 
       // クーポン適用時の確認ダイアログ（1回のみクーポンの場合）
