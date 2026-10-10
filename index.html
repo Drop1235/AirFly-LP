@@ -1455,7 +1455,8 @@
             </div>
             <div style="margin-bottom: 16px;">
               <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
-              <input type="text" id="shipping-zip" placeholder="1234567" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+              <input type="text" id="shipping-zip" placeholder="1234567" inputmode="numeric" autocomplete="postal-code" oninput="onZipInput(this.value)" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+              <div id="zip-lookup-msg" style="margin-top: 6px; font-size: 0.85rem; display: none;"></div>
             </div>
             <div style="margin-bottom: 16px;">
               <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;">住所 <span style="color: red; font-size: 0.8rem;">必須</span></label>
@@ -2945,6 +2946,51 @@
       }
     }
 
+    /* ==============================================
+       郵便番号から住所を自動入力（zipcloud API）
+       都道府県〜町名までを入れ、番地・建物名はお客様に入力してもらう
+    ============================================== */
+    let zipLookupSeq = 0;
+    let lastAutoAddress = '';   // 自動入力した値（お客様が書き換えていなければ上書きしてよい）
+
+    async function onZipInput(value) {
+      const zip = String(value).replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^\d]/g, '');
+      const msgEl = document.getElementById('zip-lookup-msg');
+      if (zip.length !== 7) {
+        msgEl.style.display = 'none';
+        return;
+      }
+      const seq = ++zipLookupSeq;
+      try {
+        const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);
+        const data = await res.json();
+        if (seq !== zipLookupSeq) return; // 入力が変わっていたら古い結果は使わない
+        const hit = data && data.results && data.results[0];
+        if (!hit) {
+          msgEl.style.display = 'block';
+          msgEl.style.color = '#ea580c';
+          msgEl.textContent = 'この郵便番号の住所が見つかりませんでした。住所を直接入力してください。';
+          return;
+        }
+        const autoAddress = `${hit.address1}${hit.address2}${hit.address3}`;
+        const addressEl = document.getElementById('shipping-address');
+        const current = addressEl.value.trim();
+        // 未入力、または前回の自動入力のまま（お客様が手を加えていない）ときだけ入れる
+        if (!current || current === lastAutoAddress) {
+          addressEl.value = autoAddress;
+          lastAutoAddress = autoAddress;
+          msgEl.style.display = 'block';
+          msgEl.style.color = '#16a34a';
+          msgEl.textContent = '住所を途中まで入力しました。続きの番地・建物名を入力してください。';
+          addressEl.focus();
+          addressEl.setSelectionRange(addressEl.value.length, addressEl.value.length);
+        }
+      } catch (e) {
+        // 通信できない場合は何もしない（手入力で続けられる）
+        console.warn('Zip lookup failed:', e);
+      }
+    }
+
     function submitOrder() {
       if (cart.length === 0) {
         alert('カートに商品がありません。');
@@ -3175,6 +3221,8 @@
       cart = [];
       orderState = { model: '', lens: '', frame: '', price: 0, originalPrice: 0 };
       ['shipping-name', 'shipping-email', 'shipping-zip', 'shipping-address', 'shipping-phone'].forEach(id => document.getElementById(id).value = '');
+      lastAutoAddress = '';
+      document.getElementById('zip-lookup-msg').style.display = 'none';
       renderCart();
       addAnotherItem();
     }
