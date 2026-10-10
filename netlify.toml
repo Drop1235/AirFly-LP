@@ -1,3 +1,5 @@
 [build]
+  # 公開してよいファイルだけを _site/ に集めて配信する（scripts/build-site.js の許可リスト）
+  command = "node scripts/build-site.js"
   functions = "netlify/functions"
-  publish = "."
+  publish = "_site"
