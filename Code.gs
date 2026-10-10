@@ -3,6 +3,21 @@ var HANDOVER_MARK = "【手渡し】";
 var HANDOVER_DONE_STATUS = "手渡し完了（手配不要）";
 
 /**
+ * 送信元（Netlify）の認証トークンを検証する
+ * トークンはコードに書かず、Apps Script の「プロジェクトの設定 → スクリプト プロパティ」に保存する
+ *   SECRET_TOKEN     : 現在のトークン（Netlify の GAS_SECRET_TOKEN と同じ値）
+ *   OLD_SECRET_TOKEN : 差し替え期間中だけ受け付ける旧トークン（切り替え完了後に削除する）
+ * SECRET_TOKEN が未設定の場合はすべて拒否する（フェイルクローズ）
+ */
+function isValidSecretToken(token) {
+  var props = PropertiesService.getScriptProperties();
+  var current = props.getProperty("SECRET_TOKEN");
+  var old = props.getProperty("OLD_SECRET_TOKEN");
+  if (!current || !token) return false;
+  return token === current || (!!old && token === old);
+}
+
+/**
  * 注文データ受け取り用Webhook (Stripe決済完了 / 会場販売の支払済確定 から)
  */
 function doPost(e) {
@@ -19,8 +34,7 @@ function doPost(e) {
     var params = JSON.parse(e.postData.contents);
     
     // セキュリティトークンの検証
-    var expectedToken = "TEMPMACHI_AIRFLY_SECURE_HOOK_2026";
-    if (params.secret_token !== expectedToken) {
+    if (!isValidSecretToken(params.secret_token)) {
       throw new Error("Unauthorized request");
     }
     
