@@ -71,6 +71,12 @@ function doPost(e) {
     var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // 最初のシート
     ensureChannelHeaders(sheet);
     
+    // 会場注文の再送時：同じ大会・受付番号の行が既にあれば二重記録・二重メールしない
+    if (isVenue && findVenueOrderRow(sheet, params.event_name, params.receipt_no) > 0) {
+      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Venue order already recorded" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // タイムスタンプの取得
     var date = new Date();
     
@@ -95,15 +101,21 @@ function doPost(e) {
     ]);
     
     if (isVenue) {
+      // 記録は済んでいるので、メール送信に失敗しても記録成功として返す（再送による二重記録を防ぐ）
+      var emailError = "";
       if (email) {
-        GmailApp.sendEmail(email, "【TempMachi】ご注文ありがとうございます（会場でのご購入）",
-          buildVenueBuyerEmail(params, customerName, itemsString, items, formattedZip, address, formattedPhone, shipCount), {
-          from: "hanks@tempmachi.com",
-          name: "株式会社TempMachi"
-        });
+        try {
+          GmailApp.sendEmail(email, "【TempMachi】ご注文ありがとうございます（会場でのご購入）",
+            buildVenueBuyerEmail(params, customerName, itemsString, items, formattedZip, address, formattedPhone, shipCount), {
+            from: "hanks@tempmachi.com",
+            name: "株式会社TempMachi"
+          });
+        } catch (mailError) {
+          emailError = mailError.message;
+        }
       }
       // 会場販売では管理者宛ての通知メールは送らない
-      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Venue order saved and email sent successfully" }))
+      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Venue order saved", "email_error": emailError }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -170,6 +182,21 @@ function ensureChannelHeaders(sheet) {
   if (current.join("") === "") {
     headerRange.setValues([["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者"]]);
   }
+}
+
+/**
+ * 会場注文の行を探す（K列: "会場: 大会名" と L列: 受付番号 が一致する行番号。なければ 0）
+ */
+function findVenueOrderRow(sheet, eventName, receiptNo) {
+  if (!receiptNo) return 0;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return 0;
+  var values = sheet.getRange(2, 11, lastRow - 1, 2).getValues();
+  var channel = "会場: " + (eventName || "");
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] === channel && values[i][1] === receiptNo) return i + 2;
+  }
+  return 0;
 }
 
 /**

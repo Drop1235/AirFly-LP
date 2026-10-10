@@ -1,5 +1,5 @@
 // 会場販売：注文の受付（未払い状態で Firestore に保存し、受付番号を発行する）
-const { getDb, admin, verifyAdmin, isEventOpen, json } = require('../lib/venue');
+const { getDb, admin, verifyAdmin, isEventOpen, json, EMAIL_PATTERN } = require('../lib/venue');
 const { calcVenueTotals, KNOWN_MODELS } = require('../lib/pricing');
 
 const MAX_ITEMS = 20;
@@ -19,6 +19,9 @@ exports.handler = async (event) => {
     if (!isShortString(event_id, 100)) return json(400, { error: '会場情報が不正です。' });
     if (!isShortString(customer_name, 100) || !isShortString(email, 200) || !isShortString(customer_address, 300)) {
       return json(400, { error: 'お客様情報の必須項目が入力されていません。' });
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      return json(400, { error: 'メールアドレスの形式が正しくありません。' });
     }
     if (!/^\d{7}$/.test(customer_zip || '') || !/^\d{10,11}$/.test(customer_phone || '')) {
       return json(400, { error: '郵便番号または電話番号の形式が正しくありません。' });
