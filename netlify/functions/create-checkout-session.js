@@ -1,4 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { getPriceData, SHIPPING_FEE } = require('../lib/pricing');
 
 exports.handler = async (event, context) => {
   // CORS Headers
@@ -79,32 +80,6 @@ exports.handler = async (event, context) => {
       }
     }
 
-    // 価格計算ロジック（通常は定価販売）
-    function getPriceData(model, lens) {
-      let orig = 0;
-
-      if (model === 'AF-901') {
-        orig = 16500;
-      } else if (model === 'AF-302-WP') {
-        if (lens && lens.includes('■調光')) {
-           orig = 28600;
-        } else if (lens && lens.includes('★偏光')) {
-           orig = 26400;
-        } else {
-           orig = 22000;
-        }
-      } else {
-        if (lens && lens.includes('■調光')) {
-           orig = 28600;
-        } else if (lens && lens.includes('★偏光')) {
-           orig = 26400;
-        } else {
-           orig = 22000;
-        }
-      }
-      return { orig: orig, sale: orig };
-    }
-
     // Convert cart items to Stripe line_items format using securely calculated prices
     const secureItems = [];
     let totalSale = 0;
@@ -146,7 +121,6 @@ exports.handler = async (event, context) => {
     });
 
     // 送料の追加
-    const SHIPPING_FEE = 600;
     line_items.push({
       price_data: {
         currency: 'jpy',
