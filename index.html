@@ -1814,6 +1814,7 @@
     const VENUE_DISCOUNT_RATE = 0.15;
     let venueEvent = null;          // 会場モード中の大会情報
     let venueModeFromUrl = false;   // 会場URLから開かれたか（代理入力で一時的に有効化した場合は false）
+    let urlVenueEvent = null;       // 会場URLで開いた大会（代理入力の終了後に戻すため）
     let venueStaffProxy = false;    // スタッフ代理入力中か
 
     let couponList = [];
@@ -2978,6 +2979,10 @@
 
       // 会場販売：Stripeには進まず、会場払いの注文として受け付ける
       if (venueEvent) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shippingEmail)) {
+          alert('メールアドレスの形式が正しくありません。ご確認ください。');
+          return;
+        }
         submitVenueOrder({ name, email: shippingEmail, zip, address, phone });
         return;
       }
@@ -3112,7 +3117,8 @@
       try {
         const doc = await db.collection('venue_events').doc(eventId).get();
         if (!doc.exists || !isVenueEventOpen(doc.data())) return; // 開催日以外は通常のWeb販売
-        activateVenueMode({ id: doc.id, ...doc.data() }, true);
+        urlVenueEvent = { id: doc.id, ...doc.data() };
+        activateVenueMode(urlVenueEvent, true);
 
         // 受付済みの注文があれば受付番号画面を再表示（リロード対策）
         const saved = JSON.parse(localStorage.getItem(VENUE_RECEIPT_KEY) || 'null');
@@ -3136,6 +3142,7 @@
       document.getElementById('coupon-code').value = '';
       document.getElementById('coupon-message').style.display = 'none';
       rerenderModelCards();
+      repriceCart();
       renderCart();
     }
 
@@ -3145,7 +3152,17 @@
       document.body.classList.remove('venue-mode');
       document.getElementById('btn-submit').innerHTML = SUBMIT_BUTTON_DEFAULT_HTML;
       rerenderModelCards();
+      repriceCart();
       renderCart();
+    }
+
+    // 価格モード（会場/通常）が切り替わったときに、カート内の価格を計算し直す
+    function repriceCart() {
+      cart.forEach(item => {
+        const priceInfo = getPriceData(item.model, item.lens);
+        item.price = priceInfo.sale;
+        item.originalPrice = priceInfo.orig;
+      });
     }
 
     function rerenderModelCards() {
@@ -3371,7 +3388,8 @@
         <img src="${src}" alt="QR"><p>スマートフォンで読み取って、商品を選んでご注文ください。<br>注文確定後、受付番号の画面をスタッフにお見せください。<br>お支払い：現金 / Square</p>
         <p style="font-size:0.9rem;color:#64748b;">${escHtml(title)}</p></body></html>`);
       win.document.close();
-      win.onload = () => win.print();
+      // 画像はdataURLのため即座に描画される。onloadは発火済みのことがあるので使わない
+      setTimeout(() => { win.focus(); win.print(); }, 300);
     }
 
     /* ---------- スタッフ：会場受付画面 ---------- */
@@ -3613,7 +3631,9 @@
           <div class="desk-card">
             <div style="font-weight:700;">支払方法：${order.paymentMethod === 'cash' ? '現金' : 'Square'}${paidAt ? `（${paidAt}）` : ''}</div>
             ${order.sheetSynced
-              ? '<div style="color:#16a34a; font-weight:700; margin-top:8px;"><i class="fas fa-check-circle"></i> スプレッドシート記録・お客様へのメール送信済み</div>'
+              ? (order.emailError
+                  ? `<div style="color:#16a34a; font-weight:700; margin-top:8px;"><i class="fas fa-check-circle"></i> スプレッドシートに記録済み</div><div style="color:#ea580c; font-weight:700; margin-top:4px;"><i class="fas fa-exclamation-triangle"></i> お客様へのメールが送れませんでした（${escHtml(order.email)}）。アドレスをご確認のうえ、必要なら個別にご連絡ください。</div>`
+                  : '<div style="color:#16a34a; font-weight:700; margin-top:8px;"><i class="fas fa-check-circle"></i> スプレッドシート記録・お客様へのメール送信済み</div>')
               : `<div style="color:#ef4444; font-weight:700; margin-top:8px;"><i class="fas fa-exclamation-triangle"></i> スプレッドシート記録・メール送信が完了していません${order.sheetError ? `<br><span style="font-weight:normal; font-size:0.85rem;">${escHtml(order.sheetError)}</span>` : ''}</div>
                  <button type="button" class="desk-confirm-btn" style="background:#ea580c;" onclick="resyncDeskOrder()" ${deskState.busy ? 'disabled' : ''}>再送する</button>`}
           </div>`;
@@ -3677,6 +3697,8 @@
         const data = await callVenueStaffApi({ order_id: order.id, action: 'confirm', payment_method: deskState.payMethod, deliveries });
         if (data.synced === false) {
           alert(`支払済にしましたが、スプレッドシート記録・メール送信に失敗しました。\n「支払済」タブの該当注文から再送してください。\n\n${data.error || ''}`);
+        } else if (data.email_error) {
+          alert(`支払済にし、スプレッドシートに記録しましたが、お客様へのメールが送れませんでした。\nメールアドレス（${order.email}）をご確認ください。`);
         }
         deskState.payMethod = null;
         deskState.cashReceived = '';
@@ -3741,7 +3763,11 @@
     function finishStaffProxy() {
       venueStaffProxy = false;
       document.body.classList.remove('staff-proxy');
-      if (!venueModeFromUrl) deactivateVenueMode();
+      if (urlVenueEvent) {
+        if (!venueEvent || venueEvent.id !== urlVenueEvent.id) activateVenueMode(urlVenueEvent, true);
+      } else {
+        deactivateVenueMode();
+      }
       resetOrderForm();
     }
 

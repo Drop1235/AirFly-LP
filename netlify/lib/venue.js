@@ -48,6 +48,8 @@ async function verifyAdmin(idToken) {
   }
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // 日本時間の今日（YYYY-MM-DD）
 function todayJst() {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -104,6 +106,7 @@ async function sendVenueOrderToGas(order) {
   if (!result || result.status !== 'success') {
     throw new Error('GAS処理エラー: ' + (result && result.message ? result.message : '不明な応答'));
   }
+  return result;
 }
 
 module.exports = {
@@ -113,6 +116,7 @@ module.exports = {
   todayJst,
   isEventOpen,
   json,
+  EMAIL_PATTERN,
   CORS_HEADERS,
   sendVenueOrderToGas
 };

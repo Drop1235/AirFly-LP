@@ -35,6 +35,7 @@ exports.handler = async (event) => {
     if (action === 'confirm') {
       if (!PAYMENT_METHODS.includes(payment_method)) return json(400, { error: '支払方法が不正です。' });
 
+      let expired = false;
       await db.runTransaction(async (tx) => {
         const snap = await tx.get(orderRef);
         if (!snap.exists) throw httpError(404, '注文が見つかりません。');
@@ -43,7 +44,9 @@ exports.handler = async (event) => {
 
         const eventSnap = await tx.get(db.collection('venue_events').doc(order.eventId));
         if (!isEventOpen(eventSnap.exists ? eventSnap.data() : null)) {
-          throw httpError(400, '受付期間が終了した注文です（未払いのため自動キャンセル扱い）。');
+          expired = true;
+          tx.update(orderRef, { status: 'cancelled', cancelledAt: admin.firestore.FieldValue.serverTimestamp() });
+          return;
         }
 
         const deliveryList = Array.isArray(deliveries) ? deliveries : [];
@@ -59,6 +62,9 @@ exports.handler = async (event) => {
           paidAt: admin.firestore.FieldValue.serverTimestamp()
         });
       });
+      if (expired) {
+        return json(400, { error: '受付期間が終了した未払いの注文のため、キャンセル扱いにしました。' });
+      }
     } else if (action !== 'resync') {
       return json(400, { error: '不正な操作です。' });
     }
@@ -70,9 +76,14 @@ exports.handler = async (event) => {
     if (order.sheetSynced) return json(200, { status: 'paid', synced: true, total: order.total });
 
     try {
-      await sendVenueOrderToGas(order);
-      await orderRef.update({ sheetSynced: true, sheetError: admin.firestore.FieldValue.delete() });
-      return json(200, { status: 'paid', synced: true, total: order.total });
+      const result = await sendVenueOrderToGas(order);
+      const emailError = result.email_error || '';
+      await orderRef.update({
+        sheetSynced: true,
+        sheetError: admin.firestore.FieldValue.delete(),
+        emailError: emailError || admin.firestore.FieldValue.delete()
+      });
+      return json(200, { status: 'paid', synced: true, total: order.total, email_error: emailError });
     } catch (e) {
       console.error('GAS sync failed:', e);
       await orderRef.update({ sheetError: e.message });
