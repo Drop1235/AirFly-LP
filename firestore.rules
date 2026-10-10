@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// AirFly LP の Firestore ルール（Firebase コンソールの「Firestore Database → ルール」に貼り付けて「公開」する）
+// ※このファイルがルール全体です。コンソールにこのLPで使っていないコレクションのルールがあれば、消さずに残してください。
+// ※サーバー（Netlify Functions）は管理者権限（Admin SDK）で読み書きするため、このルールの影響を受けません。
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isVenueAdmin() {
+      return request.auth != null && request.auth.token.email == 'hanks@tempmachi.com';
+    }
+
+    // クーポン
+    //  - お客様：コードを指定した1件の確認だけ（「適用」ボタン）。一覧の取得や書き込みはできない
+    //  - 使用済みへの更新はサーバー（create-checkout-session）が行う
+    match /coupons/{code} {
+      allow get: if true;
+      allow list: if isVenueAdmin();
+      allow create, update, delete: if isVenueAdmin();
+    }
+
+    // メルマガ登録
+    //  - お客様：自分のメールアドレスで新規登録するだけ（ドキュメントIDとメールが一致・項目は2つだけ）
+    //  - 読み取り・上書き・削除は不可（管理はコンソールで行う）
+    match /mail_list/{email} {
+      allow create: if email.size() <= 200
+        && email.matches('^[^\\s@/]+@[^\\s@/]+[.][^\\s@/]+$')
+        && request.resource.data.keys().hasOnly(['email', 'subscribedAt'])
+        && request.resource.data.email == email
+        && request.resource.data.subscribedAt == request.time;
+      allow read, update, delete: if false;
+    }
+
+    // 会場販売：大会情報は誰でも読める（会場URL）。登録・削除は管理者のみ
+    match /venue_events/{eventId} {
+      allow read: if true;
+      allow write: if isVenueAdmin();
+    }
+
+    // 会場販売：注文は管理者だけが読める。書き込みはサーバー（Admin SDK）のみ
+    match /venue_orders/{orderId} {
+      allow read: if isVenueAdmin();
+      allow write: if false;
+    }
+  }
+}

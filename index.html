@@ -3064,7 +3064,7 @@
           db.collection('mail_list').doc(shippingEmail).set({
             email: shippingEmail,
             subscribedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
+          }, { merge: true }).catch(e => console.warn('Failed to save to mail_list:', e));
         } catch (e) {
           console.warn('Failed to save to mail_list:', e);
         }
@@ -3088,8 +3088,7 @@
           lens: item.lens,
           frame: item.frame
         })),
-        coupon_code: appliedCouponCode || null,
-        projectId: firebaseConfig.projectId
+        coupon_code: appliedCouponCode || null
       };
 
       fetch('/.netlify/functions/create-checkout-session', {
@@ -3102,14 +3101,7 @@
       .then(response => response.json())
       .then(async data => {
         if(data.url) {
-          // 決済画面へ遷移する前に、クーポンを利用済みにマークする（無制限以外の場合）
-          if (appliedCouponCode && !appliedCouponUnlimited) {
-            try {
-              await db.collection('coupons').doc(appliedCouponCode).update({ isUsed: true });
-            } catch (e) {
-              console.error('Failed to mark coupon as used:', e);
-            }
-          }
+          // ※1回限りのクーポンは、サーバーが決済画面の作成時に使用済みにする
           // Redirect to Stripe Checkout
           window.location.href = data.url;
         } else {
