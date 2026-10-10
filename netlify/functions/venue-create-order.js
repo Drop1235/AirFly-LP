@@ -14,7 +14,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { event_id, email, customer_name, customer_zip, customer_address, customer_phone, items, entered_by, id_token } = body;
+    const { event_id, email, customer_name, customer_zip, customer_address, customer_phone, items, entered_by, id_token, opt_in } = body;
 
     if (!isShortString(event_id, 100)) return json(400, { error: '会場情報が不正です。' });
     if (!isShortString(customer_name, 100) || !isShortString(email, 200) || !isShortString(customer_address, 300)) {
@@ -66,6 +66,7 @@ exports.handler = async (event) => {
         zip: customer_zip,
         address: customer_address.trim(),
         phone: customer_phone,
+        optIn: opt_in === true,
         items: totals.items,
         subtotal: totals.subtotal,
         shippingFee: totals.shippingFee,
