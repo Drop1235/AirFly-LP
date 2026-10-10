@@ -1,6 +1,12 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { getPriceData, SHIPPING_FEE } = require('../lib/pricing');
+const { getPriceData, SHIPPING_FEE, KNOWN_MODELS } = require('../lib/pricing');
 const { getDb, admin } = require('../lib/venue');
+
+const MAX_ITEMS = 50;
+
+function isShortString(v, max) {
+  return typeof v === 'string' && v.trim().length > 0 && v.length <= max;
+}
 
 exports.handler = async (event, context) => {
   // CORS Headers
@@ -28,12 +34,21 @@ exports.handler = async (event, context) => {
     // ※割引の検証先（Firebaseプロジェクト）はクライアントから受け取らない（サーバー側の設定で固定）
     const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code } = JSON.parse(event.body);
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'カートに商品がありません。' })
       };
+    }
+    // 明細はスプレッドシート・メールにそのまま載るため、カタログにある商品だけを受け付ける
+    if (items.length > MAX_ITEMS) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: `一度にご注文いただけるのは${MAX_ITEMS}点までです。` }) };
+    }
+    for (const item of items) {
+      if (!item || !KNOWN_MODELS.includes(item.model) || !isShortString(item.lens, 50) || !isShortString(item.frame, 50)) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: '商品情報が不正です。ページを再読み込みしてやり直してください。' }) };
+      }
     }
 
     // クーポンの検証と消費（1回限りのクーポンは、ここでサーバーが使用済みにする）
@@ -54,7 +69,7 @@ exports.handler = async (event, context) => {
       const priceInfo = getPriceData(item.model, item.lens);
       let securePrice = priceInfo.sale;
       
-      // クーポン割引適用 (各商品の単価を10%オフにする)
+      // クーポン割引適用（各商品の単価に割引率をかける）
       if (appliedDiscount > 0) {
         securePrice = Math.floor(securePrice * (1 - appliedDiscount));
       }
@@ -62,7 +77,7 @@ exports.handler = async (event, context) => {
       totalSale += securePrice;
       
       const productName = `AirFly ${item.model}`;
-      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ' (クーポン10%OFF適用済み)' : '');
+      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ` (クーポン${Math.round(appliedDiscount * 100)}%OFF適用済み)` : '');
       
       return {
         price_data: {

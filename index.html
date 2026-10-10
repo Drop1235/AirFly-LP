@@ -2148,17 +2148,19 @@
         const usageText = c.isUnlimited ? '<span style="color:#8b5cf6; font-weight:bold;">無制限</span>' : '1回のみ';
         const statusText = c.isUsed ? '<span style="color:#ef4444; font-weight:bold;">使用済</span>' : '<span style="color:#10b981; font-weight:bold;">未使用</span>';
         const discountRate = c.discountRate || 10;
+        // クーポンのコードや割引率は Firestore の値なので、必ずエスケープして表示する
         tr.innerHTML = `
-          <td style="font-weight:700;">${c.code}</td>
-          <td><span style="font-weight:700; color:var(--color-accent-blue);">${discountRate}% OFF</span></td>
+          <td style="font-weight:700;">${escHtml(c.code)}</td>
+          <td><span style="font-weight:700; color:var(--color-accent-blue);">${escHtml(discountRate)}% OFF</span></td>
           <td>${createdText}</td>
           <td>${expiryText}</td>
           <td>${usageText}</td>
           <td>${statusText}</td>
           <td>
-            <button onclick="deleteCoupon('${c.code}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
+            <button type="button" class="btn-delete-coupon" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
           </td>
         `;
+        tr.querySelector('.btn-delete-coupon').addEventListener('click', () => deleteCoupon(c.code));
         tbody.appendChild(tr);
       });
     }
@@ -3863,7 +3865,7 @@ function checkOrderSuccess() {
         orderData.items.forEach((item, index) => {
           const div = document.createElement('div');
           div.className = 'complete-item';
-          div.innerHTML = `<strong>[${index + 1}]</strong> モデル: ${item.model} / レンズ: ${item.lens} / フレーム: ${item.frame}`;
+          div.innerHTML = `<strong>[${index + 1}]</strong> モデル: ${escHtml(item.model)} / レンズ: ${escHtml(item.lens)} / フレーム: ${escHtml(item.frame)}`;
           listContainer.appendChild(div);
         });
         

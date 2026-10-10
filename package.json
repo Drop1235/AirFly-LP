@@ -4,7 +4,7 @@
   "description": "AirFly Landing Page with Stripe Integration",
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^12.7.0",
+    "firebase-admin": "^13.10.0",
     "stripe": "^14.0.0"
   }
 }
