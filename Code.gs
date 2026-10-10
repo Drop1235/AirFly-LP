@@ -83,11 +83,20 @@ function doPost(e) {
     // スプレッドシートIDとシート名を指定
     var SPREADSHEET_ID = "1oEODWeCC1Tr7oZ3fFhylvm8MTbEuQjcWyF2YT4ruFOk";
     var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // 最初のシート
+    // 同じ注文が同時・再送で届いても1行だけ記録するよう、重複確認〜追記をロックする
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+    
     ensureChannelHeaders(sheet);
     
-    // 会場注文の再送時：同じ大会・受付番号の行が既にあれば二重記録・二重メールしない
-    if (isVenue && findVenueOrderRow(sheet, params.event_name, params.receipt_no) > 0) {
-      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Venue order already recorded" }))
+    // 再送時：同じ注文の行が既にあれば二重記録・二重メールしない
+    //  - 会場注文：大会名＋受付番号 / Web注文：Stripeの決済ID（Q列）
+    var alreadyRecorded = isVenue
+      ? findVenueOrderRow(sheet, params.event_name, params.receipt_no) > 0
+      : findRowByStripeSession(sheet, params.stripe_session_id) > 0;
+    if (alreadyRecorded) {
+      lock.releaseLock();
+      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Order already recorded" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -95,7 +104,7 @@ function doPost(e) {
     var date = new Date();
     
     // シートの最終行にデータを追加（1回の注文につき1行）
-    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報
+    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報 / Q: Stripe決済ID
     sheet.appendRow([
       date,
       customerName,
@@ -112,8 +121,11 @@ function doPost(e) {
       isVenue ? (params.receipt_no || "") : "",
       isVenue ? (params.payment_method || "") : "クレジットカード(Stripe)",
       isVenue ? describeDeliveries(items) : "配送",
-      isVenue ? (params.entered_by || "") : "お客様"
+      isVenue ? (params.entered_by || "") : "お客様",
+      isVenue ? "" : (params.stripe_session_id || "")
     ]);
+    SpreadsheetApp.flush();
+    lock.releaseLock();
     
     if (isVenue) {
       // 記録は済んでいるので、メール送信に失敗しても記録成功として返す（再送による二重記録を防ぐ）
@@ -170,16 +182,26 @@ function doPost(e) {
       + "決済金額（送料込）: ¥" + parseInt(totalAmount).toLocaleString() + "\n\n"
       + "スプレッドシートをご確認ください。";
 
-    if (email) {
-      GmailApp.sendEmail(email, subjectBuyer, bodyBuyer, {
-        from: adminEmail,
-        name: "株式会社TempMachi"
-      });
+    // 記録は済んでいるので、メール送信に失敗しても記録成功として返す（再送による二重記録・二重メールを防ぐ）
+    var mailError = "";
+    try {
+      if (email) {
+        GmailApp.sendEmail(email, subjectBuyer, bodyBuyer, {
+          from: adminEmail,
+          name: "株式会社TempMachi"
+        });
+      }
+    } catch (buyerMailError) {
+      mailError = buyerMailError.message;
+      bodyAdmin += "\n\n※お客様へのメール送信に失敗しました（" + mailError + "）。メールアドレスをご確認のうえ、個別にご連絡ください。";
+    }
+    try {
+      GmailApp.sendEmail(adminEmail, subjectAdmin, bodyAdmin);
+    } catch (adminMailError) {
+      mailError = mailError || adminMailError.message;
     }
     
-    GmailApp.sendEmail(adminEmail, subjectAdmin, bodyAdmin);
-    
-    return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Order saved and emails sent successfully" }))
+    return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Order saved", "email_error": mailError }))
       .setMimeType(ContentService.MimeType.JSON);
       
   } catch(error) {
@@ -189,14 +211,34 @@ function doPost(e) {
 }
 
 /**
- * L〜P列の見出しが未設定なら自動で追加する（初回のみ）
+ * L〜Q列の見出しのうち未設定のものを自動で追加する
  */
 function ensureChannelHeaders(sheet) {
-  var headerRange = sheet.getRange(1, 12, 1, 5);
+  var headers = ["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者", "決済ID"];
+  var headerRange = sheet.getRange(1, 12, 1, headers.length);
   var current = headerRange.getValues()[0];
-  if (current.join("") === "") {
-    headerRange.setValues([["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者"]]);
+  var changed = false;
+  for (var i = 0; i < headers.length; i++) {
+    if (current[i] === "") {
+      current[i] = headers[i];
+      changed = true;
+    }
   }
+  if (changed) headerRange.setValues([current]);
+}
+
+/**
+ * Web注文の行を探す（Q列: Stripeの決済ID が一致する行番号。なければ 0）
+ */
+function findRowByStripeSession(sheet, sessionId) {
+  if (!sessionId) return 0;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return 0;
+  var values = sheet.getRange(2, 17, lastRow - 1, 1).getValues();
+  for (var i = 0; i < values.length; i++) {
+    if (values[i][0] === sessionId) return i + 2;
+  }
+  return 0;
 }
 
 /**
