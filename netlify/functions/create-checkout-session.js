@@ -81,7 +81,6 @@ exports.handler = async (event, context) => {
     }
 
     // Convert cart items to Stripe line_items format using securely calculated prices
-    const secureItems = [];
     let totalSale = 0;
     
     const line_items = items.map(item => {
@@ -98,21 +97,14 @@ exports.handler = async (event, context) => {
       const productName = `AirFly ${item.model}`;
       const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ' (クーポン10%OFF適用済み)' : '');
       
-      // Store secure item for metadata
-      secureItems.push({
-        model: item.model,
-        lens: item.lens,
-        frame: item.frame,
-        price: securePrice,
-        originalPrice: priceInfo.orig
-      });
-      
       return {
         price_data: {
           currency: 'jpy',
           product_data: {
             name: productName,
             description: productDesc,
+            // Webhook で商品明細を復元するために保持（セッションのメタデータは500文字制限があるため商品ごとに持たせる）
+            metadata: { model: item.model, lens: item.lens, frame: item.frame },
           },
           unit_amount: securePrice,
         },
@@ -135,9 +127,6 @@ exports.handler = async (event, context) => {
 
     // Create Stripe Checkout Session
     const origin = event.headers.origin || process.env.URL || 'http://localhost:8888';
-    
-    // Convert secure items to JSON string for metadata (Webhook will read this)
-    const itemsJson = JSON.stringify(secureItems);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -153,8 +142,7 @@ exports.handler = async (event, context) => {
         customer_address: customer_address || '',
         customer_phone: customer_phone || '',
         opt_in: opt_in ? 'true' : 'false',
-        total_amount: totalSale.toString(),
-        order_items: itemsJson.length <= 400 ? itemsJson : JSON.stringify([{ error: "items too long" }])
+        total_amount: totalSale.toString()
       }
     });
 
