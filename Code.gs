@@ -95,7 +95,7 @@ function doPost(e) {
     var date = new Date();
     
     // シートの最終行にデータを追加（1回の注文につき1行）
-    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K〜O: 販売チャネル情報
+    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報
     sheet.appendRow([
       date,
       customerName,
@@ -107,6 +107,7 @@ function doPost(e) {
       "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
       "",
       (isVenue && shipCount === 0) ? HANDOVER_DONE_STATUS : "",
+      (params.opt_in === true || params.opt_in === "true") ? "希望する" : "希望しない",
       isVenue ? "会場: " + (params.event_name || "") : "Web",
       isVenue ? (params.receipt_no || "") : "",
       isVenue ? (params.payment_method || "") : "クレジットカード(Stripe)",
@@ -188,10 +189,10 @@ function doPost(e) {
 }
 
 /**
- * K〜O列の見出しが未設定なら自動で追加する（初回のみ）
+ * L〜P列の見出しが未設定なら自動で追加する（初回のみ）
  */
 function ensureChannelHeaders(sheet) {
-  var headerRange = sheet.getRange(1, 11, 1, 5);
+  var headerRange = sheet.getRange(1, 12, 1, 5);
   var current = headerRange.getValues()[0];
   if (current.join("") === "") {
     headerRange.setValues([["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者"]]);
@@ -199,13 +200,13 @@ function ensureChannelHeaders(sheet) {
 }
 
 /**
- * 会場注文の行を探す（K列: "会場: 大会名" と L列: 受付番号 が一致する行番号。なければ 0）
+ * 会場注文の行を探す（L列: "会場: 大会名" と M列: 受付番号 が一致する行番号。なければ 0）
  */
 function findVenueOrderRow(sheet, eventName, receiptNo) {
   if (!receiptNo) return 0;
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return 0;
-  var values = sheet.getRange(2, 11, lastRow - 1, 2).getValues();
+  var values = sheet.getRange(2, 12, lastRow - 1, 2).getValues();
   var channel = "会場: " + (eventName || "");
   for (var i = 0; i < values.length; i++) {
     if (values[i][0] === channel && values[i][1] === receiptNo) return i + 2;
@@ -214,7 +215,7 @@ function findVenueOrderRow(sheet, eventName, receiptNo) {
 }
 
 /**
- * 受取方法の一覧（N列用）。例: "1:配送 / 2:手渡し"
+ * 受取方法の一覧（O列用）。例: "1:配送 / 2:手渡し"
  */
 function describeDeliveries(items) {
   var parts = [];

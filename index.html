@@ -3200,6 +3200,7 @@
         customer_address: customer.address,
         customer_phone: customer.phone,
         items: cart.map(item => ({ model: item.model, lens: item.lens, frame: item.frame })),
+        opt_in: !!optIn,
         entered_by: venueStaffProxy ? 'staff' : 'customer'
       };
 

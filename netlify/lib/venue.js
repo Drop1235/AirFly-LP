@@ -87,6 +87,7 @@ async function sendVenueOrderToGas(order) {
     customer_zip: order.zip,
     customer_address: order.address,
     customer_phone: order.phone,
+    opt_in: order.optIn === true,
     subtotal: order.subtotal,
     shipping_fee: order.shippingFee,
     total_amount: order.total,
