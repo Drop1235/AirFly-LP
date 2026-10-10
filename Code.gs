@@ -69,6 +69,7 @@ function doPost(e) {
     // スプレッドシートIDとシート名を指定
     var SPREADSHEET_ID = "1oEODWeCC1Tr7oZ3fFhylvm8MTbEuQjcWyF2YT4ruFOk";
     var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0]; // 最初のシート
+    ensureChannelHeaders(sheet);
     
     // タイムスタンプの取得
     var date = new Date();
@@ -157,6 +158,17 @@ function doPost(e) {
   } catch(error) {
     return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": error.message }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * K〜O列の見出しが未設定なら自動で追加する（初回のみ）
+ */
+function ensureChannelHeaders(sheet) {
+  var headerRange = sheet.getRange(1, 11, 1, 5);
+  var current = headerRange.getValues()[0];
+  if (current.join("") === "") {
+    headerRange.setValues([["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者"]]);
   }
 }
 
