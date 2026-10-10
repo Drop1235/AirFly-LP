@@ -107,7 +107,7 @@ exports.handler = async () => {
 
 | # | 重要度 | 内容 | 対象 |
 |---|---|---|---|
-| B1 | **高** | **Stripe決済後のスプシ記録が失敗すると、注文が消える**。`stripe-webhook.js` は GAS への送信に失敗してもログを出すだけで 200 を返すため、Stripe は再送しない。決済は完了しているのに、台帳にも管理者宛てメールにも残らない | `netlify/functions/stripe-webhook.js:86-91` |
+| B1 | **高** | **Stripe決済後のスプシ記録が失敗すると、注文が消える**。`stripe-webhook.js` は GAS への送信に失敗してもログを出すだけで 200 を返すため、Stripe は再送しない。決済は完了しているのに、台帳にも管理者宛てメールにも残らない | `netlify/functions/stripe-webhook.js:81-85` |
 | B2 | **高** | **5点以上（商品名が短ければ6点以上）の注文で、商品明細が失われる**。Stripe のメタデータが400文字を超えると、明細を `[{error:"items too long"}]` に置き換えるため、台帳には「モデル: undefined」と記録される。4点で393文字（上限ぎりぎり） | `create-checkout-session.js:157` |
 | B3 | 中 | Web のクーポン割引の計算が、画面（合計×割引率を四捨五入）とサーバー（1点ごとに切り捨て）で違う。複数商品のとき、表示額と決済額が数円ずれることがある | `index.html` renderCart / `create-checkout-session.js` |
 | B4 | 低 | 会場受付の確定処理で、GAS への送信中に別端末から再送するとメールが二重になりうる（台帳は重複判定済み）。スタッフ1名の運用なら実害はほぼない | `venue-confirm-payment.js` |
