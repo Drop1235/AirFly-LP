@@ -18,6 +18,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- QRコード生成（会場販売の受付URL用） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     /* =====================================================
@@ -1036,6 +1038,127 @@
       line-height: 1.6;
     }
   </style>
+  <style>
+    /* =====================================================
+       会場販売（大会会場での受付）
+    ===================================================== */
+    .venue-banner {
+      display: none;
+      background: linear-gradient(90deg, #ff7a00, #ffb600);
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin: 0 auto 24px;
+      max-width: 600px;
+      line-height: 1.5;
+      box-shadow: 0 4px 12px rgba(255, 140, 0, 0.25);
+    }
+    .venue-banner small { display: block; font-weight: 700; font-size: 0.8rem; opacity: 0.95; }
+    body.venue-mode .venue-banner { display: block; }
+    body.venue-mode #coupon-box { display: none; }
+    .venue-price-note { display: none; margin-top: 8px; font-size: 0.95rem; color: #ea580c; font-weight: 700; text-align: right; }
+    body.venue-mode .venue-price-note { display: block; }
+    .card-venue-price { display: block; margin-top: 4px; color: #ea580c; font-weight: 900; font-size: 1.05rem; }
+
+    /* スタッフ代理入力中バー */
+    .staff-proxy-bar {
+      display: none;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+      background: #1e293b; color: #fff;
+      padding: 10px 16px; gap: 12px;
+      align-items: center; justify-content: space-between;
+      font-weight: 700; font-size: 0.9rem;
+    }
+    body.staff-proxy .staff-proxy-bar { display: flex; }
+    body.staff-proxy { padding-bottom: 64px; }
+    .staff-proxy-bar button {
+      background: #fff; color: #1e293b; border: none; border-radius: 6px;
+      padding: 8px 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+
+    /* 受付番号画面（お客様） */
+    #venue-receipt-screen {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: #ffffff; z-index: 10000; overflow-y: auto; padding: 32px 16px;
+    }
+    #venue-receipt-screen.visible { display: block; animation: fadeIn 0.4s ease forwards; }
+    .venue-receipt-event { font-weight: 700; color: #ea580c; margin-bottom: 8px; }
+    .venue-receipt-label { font-size: 0.9rem; font-weight: 700; color: var(--color-text-secondary); }
+    .venue-receipt-no {
+      font-family: var(--font-display); font-size: clamp(4rem, 22vw, 6.5rem);
+      line-height: 1; color: var(--color-accent-blue); letter-spacing: 0.04em; margin: 4px 0 20px;
+    }
+    .venue-receipt-instruction {
+      background: #eff6ff; border: 2px solid var(--color-accent-blue); border-radius: 12px;
+      padding: 16px; font-weight: 700; color: #1e3a8a; margin-bottom: 24px; line-height: 1.6;
+    }
+    .venue-receipt-breakdown { margin-top: 12px; font-size: 0.9rem; color: var(--color-text-secondary); text-align: right; line-height: 1.8; }
+
+    /* 会場受付画面（スタッフ） */
+    #venue-desk {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: #f1f5f9; z-index: 10001; color: #1e293b;
+      flex-direction: column; text-align: left;
+    }
+    #venue-desk.visible { display: flex; }
+    .desk-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      background: #fff; border-bottom: 1px solid #e2e8f0; padding: 12px 16px;
+    }
+    .desk-title { font-size: 1.15rem; font-weight: 900; }
+    .desk-sub { font-size: 0.8rem; color: #64748b; }
+    .desk-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .desk-close { padding: 8px 16px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .desk-body { flex: 1; display: flex; min-height: 0; }
+    .desk-list-pane { width: 360px; max-width: 100%; display: flex; flex-direction: column; border-right: 1px solid #e2e8f0; background: #fff; min-height: 0; }
+    .desk-detail-pane { flex: 1; overflow-y: auto; padding: 20px 16px; min-width: 0; }
+    .desk-tabs { display: flex; gap: 8px; padding: 12px 12px 0; }
+    .desk-tab { flex: 1; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .desk-tab.active { background: var(--color-accent-blue); border-color: var(--color-accent-blue); color: #fff; }
+    .desk-search { margin: 12px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+    .desk-order-list { flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+    .desk-order-card {
+      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; font: inherit; color: inherit;
+    }
+    .desk-order-card.selected { border-color: var(--color-accent-blue); background: #eff6ff; }
+    .desk-order-no { font-family: var(--font-display); font-size: 2rem; line-height: 1; color: var(--color-accent-blue); min-width: 80px; }
+    .desk-order-meta { flex: 1; min-width: 0; font-size: 0.85rem; color: #475569; }
+    .desk-order-meta strong { display: block; color: #1e293b; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .desk-order-amount { font-weight: 900; white-space: nowrap; }
+    .desk-empty { text-align: center; color: #94a3b8; padding: 32px 12px; font-weight: 700; }
+    .desk-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .desk-detail-no { font-family: var(--font-display); font-size: 3.5rem; line-height: 1; color: var(--color-accent-blue); }
+    .desk-item { padding: 12px 0; border-bottom: 1px dashed #e2e8f0; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .desk-item:last-child { border-bottom: none; }
+    .desk-toggle { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
+    .desk-toggle button { padding: 8px 14px; border: none; background: #fff; font-weight: 700; cursor: pointer; color: #475569; }
+    .desk-toggle button.active { background: #1e293b; color: #fff; }
+    .desk-total-row { display: flex; justify-content: space-between; padding: 4px 0; color: #475569; }
+    .desk-total-row.grand { font-size: 1.6rem; font-weight: 900; color: #1e293b; border-top: 2px solid #e2e8f0; margin-top: 8px; padding-top: 12px; }
+    .desk-pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .desk-pay-btn { padding: 18px 12px; font-size: 1.1rem; font-weight: 900; border: 2px solid #cbd5e1; border-radius: 12px; background: #fff; cursor: pointer; color: #1e293b; }
+    .desk-pay-btn.active { border-color: var(--color-accent-blue); background: #eff6ff; color: var(--color-accent-blue); }
+    .desk-confirm-btn { width: 100%; margin-top: 16px; padding: 18px; font-size: 1.15rem; font-weight: 900; border: none; border-radius: 12px; background: #16a34a; color: #fff; cursor: pointer; }
+    .desk-confirm-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .desk-quick-cash { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .desk-quick-cash button { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-weight: 700; cursor: pointer; }
+    .desk-big-amount { font-size: 2.4rem; font-weight: 900; text-align: center; color: #1e293b; }
+    .desk-link-btn { background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 8px 0; }
+    .desk-back-btn { display: none; margin-bottom: 12px; }
+    @media (max-width: 760px) {
+      .desk-list-pane { width: 100%; border-right: none; }
+      .desk-detail-pane { display: none; }
+      .desk-body.show-detail .desk-list-pane { display: none; }
+      .desk-body.show-detail .desk-detail-pane { display: block; }
+      .desk-back-btn { display: inline-block; }
+    }
+  </style>
 </head>
 <body>
 
@@ -1071,6 +1194,40 @@
 
 
   <!-- =====================================================
+       会場販売：受付番号画面（お客様がスタッフに見せる画面）
+  ===================================================== -->
+  <div id="venue-receipt-screen">
+    <div class="complete-container">
+      <div class="venue-receipt-event" id="venue-receipt-event"></div>
+      <h2 class="complete-title" style="margin-bottom: 8px;">ご注文を受け付けました</h2>
+      <div class="venue-receipt-label">受付番号</div>
+      <div class="venue-receipt-no" id="venue-receipt-no"></div>
+      <div class="venue-receipt-instruction">
+        <i class="fas fa-hand-point-right"></i> この画面をスタッフにお見せいただき、<br>お支払い（現金またはSquare）をお願いいたします。
+      </div>
+      <div class="complete-details">
+        <div class="complete-details-title">【ご注文内容】</div>
+        <div id="venue-receipt-items"></div>
+        <div class="venue-receipt-breakdown" id="venue-receipt-breakdown"></div>
+        <div class="complete-total">
+          お支払い金額（送料込）: <span id="venue-receipt-total">¥0</span>
+        </div>
+      </div>
+      <div class="complete-note">
+        お支払いの確認後、ご入力いただいたメールアドレスにご注文内容の詳細をお送りします。<br>
+        ※お支払いが完了するまで、ご注文は確定しません。
+      </div>
+      <button class="btn-flow-back" onclick="closeVenueReceipt()">別の注文をする</button>
+    </div>
+  </div>
+
+  <!-- スタッフ代理入力中の表示 -->
+  <div class="staff-proxy-bar">
+    <span><i class="fas fa-user-edit"></i> スタッフ代理入力中：<span id="staff-proxy-event"></span></span>
+    <button type="button" onclick="exitStaffProxy()">代理入力をやめる</button>
+  </div>
+
+  <!-- =====================================================
        メインコンテンツ (全画面)
   ===================================================== -->
   <div id="main-content">
@@ -1085,6 +1242,7 @@
     <!-- ファーストビュー #hero -->
     <section id="hero">
       <div class="hero-content fade-in-up">
+        <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>この会場でのご注文は全商品15%OFFでご購入いただけます</small></div>
         
         <h1 class="hero-title">
           Beyond
@@ -1190,6 +1348,7 @@
         
         <h2 class="section-title fade-in-up">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>お支払いは注文確定後、会場にて現金またはSquareで承ります</small></div>
         
         <!-- ステップ1: モデル選択 -->
         <div id="flow-step-1" class="flow-step active">
@@ -1280,6 +1439,7 @@
               <div id="coupon-discount-row" style="display: none; margin-top: 8px; font-size: 0.95rem; color: #e11d48; font-weight: bold; text-align: right;">
                 クーポン割引 (10%OFF): -<span id="coupon-discount-amount">¥0</span>
               </div>
+              <div class="venue-price-note" id="venue-price-note"></div>
             </div>
           </div>
 
@@ -1306,8 +1466,8 @@
               <input type="tel" id="shipping-phone" placeholder="09012345678" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
 
-            <!-- クーポン入力欄 -->
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--color-border);">
+            <!-- クーポン入力欄（会場販売では非表示） -->
+            <div id="coupon-box" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--color-border);">
               <label for="coupon-code" style="display: block; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-ticket-alt"></i> クーポンコード（任意）</label>
               <div style="display: flex; gap: 8px;">
                 <input type="text" id="coupon-code" placeholder="例: SPECIAL10" style="flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
@@ -1459,6 +1619,44 @@
       <!-- 管理者ダッシュボードビュー -->
       <div id="admin-dashboard-view" style="display: none;">
         <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;">管理者メニュー</h2>
+
+        <!-- 会場販売（大会）セクション -->
+        <div class="admin-section">
+          <h3><i class="fas fa-store"></i> 会場販売（大会）</h3>
+          <div class="admin-grid">
+            <div style="grid-column: 1 / -1;">
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">大会名</label>
+              <input type="text" id="new-venue-name" placeholder="例: ○○カップ2026" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">開催日（初日）</label>
+              <input type="date" id="new-venue-start" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; height: 38px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">最終日（1日開催なら空欄）</label>
+              <input type="date" id="new-venue-end" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; height: 38px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">受付番号の頭文字</label>
+              <input type="text" id="new-venue-prefix" value="A" maxlength="2" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+            </div>
+          </div>
+          <button class="btn-admin-action" onclick="createVenueEvent()">大会を登録</button>
+          <div id="admin-venue-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>大会名</th>
+                  <th>開催日</th>
+                  <th>状態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-venue-list-body"></tbody>
+            </table>
+          </div>
+        </div>
         
         <!-- パスワード変更セクション -->
         <div class="admin-section">
@@ -1544,6 +1742,46 @@
     </div>
   </div>
 
+  <!-- 会場URL・QRコード表示 -->
+  <div id="venue-qr-overlay" class="modal-overlay" onclick="if (event.target.id === 'venue-qr-overlay') closeVenueQr()">
+    <div class="admin-modal" style="max-width: 420px; text-align: center;">
+      <button class="admin-modal-close" onclick="closeVenueQr()">&times;</button>
+      <h3 id="venue-qr-title" style="margin-bottom: 16px; padding-right: 24px;"></h3>
+      <div id="venue-qr-code" style="display: inline-block; padding: 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
+      <input type="text" id="venue-qr-url" readonly style="width:100%; margin-top: 16px; padding:8px; border:1px solid #e2e8f0; border-radius:6px; font-size: 0.8rem; background: #f8fafc;">
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px;">
+        <button class="btn-admin-action" onclick="copyVenueUrl()"><i class="fas fa-copy"></i> URLをコピー</button>
+        <button class="btn-admin-action" style="background: #1e293b;" onclick="printVenueQr()"><i class="fas fa-print"></i> 印刷用ページ</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #64748b; margin-top: 12px;">※このURLは開催日のみ有効です（開催日以外は通常のWeb販売ページになります）。</p>
+    </div>
+  </div>
+
+  <!-- 会場受付画面（スタッフ用） -->
+  <div id="venue-desk">
+    <div class="desk-header">
+      <div>
+        <div class="desk-title"><i class="fas fa-cash-register"></i> 会場受付：<span id="desk-event-name"></span></div>
+        <div class="desk-sub" id="desk-event-date"></div>
+      </div>
+      <div class="desk-header-actions">
+        <button class="btn-admin-action" onclick="startStaffProxyOrder()"><i class="fas fa-user-edit"></i> 代理で注文を入力</button>
+        <button class="desk-close" onclick="closeVenueDesk()">閉じる</button>
+      </div>
+    </div>
+    <div class="desk-body" id="desk-body">
+      <div class="desk-list-pane">
+        <div class="desk-tabs">
+          <button class="desk-tab active" id="desk-tab-unpaid" onclick="switchDeskTab('unpaid')">未払い</button>
+          <button class="desk-tab" id="desk-tab-paid" onclick="switchDeskTab('paid')">支払済</button>
+        </div>
+        <input type="search" class="desk-search" id="desk-search" placeholder="受付番号・お名前で検索" oninput="onDeskSearch(this.value)">
+        <div class="desk-order-list" id="desk-order-list"></div>
+      </div>
+      <div class="desk-detail-pane" id="desk-order-detail"></div>
+    </div>
+  </div>
+
   </div> <!-- /#main-content -->
 
   <!-- =====================================================
@@ -1571,6 +1809,12 @@
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // 会場販売の状態（会場モード中は会場限定価格で表示・会場払いで受付）
+    const VENUE_DISCOUNT_RATE = 0.15;
+    let venueEvent = null;          // 会場モード中の大会情報
+    let venueModeFromUrl = false;   // 会場URLから開かれたか（代理入力で一時的に有効化した場合は false）
+    let venueStaffProxy = false;    // スタッフ代理入力中か
 
     let couponList = [];
     let appliedCouponCode = '';
@@ -1663,6 +1907,7 @@
         document.getElementById('admin-login-view').style.display = 'none';
         document.getElementById('admin-dashboard-view').style.display = 'block';
         loadCouponsFromFirebase();
+        loadVenueEvents();
         return;
       }
       
@@ -1696,6 +1941,7 @@
         document.getElementById('admin-login-view').style.display = 'none';
         document.getElementById('admin-dashboard-view').style.display = 'block';
         loadCouponsFromFirebase();
+        loadVenueEvents();
       } catch (error) {
         console.error('Auth error:', error);
         msgEl.style.color = '#ef4444';
@@ -1985,6 +2231,7 @@
       initScrollAnimation();
       initVisualOrderFlow();
       checkAdminStatus();
+      initVenueMode();
     }
 
         /* ==============================================
@@ -2265,6 +2512,10 @@
            orig = 22000;
         }
       }
+      // 会場販売では会場限定割引（サーバー側 netlify/lib/pricing.js と同じ計算）
+      if (venueEvent) {
+        return { orig: orig, sale: Math.floor(orig * (1 - VENUE_DISCOUNT_RATE)) };
+      }
       return { orig: orig, sale: orig };
     }
 
@@ -2375,8 +2626,9 @@
               <div class="card-price-row">
                 <div>
                   <span style="font-size: 0.85rem; color: #64748b; font-weight: normal; margin-right: 4px;">定価</span>
-                  <span class="card-price-sale" style="color: #1a1a1a;">¥${formatPrice(info.priceOrig)}</span>
+                  <span class="card-price-sale" style="color: #1a1a1a;${venueEvent ? ' text-decoration: line-through; font-size: 0.95rem;' : ''}">¥${formatPrice(info.priceOrig)}</span>
                   <span class="card-price-suffix"> (税込)</span>
+                  ${venueEvent ? `<span class="card-venue-price">会場価格 ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))}〜 (税込)</span>` : ''}
                 </div>
               </div>
             </div>
@@ -2448,10 +2700,11 @@
         const catTitle = document.createElement('div');
         catTitle.className = 'lens-category-title';
         catTitle.innerHTML = title;
+        const priceBasis = venueEvent ? '（定価）' : '';
         if (categoryType === 'polarized') {
-          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋4,400円</span>`;
+          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋4,400円${priceBasis}</span>`;
         } else if (categoryType === 'photochromic') {
-          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋6,600円</span>`;
+          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋6,600円${priceBasis}</span>`;
         }
         lensRoot.appendChild(catTitle);
 
@@ -2614,7 +2867,7 @@
           <div class="cart-item-detail"><strong>モデル：</strong>${item.model}</div>
           <div class="cart-item-detail"><strong>レンズ：</strong>${item.lens}</div>
           <div class="cart-item-detail"><strong>フレーム：</strong>${item.frame}</div>
-          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">小計：¥${formatPrice(item.price)}（税込）</div>
+          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">小計：¥${formatPrice(item.price)}（税込）${venueEvent ? `<span style="font-weight:500; color:#64748b; text-decoration:line-through; margin-left:8px;">¥${formatPrice(item.originalPrice)}</span>` : ''}</div>
         `;
         container.appendChild(itemDiv);
       });
@@ -2628,6 +2881,13 @@
         document.getElementById('coupon-discount-row').innerHTML = `クーポン割引 (${Math.round(appliedDiscount * 100)}%OFF): -¥${formatPrice(discountAmount)}`;
       } else {
         document.getElementById('coupon-discount-row').style.display = 'none';
+      }
+      
+      const venueNote = document.getElementById('venue-price-note');
+      if (venueEvent && cart.length > 0) {
+        venueNote.textContent = `会場限定15%OFF適用済み（定価合計 ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)}）`;
+      } else {
+        venueNote.textContent = '';
       }
       
       const SHIPPING_FEE = 600;
@@ -2713,6 +2973,12 @@
       phone = phone.replace(/[-ー]/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
       if (!/^\d{10,11}$/.test(phone)) {
         alert('電話番号はハイフンなしの半角数字10桁または11桁で入力してください。');
+        return;
+      }
+
+      // 会場販売：Stripeには進まず、会場払いの注文として受け付ける
+      if (venueEvent) {
+        submitVenueOrder({ name, email: shippingEmail, zip, address, phone });
         return;
       }
       
@@ -2805,6 +3071,685 @@
         console.error('Checkout error:', err);
         alert('通信エラーが発生しました。もう一度お試しください。');
       });
+    }
+
+    /* ==============================================
+       会場販売（大会会場での受付）
+       - お客様：?venue=<大会ID> のURLで開くと会場モード（開催日のみ）
+       - スタッフ：管理者メニュー → 会場受付 で支払済を確定
+    ============================================== */
+    const VENUE_RECEIPT_KEY = 'airfly_venue_receipt';
+    const SUBMIT_BUTTON_DEFAULT_HTML = '<i class="fas fa-lock"></i> 決済に進む';
+
+    function escHtml(str) {
+      return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // 日本時間の今日（YYYY-MM-DD）
+    function todayJst() {
+      return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    }
+
+    function isVenueEventOpen(ev) {
+      if (!ev || !ev.startDate) return false;
+      const today = todayJst();
+      return ev.startDate <= today && today <= (ev.endDate || ev.startDate);
+    }
+
+    function formatVenueDates(ev) {
+      if (!ev.endDate || ev.endDate === ev.startDate) return ev.startDate;
+      return `${ev.startDate} 〜 ${ev.endDate}`;
+    }
+
+    function venueUrl(eventId) {
+      return `${window.location.origin}${window.location.pathname}?venue=${encodeURIComponent(eventId)}`;
+    }
+
+    // 会場URLで開かれた場合に会場モードを有効にする
+    async function initVenueMode() {
+      const eventId = new URLSearchParams(window.location.search).get('venue');
+      if (!eventId) return;
+      try {
+        const doc = await db.collection('venue_events').doc(eventId).get();
+        if (!doc.exists || !isVenueEventOpen(doc.data())) return; // 開催日以外は通常のWeb販売
+        activateVenueMode({ id: doc.id, ...doc.data() }, true);
+
+        // 受付済みの注文があれば受付番号画面を再表示（リロード対策）
+        const saved = JSON.parse(localStorage.getItem(VENUE_RECEIPT_KEY) || 'null');
+        if (saved && saved.eventId === doc.id && saved.date === todayJst()) {
+          showVenueReceipt(saved);
+        }
+      } catch (e) {
+        console.error('Venue mode init failed:', e);
+      }
+    }
+
+    function activateVenueMode(ev, fromUrl) {
+      venueEvent = ev;
+      venueModeFromUrl = fromUrl;
+      document.body.classList.add('venue-mode');
+      document.querySelectorAll('.venue-event-name').forEach(el => el.textContent = ev.name);
+      document.getElementById('btn-submit').innerHTML = '<i class="fas fa-check"></i> 注文を確定（会場でお支払い）';
+      // 会場クーポンとの併用不可：Webクーポンの適用状態をクリア
+      appliedCouponCode = '';
+      appliedDiscount = 0;
+      document.getElementById('coupon-code').value = '';
+      document.getElementById('coupon-message').style.display = 'none';
+      rerenderModelCards();
+      renderCart();
+    }
+
+    function deactivateVenueMode() {
+      venueEvent = null;
+      venueModeFromUrl = false;
+      document.body.classList.remove('venue-mode');
+      document.getElementById('btn-submit').innerHTML = SUBMIT_BUTTON_DEFAULT_HTML;
+      rerenderModelCards();
+      renderCart();
+    }
+
+    function rerenderModelCards() {
+      ['model-cards-men', 'model-cards-women', 'model-cards-kids'].forEach(id => document.getElementById(id).innerHTML = '');
+      initVisualOrderFlow();
+    }
+
+    // カート・入力欄・選択状態を初期化する
+    function resetOrderForm() {
+      cart = [];
+      orderState = { model: '', lens: '', frame: '', price: 0, originalPrice: 0 };
+      ['shipping-name', 'shipping-email', 'shipping-zip', 'shipping-address', 'shipping-phone'].forEach(id => document.getElementById(id).value = '');
+      renderCart();
+      addAnotherItem();
+    }
+
+    async function submitVenueOrder(customer) {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.style.display = 'flex';
+
+      // メルマガ購読の保存（Web注文と同じ）
+      const optIn = document.getElementById('newsletter-opt-in') && document.getElementById('newsletter-opt-in').checked;
+      if (optIn) {
+        db.collection('mail_list').doc(customer.email).set({
+          email: customer.email,
+          subscribedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(e => console.warn('Failed to save to mail_list:', e));
+      }
+
+      const payload = {
+        event_id: venueEvent.id,
+        email: customer.email,
+        customer_name: customer.name,
+        customer_zip: customer.zip,
+        customer_address: customer.address,
+        customer_phone: customer.phone,
+        items: cart.map(item => ({ model: item.model, lens: item.lens, frame: item.frame })),
+        entered_by: venueStaffProxy ? 'staff' : 'customer'
+      };
+
+      try {
+        if (venueStaffProxy) {
+          const user = firebase.auth().currentUser;
+          if (!user) throw new Error('スタッフのログインが切れています。管理者メニューから再ログインしてください。');
+          payload.id_token = await user.getIdToken();
+        }
+        const res = await fetch('/.netlify/functions/venue-create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '注文の受付に失敗しました。');
+
+        overlay.style.display = 'none';
+
+        if (venueStaffProxy) {
+          // 代理入力：そのまま会場受付画面でお会計へ
+          const eventId = venueEvent.id;
+          finishStaffProxy();
+          openVenueDesk(eventId, data.order_id);
+          return;
+        }
+
+        const receipt = {
+          eventId: venueEvent.id,
+          eventName: venueEvent.name,
+          date: todayJst(),
+          receiptNo: data.receipt_no,
+          items: data.items,
+          subtotal: data.subtotal,
+          shippingFee: data.shipping_fee,
+          total: data.total
+        };
+        localStorage.setItem(VENUE_RECEIPT_KEY, JSON.stringify(receipt));
+        showVenueReceipt(receipt);
+      } catch (e) {
+        overlay.style.display = 'none';
+        console.error('Venue order error:', e);
+        alert(e.message || '通信エラーが発生しました。もう一度お試しください。');
+      }
+    }
+
+    function showVenueReceipt(receipt) {
+      document.getElementById('venue-receipt-event').textContent = `${receipt.eventName} 会場`;
+      document.getElementById('venue-receipt-no').textContent = receipt.receiptNo;
+      document.getElementById('venue-receipt-items').innerHTML = receipt.items.map((item, i) =>
+        `<div class="complete-item"><strong>[${i + 1}]</strong> モデル: ${escHtml(item.model)} / レンズ: ${escHtml(item.lens)} / フレーム: ${escHtml(item.frame)}<br>¥${formatPrice(item.price)}（会場限定15%OFF）</div>`
+      ).join('');
+      document.getElementById('venue-receipt-breakdown').innerHTML =
+        `商品小計：¥${formatPrice(receipt.subtotal)}<br>送料：¥${formatPrice(receipt.shippingFee)}`;
+      document.getElementById('venue-receipt-total').textContent = `¥${formatPrice(receipt.total)}`;
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('venue-receipt-screen').classList.add('visible');
+      window.scrollTo(0, 0);
+    }
+
+    function closeVenueReceipt() {
+      if (!confirm('受付番号の画面を閉じて、別の注文を始めますか？\n※お支払いがまだの場合は、先にスタッフにこの画面をお見せください。')) return;
+      localStorage.removeItem(VENUE_RECEIPT_KEY);
+      window.location.href = venueUrl(venueEvent ? venueEvent.id : new URLSearchParams(window.location.search).get('venue'));
+    }
+
+    /* ---------- 管理者：大会の登録・一覧 ---------- */
+    let venueEventList = [];
+
+    async function loadVenueEvents() {
+      try {
+        const snapshot = await db.collection('venue_events').get();
+        venueEventList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        venueEventList.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+      } catch (e) {
+        console.error('Failed to load venue events:', e);
+      }
+      renderVenueEvents();
+    }
+
+    function renderVenueEvents() {
+      const tbody = document.getElementById('admin-venue-list-body');
+      if (venueEventList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">登録済みの大会はありません。</td></tr>';
+        return;
+      }
+      const today = todayJst();
+      tbody.innerHTML = venueEventList.map(ev => {
+        let status = '<span style="color:#64748b;">終了</span>';
+        if (isVenueEventOpen(ev)) status = '<span style="color:#16a34a; font-weight:bold;">開催中</span>';
+        else if (ev.startDate > today) status = '<span style="color:#2563eb;">予定</span>';
+        return `<tr>
+          <td style="font-weight:700;">${escHtml(ev.name)}<br><span style="font-size:0.75rem; color:#64748b; font-weight:normal;">受付番号: ${escHtml(ev.prefix || 'A')}-001〜（${ev.orderSeq || 0}件）</span></td>
+          <td style="white-space:nowrap;">${escHtml(formatVenueDates(ev)).replace(' 〜 ', '<br>〜 ')}</td>
+          <td>${status}</td>
+          <td style="white-space:nowrap;">
+            <button onclick="openVenueDesk('${ev.id}')" style="padding:4px 8px; background:#16a34a; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">受付を開く</button>
+            <button onclick="showVenueQr('${ev.id}')" style="padding:4px 8px; background:#2563eb; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">URL・QR</button>
+            <button onclick="deleteVenueEvent('${ev.id}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function createVenueEvent() {
+      const name = document.getElementById('new-venue-name').value.trim();
+      const startDate = document.getElementById('new-venue-start').value;
+      const endDate = document.getElementById('new-venue-end').value || startDate;
+      const prefix = document.getElementById('new-venue-prefix').value.trim().toUpperCase() || 'A';
+      const msgEl = document.getElementById('admin-venue-msg');
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#ef4444';
+
+      if (!name || !startDate) { msgEl.textContent = '大会名と開催日を入力してください。'; return; }
+      if (endDate < startDate) { msgEl.textContent = '最終日は開催日（初日）以降の日付にしてください。'; return; }
+      if (!/^[A-Z]{1,2}$/.test(prefix)) { msgEl.textContent = '受付番号の頭文字は英字1〜2文字で入力してください。'; return; }
+
+      try {
+        await db.collection('venue_events').add({
+          name, startDate, endDate, prefix,
+          orderSeq: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        msgEl.style.color = '#10b981';
+        msgEl.textContent = `大会「${name}」を登録しました。「URL・QR」から会場用のQRコードを印刷できます。`;
+        document.getElementById('new-venue-name').value = '';
+        document.getElementById('new-venue-start').value = '';
+        document.getElementById('new-venue-end').value = '';
+        loadVenueEvents();
+      } catch (e) {
+        console.error('Failed to create venue event:', e);
+        msgEl.textContent = '登録に失敗しました。ログイン状態とFirestoreのルール設定をご確認ください。';
+      }
+    }
+
+    async function deleteVenueEvent(eventId) {
+      const ev = venueEventList.find(e => e.id === eventId);
+      if (!ev) return;
+      if (!confirm(`大会「${ev.name}」を削除しますか？\n※会場用URLが使えなくなります（支払済の注文はスプレッドシートに残ります）。`)) return;
+      try {
+        await db.collection('venue_events').doc(eventId).delete();
+        loadVenueEvents();
+      } catch (e) {
+        console.error('Failed to delete venue event:', e);
+        alert('削除に失敗しました。');
+      }
+    }
+
+    function showVenueQr(eventId) {
+      const ev = venueEventList.find(e => e.id === eventId);
+      if (!ev) return;
+      const url = venueUrl(eventId);
+      document.getElementById('venue-qr-title').textContent = `${ev.name}（${formatVenueDates(ev)}）`;
+      document.getElementById('venue-qr-url').value = url;
+      const box = document.getElementById('venue-qr-code');
+      box.innerHTML = '';
+      new QRCode(box, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+      document.getElementById('venue-qr-overlay').classList.add('visible');
+    }
+
+    function closeVenueQr() {
+      document.getElementById('venue-qr-overlay').classList.remove('visible');
+    }
+
+    function copyVenueUrl() {
+      const input = document.getElementById('venue-qr-url');
+      input.select();
+      (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject())
+        .then(() => alert('URLをコピーしました。'))
+        .catch(() => { document.execCommand('copy'); alert('URLをコピーしました。'); });
+    }
+
+    // ブースに掲示する印刷用ページを開く
+    function printVenueQr() {
+      const canvas = document.querySelector('#venue-qr-code canvas');
+      const img = document.querySelector('#venue-qr-code img');
+      const src = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+      const title = document.getElementById('venue-qr-title').textContent;
+      const win = window.open('', '_blank');
+      if (!win) { alert('ポップアップがブロックされました。許可してから再度お試しください。'); return; }
+      win.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>AirFly 会場注文QR</title>
+        <style>body{font-family:'Noto Sans JP',sans-serif;text-align:center;padding:40px 16px;color:#1e293b}
+        h1{font-size:2rem;margin:0 0 8px}h2{font-size:2.6rem;color:#ea580c;margin:8px 0 24px}
+        img{width:320px;height:320px;image-rendering:pixelated}p{font-size:1.2rem;font-weight:700;line-height:1.7}</style></head>
+        <body><h1>AirFly ご注文はこちら</h1><h2>会場限定 15%OFF</h2>
+        <img src="${src}" alt="QR"><p>スマートフォンで読み取って、商品を選んでご注文ください。<br>注文確定後、受付番号の画面をスタッフにお見せください。<br>お支払い：現金 / Square</p>
+        <p style="font-size:0.9rem;color:#64748b;">${escHtml(title)}</p></body></html>`);
+      win.document.close();
+      win.onload = () => win.print();
+    }
+
+    /* ---------- スタッフ：会場受付画面 ---------- */
+    const deskState = {
+      eventId: null, event: null, orders: [], tab: 'unpaid', search: '',
+      selectedId: null, deliveries: {}, payMethod: null, cashReceived: '', busy: false,
+      unsubscribe: null, lastSelectedJson: ''
+    };
+
+    async function openVenueDesk(eventId, selectOrderId) {
+      if (!firebase.auth().currentUser) {
+        alert('スタッフのログインが必要です。管理者メニューからログインしてください。');
+        return;
+      }
+      let ev = venueEventList.find(e => e.id === eventId);
+      if (!ev) {
+        const doc = await db.collection('venue_events').doc(eventId).get();
+        if (!doc.exists) { alert('大会が見つかりません。'); return; }
+        ev = { id: doc.id, ...doc.data() };
+      }
+      if (deskState.unsubscribe) deskState.unsubscribe();
+      Object.assign(deskState, {
+        eventId, event: ev, orders: [], tab: 'unpaid', search: '',
+        selectedId: selectOrderId || null, deliveries: {}, payMethod: null, cashReceived: '', busy: false, lastSelectedJson: ''
+      });
+      document.getElementById('desk-search').value = '';
+      document.getElementById('desk-event-name').textContent = ev.name;
+      document.getElementById('desk-event-date').textContent =
+        `${formatVenueDates(ev)}　${isVenueEventOpen(ev) ? '受付中' : '※受付期間外（支払済の確定はできません）'}`;
+      document.getElementById('admin-modal-overlay').classList.remove('visible');
+      document.getElementById('venue-desk').classList.add('visible');
+      document.getElementById('desk-body').classList.toggle('show-detail', !!selectOrderId);
+      updateDeskTabs();
+      renderDeskDetail();
+
+      deskState.unsubscribe = db.collection('venue_orders').where('eventId', '==', eventId).onSnapshot(snapshot => {
+        deskState.orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        deskState.orders.sort((a, b) => (b.receiptNo || '').localeCompare(a.receiptNo || '', 'ja', { numeric: true }));
+        renderDeskList();
+        // 入力中の金額が消えないよう、選択中の注文に変化があったときだけ詳細を描き直す
+        const selected = deskState.orders.find(o => o.id === deskState.selectedId);
+        const selectedJson = JSON.stringify(selected || null);
+        if (selectedJson !== deskState.lastSelectedJson) {
+          deskState.lastSelectedJson = selectedJson;
+          renderDeskDetail();
+        }
+      }, err => {
+        console.error('Failed to subscribe venue orders:', err);
+        document.getElementById('desk-order-list').innerHTML = '<div class="desk-empty">注文を読み込めませんでした。<br>ログイン状態とFirestoreのルール設定をご確認ください。</div>';
+      });
+    }
+
+    function closeVenueDesk() {
+      if (deskState.unsubscribe) deskState.unsubscribe();
+      deskState.unsubscribe = null;
+      document.getElementById('venue-desk').classList.remove('visible');
+    }
+
+    function switchDeskTab(tab) {
+      deskState.tab = tab;
+      updateDeskTabs();
+      renderDeskList();
+    }
+
+    function onDeskSearch(value) {
+      deskState.search = value.trim().toUpperCase();
+      renderDeskList();
+    }
+
+    function updateDeskTabs() {
+      const unpaid = deskState.orders.filter(o => o.status === 'unpaid').length;
+      const paid = deskState.orders.filter(o => o.status === 'paid').length;
+      const tabUnpaid = document.getElementById('desk-tab-unpaid');
+      const tabPaid = document.getElementById('desk-tab-paid');
+      tabUnpaid.textContent = `未払い（${unpaid}）`;
+      tabPaid.textContent = `支払済（${paid}）`;
+      tabUnpaid.classList.toggle('active', deskState.tab === 'unpaid');
+      tabPaid.classList.toggle('active', deskState.tab === 'paid');
+    }
+
+    function orderTimeText(order) {
+      const ts = order.createdAt && order.createdAt.toDate ? order.createdAt.toDate() : null;
+      return ts ? ts.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+    }
+
+    function renderDeskList() {
+      updateDeskTabs();
+      const list = document.getElementById('desk-order-list');
+      const q = deskState.search;
+      const orders = deskState.orders.filter(o => o.status === deskState.tab)
+        .filter(o => !q || (o.receiptNo || '').toUpperCase().includes(q) || (o.customerName || '').toUpperCase().includes(q));
+      if (orders.length === 0) {
+        list.innerHTML = `<div class="desk-empty">${deskState.tab === 'unpaid' ? '未払いの注文はありません' : '支払済の注文はありません'}</div>`;
+        return;
+      }
+      list.innerHTML = orders.map(o => `
+        <button type="button" class="desk-order-card${o.id === deskState.selectedId ? ' selected' : ''}" onclick="selectDeskOrder('${o.id}')">
+          <span class="desk-order-no">${escHtml(o.receiptNo)}</span>
+          <span class="desk-order-meta">
+            <strong>${escHtml(o.customerName)} 様</strong>
+            ${o.items.length}点・${orderTimeText(o)}${o.enteredBy === 'staff' ? '・代理入力' : ''}${o.status === 'paid' && !o.sheetSynced ? ' <span style="color:#ef4444; font-weight:700;">要再送</span>' : ''}
+          </span>
+          <span class="desk-order-amount">¥${formatPrice(o.total)}</span>
+        </button>`).join('');
+    }
+
+    function selectDeskOrder(orderId) {
+      deskState.selectedId = orderId;
+      deskState.payMethod = null;
+      deskState.cashReceived = '';
+      const order = deskState.orders.find(o => o.id === orderId);
+      deskState.lastSelectedJson = JSON.stringify(order || null);
+      document.getElementById('desk-body').classList.add('show-detail');
+      renderDeskList();
+      renderDeskDetail();
+    }
+
+    function backToDeskList() {
+      document.getElementById('desk-body').classList.remove('show-detail');
+    }
+
+    function getDeskDeliveries(order) {
+      if (!deskState.deliveries[order.id]) {
+        deskState.deliveries[order.id] = order.items.map(item => item.delivery === 'handover' ? 'handover' : 'ship');
+      }
+      return deskState.deliveries[order.id];
+    }
+
+    // 画面表示用の金額計算（確定時はサーバー側で再計算する）
+    function calcDeskTotals(order, deliveries) {
+      const subtotal = order.items.reduce((sum, item) => sum + item.price, 0);
+      const shippingFee = deliveries.some(d => d === 'ship') ? 600 : 0;
+      return { subtotal, shippingFee, total: subtotal + shippingFee };
+    }
+
+    function setDeskDelivery(index, value) {
+      const order = deskState.orders.find(o => o.id === deskState.selectedId);
+      if (!order || order.status !== 'unpaid') return;
+      getDeskDeliveries(order)[index] = value;
+      renderDeskDetail();
+    }
+
+    function setDeskPayMethod(method) {
+      deskState.payMethod = method;
+      renderDeskDetail();
+      if (method === 'cash') {
+        const input = document.getElementById('desk-cash-input');
+        if (input) input.focus();
+      }
+    }
+
+    function setDeskCash(value) {
+      deskState.cashReceived = value === '' ? '' : String(value);
+      const input = document.getElementById('desk-cash-input');
+      if (input && input.value !== deskState.cashReceived) input.value = deskState.cashReceived;
+      updateDeskChange();
+    }
+
+    function updateDeskChange() {
+      const order = deskState.orders.find(o => o.id === deskState.selectedId);
+      if (!order) return;
+      const { total } = calcDeskTotals(order, getDeskDeliveries(order));
+      const received = parseInt(String(deskState.cashReceived).replace(/[^\d]/g, ''), 10) || 0;
+      const changeEl = document.getElementById('desk-cash-change');
+      const btn = document.getElementById('desk-confirm-btn');
+      if (!changeEl || !btn) return;
+      if (received >= total) {
+        changeEl.innerHTML = `お釣り <span style="font-size:2rem; color:#16a34a;">¥${formatPrice(received - total)}</span>`;
+        btn.disabled = deskState.busy;
+      } else {
+        changeEl.innerHTML = received > 0 ? `<span style="color:#ef4444;">あと ¥${formatPrice(total - received)} 不足しています</span>` : '預かり金額を入力してください';
+        btn.disabled = true;
+      }
+    }
+
+    function renderDeskDetail() {
+      const pane = document.getElementById('desk-order-detail');
+      const order = deskState.orders.find(o => o.id === deskState.selectedId);
+      if (!order) {
+        pane.innerHTML = `<div class="desk-empty">${deskState.selectedId ? '読み込み中...' : '左の一覧から注文を選んでください'}</div>`;
+        return;
+      }
+      const isUnpaid = order.status === 'unpaid';
+      const deliveries = isUnpaid ? getDeskDeliveries(order) : order.items.map(i => i.delivery || 'ship');
+      const totals = isUnpaid ? calcDeskTotals(order, deliveries) : { subtotal: order.subtotal, shippingFee: order.shippingFee, total: order.total };
+      const statusLabel = { unpaid: '<span style="color:#ea580c;">未払い</span>', paid: '<span style="color:#16a34a;">支払済</span>', cancelled: '<span style="color:#64748b;">キャンセル</span>' }[order.status] || '';
+
+      const itemsHtml = order.items.map((item, i) => `
+        <div class="desk-item">
+          <div style="min-width:0;">
+            <div style="font-weight:700;">[${i + 1}] ${escHtml(item.model)}</div>
+            <div style="font-size:0.85rem; color:#475569;">レンズ: ${escHtml(item.lens)} / フレーム: ${escHtml(item.frame)}</div>
+            <div style="font-weight:700;">¥${formatPrice(item.price)}</div>
+          </div>
+          ${isUnpaid ? `
+          <div class="desk-toggle">
+            <button type="button" class="${deliveries[i] === 'ship' ? 'active' : ''}" onclick="setDeskDelivery(${i}, 'ship')"><i class="fas fa-truck"></i> 配送</button>
+            <button type="button" class="${deliveries[i] === 'handover' ? 'active' : ''}" onclick="setDeskDelivery(${i}, 'handover')"><i class="fas fa-hand-holding"></i> 手渡し</button>
+          </div>` : `<span style="font-weight:700;">${deliveries[i] === 'handover' ? '手渡し' : '配送'}</span>`}
+        </div>`).join('');
+
+      let actionHtml = '';
+      if (isUnpaid) {
+        let methodHtml = '';
+        if (deskState.payMethod === 'cash') {
+          methodHtml = `
+            <div class="desk-card">
+              <label style="display:block; font-weight:700; margin-bottom:6px;">預かり金額</label>
+              <input type="text" id="desk-cash-input" inputmode="numeric" value="${escHtml(deskState.cashReceived)}" oninput="setDeskCash(this.value)" placeholder="例: 20000" style="width:100%; padding:12px; font-size:1.4rem; border:1px solid #cbd5e1; border-radius:8px;">
+              <div class="desk-quick-cash">
+                <button type="button" onclick="setDeskCash(${totals.total})">ちょうど</button>
+                ${[10000, 20000, 30000, 50000].filter(v => v >= totals.total).slice(0, 3).map(v => `<button type="button" onclick="setDeskCash(${v})">¥${formatPrice(v)}</button>`).join('')}
+              </div>
+              <div id="desk-cash-change" style="margin-top:12px; font-weight:900; font-size:1.1rem; text-align:center;"></div>
+              <button type="button" class="desk-confirm-btn" id="desk-confirm-btn" onclick="confirmDeskPayment()" disabled>現金で受領（支払済にする）</button>
+            </div>`;
+        } else if (deskState.payMethod === 'square') {
+          methodHtml = `
+            <div class="desk-card">
+              <div style="text-align:center; font-weight:700; color:#475569;">Squareで以下の金額を決済してください</div>
+              <div class="desk-big-amount">¥${formatPrice(totals.total)}</div>
+              <div style="text-align:center; font-weight:700;">メモ欄に受付番号：<span style="font-size:1.4rem; color:var(--color-accent-blue);">${escHtml(order.receiptNo)}</span></div>
+              <button type="button" class="desk-confirm-btn" id="desk-confirm-btn" onclick="confirmDeskPayment()" ${deskState.busy ? 'disabled' : ''}>Square決済完了（支払済にする）</button>
+            </div>`;
+        }
+        actionHtml = `
+          <div class="desk-card">
+            <div style="font-weight:700; margin-bottom:10px;">お支払い方法</div>
+            <div class="desk-pay-methods">
+              <button type="button" class="desk-pay-btn${deskState.payMethod === 'cash' ? ' active' : ''}" onclick="setDeskPayMethod('cash')"><i class="fas fa-yen-sign"></i> 現金</button>
+              <button type="button" class="desk-pay-btn${deskState.payMethod === 'square' ? ' active' : ''}" onclick="setDeskPayMethod('square')"><i class="fas fa-credit-card"></i> Square</button>
+            </div>
+          </div>
+          ${methodHtml}
+          <button type="button" class="desk-link-btn" onclick="cancelDeskOrder()">この注文をキャンセルする</button>`;
+      } else if (order.status === 'paid') {
+        const paidAt = order.paidAt && order.paidAt.toDate ? order.paidAt.toDate().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+        actionHtml = `
+          <div class="desk-card">
+            <div style="font-weight:700;">支払方法：${order.paymentMethod === 'cash' ? '現金' : 'Square'}${paidAt ? `（${paidAt}）` : ''}</div>
+            ${order.sheetSynced
+              ? '<div style="color:#16a34a; font-weight:700; margin-top:8px;"><i class="fas fa-check-circle"></i> スプレッドシート記録・お客様へのメール送信済み</div>'
+              : `<div style="color:#ef4444; font-weight:700; margin-top:8px;"><i class="fas fa-exclamation-triangle"></i> スプレッドシート記録・メール送信が完了していません${order.sheetError ? `<br><span style="font-weight:normal; font-size:0.85rem;">${escHtml(order.sheetError)}</span>` : ''}</div>
+                 <button type="button" class="desk-confirm-btn" style="background:#ea580c;" onclick="resyncDeskOrder()" ${deskState.busy ? 'disabled' : ''}>再送する</button>`}
+          </div>`;
+      }
+
+      pane.innerHTML = `
+        <button type="button" class="desk-close desk-back-btn" onclick="backToDeskList()"><i class="fas fa-chevron-left"></i> 一覧に戻る</button>
+        <div class="desk-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.85rem; color:#64748b; font-weight:700;">受付番号</div>
+              <div class="desk-detail-no">${escHtml(order.receiptNo)}</div>
+            </div>
+            <div style="font-weight:900; font-size:1.1rem;">${statusLabel}</div>
+          </div>
+          <div style="margin-top:12px; font-weight:700; font-size:1.1rem;">${escHtml(order.customerName)} 様</div>
+          <div style="font-size:0.85rem; color:#475569; line-height:1.7;">
+            ${escHtml(order.email)} / ${escHtml(order.phone)}<br>
+            〒${escHtml(order.zip)} ${escHtml(order.address)}<br>
+            受付 ${orderTimeText(order)}・${order.enteredBy === 'staff' ? 'スタッフ代理入力' : 'お客様入力'}
+          </div>
+        </div>
+        <div class="desk-card">
+          <div style="font-weight:700; margin-bottom:4px;">ご注文商品 ${isUnpaid ? '<span style="font-size:0.8rem; color:#64748b; font-weight:normal;">（在庫からお渡しする商品は「手渡し」に）</span>' : ''}</div>
+          ${itemsHtml}
+          <div style="margin-top:12px;">
+            <div class="desk-total-row"><span>商品小計（会場15%OFF）</span><span>¥${formatPrice(totals.subtotal)}</span></div>
+            <div class="desk-total-row"><span>送料${totals.shippingFee === 0 ? '（全商品手渡し）' : ''}</span><span>¥${formatPrice(totals.shippingFee)}</span></div>
+            <div class="desk-total-row grand"><span>合計</span><span>¥${formatPrice(totals.total)}</span></div>
+          </div>
+        </div>
+        ${actionHtml}`;
+
+      if (isUnpaid && deskState.payMethod === 'cash') updateDeskChange();
+    }
+
+    async function callVenueStaffApi(body) {
+      const user = firebase.auth().currentUser;
+      if (!user) throw new Error('ログインが切れています。管理者メニューから再ログインしてください。');
+      const res = await fetch('/.netlify/functions/venue-confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, id_token: await user.getIdToken() })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || '処理に失敗しました。');
+      return data;
+    }
+
+    async function confirmDeskPayment() {
+      const order = deskState.orders.find(o => o.id === deskState.selectedId);
+      if (!order || deskState.busy || !deskState.payMethod) return;
+      const deliveries = getDeskDeliveries(order);
+      const { total } = calcDeskTotals(order, deliveries);
+      const methodLabel = deskState.payMethod === 'cash' ? '現金' : 'Square';
+      if (!confirm(`受付番号 ${order.receiptNo}（${order.customerName} 様）\n${methodLabel}で ¥${formatPrice(total)} を受領し、支払済にしますか？\n\n※お客様に注文詳細メールが送信されます。`)) return;
+
+      deskState.busy = true;
+      renderDeskDetail();
+      try {
+        const data = await callVenueStaffApi({ order_id: order.id, action: 'confirm', payment_method: deskState.payMethod, deliveries });
+        if (data.synced === false) {
+          alert(`支払済にしましたが、スプレッドシート記録・メール送信に失敗しました。\n「支払済」タブの該当注文から再送してください。\n\n${data.error || ''}`);
+        }
+        deskState.payMethod = null;
+        deskState.cashReceived = '';
+        deskState.selectedId = null;
+        document.getElementById('desk-body').classList.remove('show-detail');
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        deskState.busy = false;
+        renderDeskDetail();
+      }
+    }
+
+    async function resyncDeskOrder() {
+      if (deskState.busy) return;
+      deskState.busy = true;
+      renderDeskDetail();
+      try {
+        const data = await callVenueStaffApi({ order_id: deskState.selectedId, action: 'resync' });
+        alert(data.synced ? 'スプレッドシート記録・メール送信が完了しました。' : `再送に失敗しました。\n${data.error || ''}`);
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        deskState.busy = false;
+        renderDeskDetail();
+      }
+    }
+
+    async function cancelDeskOrder() {
+      const order = deskState.orders.find(o => o.id === deskState.selectedId);
+      if (!order || deskState.busy) return;
+      if (!confirm(`受付番号 ${order.receiptNo}（${order.customerName} 様）の注文をキャンセルしますか？`)) return;
+      deskState.busy = true;
+      try {
+        await callVenueStaffApi({ order_id: order.id, action: 'cancel' });
+        deskState.selectedId = null;
+        document.getElementById('desk-body').classList.remove('show-detail');
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        deskState.busy = false;
+        renderDeskDetail();
+      }
+    }
+
+    /* ---------- スタッフ：代理入力 ---------- */
+    function startStaffProxyOrder() {
+      const ev = deskState.event;
+      if (!ev) return;
+      if (!isVenueEventOpen(ev)) {
+        alert('この大会は受付期間外のため、代理入力はできません。');
+        return;
+      }
+      closeVenueDesk();
+      venueStaffProxy = true;
+      document.body.classList.add('staff-proxy');
+      document.getElementById('staff-proxy-event').textContent = ev.name;
+      if (!venueEvent || venueEvent.id !== ev.id) activateVenueMode(ev, false);
+      resetOrderForm();
+    }
+
+    function finishStaffProxy() {
+      venueStaffProxy = false;
+      document.body.classList.remove('staff-proxy');
+      if (!venueModeFromUrl) deactivateVenueMode();
+      resetOrderForm();
+    }
+
+    function exitStaffProxy() {
+      if (cart.length > 0 && !confirm('入力中の内容は破棄されます。代理入力をやめますか？')) return;
+      const eventId = deskState.eventId;
+      finishStaffProxy();
+      if (eventId) openVenueDesk(eventId);
     }
 
     /* ==============================================

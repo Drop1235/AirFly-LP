@@ -1,5 +1,9 @@
+// 会場で手渡しした商品の印（D列）と、全商品手渡し時のステータス（J列）
+var HANDOVER_MARK = "【手渡し】";
+var HANDOVER_DONE_STATUS = "手渡し完了（手配不要）";
+
 /**
- * 注文データ受け取り用Webhook (Stripe等から)
+ * 注文データ受け取り用Webhook (Stripe決済完了 / 会場販売の支払済確定 から)
  */
 function doPost(e) {
   // CORS対策: ブラウザからのアクセスを許可するヘッダーを設定
@@ -28,11 +32,17 @@ function doPost(e) {
     var totalAmount = params.total_amount || "0";
     var items = params.items || [];
     
+    var isVenue = params.channel === 'venue';
+    
     // アイテム情報を1つの文字列にまとめる
+    // ※会場で手渡しした商品には【手渡し】を付ける（LINE手配の対象外にするため）
     var itemsString = "";
+    var shipCount = 0;
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
-      itemsString += "[" + (i + 1) + "] モデル: " + item.model + " / レンズ: " + item.lens + " / フレーム: " + item.frame + "\n";
+      var isHandover = item.delivery === 'handover';
+      if (!isHandover) shipCount++;
+      itemsString += "[" + (i + 1) + "] モデル: " + item.model + " / レンズ: " + item.lens + " / フレーム: " + item.frame + (isHandover ? " " + HANDOVER_MARK : "") + "\n";
     }
     itemsString = itemsString.trim();
     
@@ -64,6 +74,7 @@ function doPost(e) {
     var date = new Date();
     
     // シートの最終行にデータを追加（1回の注文につき1行）
+    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K〜O: 販売チャネル情報
     sheet.appendRow([
       date,
       customerName,
@@ -72,8 +83,28 @@ function doPost(e) {
       "'" + formattedZip,
       address,
       "'" + formattedPhone,
-      "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+      "",
+      (isVenue && shipCount === 0) ? HANDOVER_DONE_STATUS : "",
+      isVenue ? "会場: " + (params.event_name || "") : "Web",
+      isVenue ? (params.receipt_no || "") : "",
+      isVenue ? (params.payment_method || "") : "クレジットカード(Stripe)",
+      isVenue ? describeDeliveries(items) : "配送",
+      isVenue ? (params.entered_by || "") : "お客様"
     ]);
+    
+    if (isVenue) {
+      if (email) {
+        GmailApp.sendEmail(email, "【TempMachi】ご注文ありがとうございます（会場でのご購入）",
+          buildVenueBuyerEmail(params, customerName, itemsString, items, formattedZip, address, formattedPhone, shipCount), {
+          from: "hanks@tempmachi.com",
+          name: "株式会社TempMachi"
+        });
+      }
+      // 会場販売では管理者宛ての通知メールは送らない
+      return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Venue order saved and email sent successfully" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
     
     // --- メール自動送信処理 ---
     var adminEmail = "hanks@tempmachi.com";
@@ -129,6 +160,52 @@ function doPost(e) {
   }
 }
 
+/**
+ * 受取方法の一覧（N列用）。例: "1:配送 / 2:手渡し"
+ */
+function describeDeliveries(items) {
+  var parts = [];
+  for (var i = 0; i < items.length; i++) {
+    parts.push((i + 1) + ":" + (items[i].delivery === 'handover' ? "手渡し" : "配送"));
+  }
+  return parts.join(" / ");
+}
+
+/**
+ * 会場販売のお客様向け注文詳細メール本文
+ */
+function buildVenueBuyerEmail(params, customerName, itemsString, items, formattedZip, address, formattedPhone, shipCount) {
+  var yen = function(n) { return "¥" + parseInt(n || 0, 10).toLocaleString(); };
+  var body = customerName + " 様\n\n"
+    + "この度は" + (params.event_name || "大会") + "会場にて、TempMachiよりAirFlyをご購入いただき、誠にありがとうございます。\n"
+    + "以下の内容でお支払いを確認し、ご注文を承りました。\n\n"
+    + "【受付番号】" + (params.receipt_no || "") + "\n\n"
+    + "【ご注文内容】\n"
+    + itemsString + "\n"
+    + (shipCount < items.length ? "※" + HANDOVER_MARK + "の商品は会場にてお渡し済みです。\n" : "")
+    + "\n"
+    + "商品小計（会場限定15%OFF適用）: " + yen(params.subtotal) + "\n"
+    + "送料: " + yen(params.shipping_fee) + "\n"
+    + "お支払い金額: " + yen(params.total_amount) + "（" + (params.payment_method || "") + "）\n\n";
+  
+  if (shipCount > 0) {
+    body += "【お届け先】\n"
+      + "〒" + formattedZip + "\n"
+      + address + "\n"
+      + "電話番号: " + formattedPhone + "\n\n"
+      + "配送の商品は通常、2日～1週間程度でお届けいたします。\n"
+      + "なお、在庫状況によっては2週間～1ヶ月ほどお時間をいただく場合がございます。\n"
+      + "商品の到着まで、楽しみにお待ちくださいませ。\n\n";
+  }
+  
+  body += "------------------------\n"
+    + "株式会社TempMachi\n"
+    + "Email: hanks@tempmachi.com\n"
+    + "URL: https://www.tempmachi.com/\n"
+    + "------------------------";
+  return body;
+}
+
 function doOptions(e) {
   var headers = {
     "Access-Control-Allow-Origin": "*",
@@ -176,7 +253,7 @@ function sendToLine() {
     var status = rowData[9];    // J列
     
     // チェックが入っており、かつステータスが「送信済」を含まない場合を対象にする
-    if (isChecked === true && (!status || String(status).indexOf('送信済') === -1)) {
+    if (isChecked === true && (!status || (String(status).indexOf('送信済') === -1 && String(status).indexOf(HANDOVER_DONE_STATUS) === -1))) {
       targets.push({
         rowNum: rowNum,
         name: rowData[1],       // B列
@@ -264,6 +341,8 @@ function parseOrderItems(itemsText, frameMap) {
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i].trim();
     if (!line) continue;
+    // 会場で手渡し済みの商品は代理店への手配対象外
+    if (line.indexOf(HANDOVER_MARK) !== -1) continue;
     
     var model = "";
     var lens = "";
