@@ -18,6 +18,15 @@ function isValidSecretToken(token) {
 }
 
 /**
+ * お客様が入力した文字列をスプレッドシートに書くときは、数式として実行されないよう先頭に ' を付ける
+ * （"=" "+" "-" "@"（全角も含む）で始まる値は、そのままだとセルの数式として解釈されるため。' はセルの値には含まれない）
+ */
+function sheetText(value) {
+  var s = String(value == null ? "" : value);
+  return /^[=+\-@\t\r＝＋－＠]/.test(s) ? "'" + s : s;
+}
+
+/**
  * 注文データ受け取り用Webhook (Stripe決済完了 / 会場販売の支払済確定 から)
  */
 function doPost(e) {
@@ -107,11 +116,11 @@ function doPost(e) {
     // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報 / Q: Stripe決済ID
     sheet.appendRow([
       date,
-      customerName,
-      email,
-      itemsString,
+      sheetText(customerName),
+      sheetText(email),
+      sheetText(itemsString),
       "'" + formattedZip,
-      address,
+      sheetText(address),
       "'" + formattedPhone,
       "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
       "",

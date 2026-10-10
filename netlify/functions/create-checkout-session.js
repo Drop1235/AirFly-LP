@@ -1,5 +1,12 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { getPriceData, SHIPPING_FEE } = require('../lib/pricing');
+const { getPriceData, SHIPPING_FEE, KNOWN_MODELS } = require('../lib/pricing');
+const { getDb, admin } = require('../lib/venue');
+
+const MAX_ITEMS = 50;
+
+function isShortString(v, max) {
+  return typeof v === 'string' && v.trim().length > 0 && v.length <= max;
+}
 
 exports.handler = async (event, context) => {
   // CORS Headers
@@ -22,62 +29,37 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, headers, body: 'Method Not Allowed' };
   }
 
+  let consumedCouponRef = null;
   try {
-    const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code, projectId } = JSON.parse(event.body);
+    // ※割引の検証先（Firebaseプロジェクト）はクライアントから受け取らない（サーバー側の設定で固定）
+    const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code } = JSON.parse(event.body);
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'カートに商品がありません。' })
       };
     }
-
-    // クーポン検証 (Firestore REST API)
-    let appliedDiscount = 0;
-    if (coupon_code && projectId) {
-      try {
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/coupons/${coupon_code.toUpperCase()}`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const doc = await res.json();
-          let isValid = true;
-          
-          if (doc.fields) {
-            // Check if used and NOT unlimited
-            const isUnlimited = doc.fields.isUnlimited && doc.fields.isUnlimited.booleanValue === true;
-            if (!isUnlimited && doc.fields.isUsed && doc.fields.isUsed.booleanValue === true) {
-              isValid = false;
-            }
-            // Check if expired
-            if (doc.fields.expiresAt) {
-              const expiresAtVal = doc.fields.expiresAt.timestampValue || doc.fields.expiresAt.stringValue;
-              if (expiresAtVal) {
-                const expiry = new Date(expiresAtVal);
-                expiry.setHours(23, 59, 59, 999);
-                if (new Date() > expiry) {
-                  isValid = false;
-                }
-              }
-            }
-          }
-          if (isValid) {
-            if (doc.fields && doc.fields.discountRate) {
-              const rateVal = doc.fields.discountRate.integerValue || doc.fields.discountRate.doubleValue || doc.fields.discountRate.stringValue;
-              if (rateVal) {
-                const rate = parseFloat(rateVal);
-                appliedDiscount = rate >= 1 ? rate / 100 : rate;
-              } else {
-                appliedDiscount = 0.10;
-              }
-            } else {
-              appliedDiscount = 0.10; // デフォルト10%
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Firestore REST validation error:', e);
+    // 明細はスプレッドシート・メールにそのまま載るため、カタログにある商品だけを受け付ける
+    if (items.length > MAX_ITEMS) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: `一度にご注文いただけるのは${MAX_ITEMS}点までです。` }) };
+    }
+    for (const item of items) {
+      if (!item || !KNOWN_MODELS.includes(item.model) || !isShortString(item.lens, 50) || !isShortString(item.frame, 50)) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: '商品情報が不正です。ページを再読み込みしてやり直してください。' }) };
       }
+    }
+
+    // クーポンの検証と消費（1回限りのクーポンは、ここでサーバーが使用済みにする）
+    let appliedDiscount = 0;
+    if (coupon_code) {
+      const result = await redeemCoupon(coupon_code);
+      if (result.error) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: result.error }) };
+      }
+      appliedDiscount = result.discount;
+      consumedCouponRef = result.consumedRef;
     }
 
     // Convert cart items to Stripe line_items format using securely calculated prices
@@ -87,7 +69,7 @@ exports.handler = async (event, context) => {
       const priceInfo = getPriceData(item.model, item.lens);
       let securePrice = priceInfo.sale;
       
-      // クーポン割引適用 (各商品の単価を10%オフにする)
+      // クーポン割引適用（各商品の単価に割引率をかける）
       if (appliedDiscount > 0) {
         securePrice = Math.floor(securePrice * (1 - appliedDiscount));
       }
@@ -95,7 +77,7 @@ exports.handler = async (event, context) => {
       totalSale += securePrice;
       
       const productName = `AirFly ${item.model}`;
-      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ' (クーポン10%OFF適用済み)' : '');
+      const productDesc = `レンズ: ${item.lens} / フレーム: ${item.frame}` + (appliedDiscount > 0 ? ` (クーポン${Math.round(appliedDiscount * 100)}%OFF適用済み)` : '');
       
       return {
         price_data: {
@@ -154,6 +136,11 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
+    // 決済画面を作れなかった場合は、消費したクーポンを未使用に戻す
+    if (consumedCouponRef) {
+      await consumedCouponRef.update({ isUsed: false, usedAt: admin.firestore.FieldValue.delete() })
+        .catch(e => console.error('Failed to release coupon:', e));
+    }
     return {
       statusCode: 500,
       headers,
@@ -161,3 +148,37 @@ exports.handler = async (event, context) => {
     };
   }
 };
+
+// クーポンを検証し、1回限りのものはトランザクションで使用済みにする（同時利用でも1回だけ成功する）
+// 戻り値: { discount, consumedRef } または { error }
+async function redeemCoupon(rawCode) {
+  if (typeof rawCode !== 'string' || !rawCode.trim() || rawCode.length > 100 || rawCode.includes('/')) {
+    return { error: '有効なクーポンコードではありません。' };
+  }
+  const db = getDb();
+  const ref = db.collection('coupons').doc(rawCode.trim().toUpperCase());
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return { error: '有効なクーポンコードではありません。' };
+    const c = snap.data();
+
+    const isUnlimited = c.isUnlimited === true;
+    if (!isUnlimited && c.isUsed === true) {
+      return { error: 'このクーポンコードはすでに使用されています。' };
+    }
+    if (c.expiresAt) {
+      const expiry = c.expiresAt.toDate ? c.expiresAt.toDate() : new Date(c.expiresAt);
+      expiry.setHours(23, 59, 59, 999);
+      if (new Date() > expiry) return { error: 'このクーポンコードは有効期限が切れています。' };
+    }
+
+    // 割引率（10 = 10%）。範囲外の値は無効なクーポンとして扱う
+    const rate = c.discountRate === undefined ? 10 : Number(c.discountRate);
+    const discount = rate >= 1 ? rate / 100 : rate;
+    if (!(discount > 0 && discount < 1)) return { error: '有効なクーポンコードではありません。' };
+
+    if (isUnlimited) return { discount, consumedRef: null };
+    tx.update(ref, { isUsed: true, usedAt: admin.firestore.FieldValue.serverTimestamp() });
+    return { discount, consumedRef: ref };
+  });
+}

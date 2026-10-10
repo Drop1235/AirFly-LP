@@ -2,7 +2,20 @@
 const { getDb, admin, verifyAdmin, isEventOpen, json, EMAIL_PATTERN } = require('../lib/venue');
 const { calcVenueTotals, KNOWN_MODELS } = require('../lib/pricing');
 
+const crypto = require('crypto');
+
 const MAX_ITEMS = 20;
+
+// お客様の注文の受付上限：同じ回線（IPアドレス）から同じ大会へ、10分あたり30件まで
+// 会場Wi-Fiなどで回線を共有していても通常の受付では届かない値にしている。スタッフの代理入力は対象外
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 30;
+
+function clientIp(headers) {
+  const h = headers || {};
+  const forwarded = (h['x-forwarded-for'] || '').split(',')[0].trim();
+  return h['x-nf-client-connection-ip'] || forwarded || '';
+}
 
 function isShortString(v, max) {
   return typeof v === 'string' && v.trim().length > 0 && v.length <= max;
@@ -44,12 +57,27 @@ exports.handler = async (event) => {
     const db = getDb();
     const eventRef = db.collection('venue_events').doc(event_id);
     const orderRef = db.collection('venue_orders').doc();
+    // IPアドレスはそのまま保存せず、大会IDと合わせたハッシュをキーにする
+    const ip = enteredBy === 'customer' ? clientIp(event.headers) : '';
+    const rateRef = ip
+      ? db.collection('venue_rate_limits').doc(crypto.createHash('sha256').update(event_id + '|' + ip).digest('hex'))
+      : null;
     const totals = calcVenueTotals(items.map(i => ({ model: i.model, lens: i.lens, frame: i.frame })));
 
     const receiptNo = await db.runTransaction(async (tx) => {
       const eventSnap = await tx.get(eventRef);
+      const rateSnap = rateRef ? await tx.get(rateRef) : null;
       if (!eventSnap.exists || !isEventOpen(eventSnap.data())) {
         throw Object.assign(new Error('この会場の受付期間外です。'), { statusCode: 400 });
+      }
+      if (rateRef) {
+        const now = Date.now();
+        const rate = rateSnap.exists ? rateSnap.data() : null;
+        const inWindow = rate && now - rate.windowStart < RATE_LIMIT_WINDOW_MS;
+        if (inWindow && rate.count >= RATE_LIMIT_MAX) {
+          throw Object.assign(new Error('短時間にご注文が集中しています。少し時間をおいてお試しいただくか、スタッフにお声がけください。'), { statusCode: 429 });
+        }
+        tx.set(rateRef, inWindow ? { windowStart: rate.windowStart, count: rate.count + 1 } : { windowStart: now, count: 1 });
       }
       const ev = eventSnap.data();
       const seq = (ev.orderSeq || 0) + 1;
