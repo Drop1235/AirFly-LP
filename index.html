@@ -1266,8 +1266,8 @@
       <h2 class="complete-title" style="margin-bottom: 8px;" data-en="Your order has been received">ご注文を受け付けました</h2>
       <div class="venue-receipt-label" data-en="Receipt number">受付番号</div>
       <div class="venue-receipt-no" id="venue-receipt-no"></div>
-      <div class="venue-receipt-instruction" data-en="<i class='fas fa-hand-point-right'></i> Please show this screen to our staff<br>and pay in cash or with Square.">
-        <i class="fas fa-hand-point-right"></i> この画面をスタッフにお見せいただき、<br>お支払い（現金またはSquare）をお願いいたします。
+      <div class="venue-receipt-instruction" data-en="<i class='fas fa-hand-point-right'></i> Please show this screen to our staff<br>and pay in cash or by credit card.">
+        <i class="fas fa-hand-point-right"></i> この画面をスタッフにお見せいただき、<br>お支払い（現金またはクレジットカード）をお願いいたします。
       </div>
       <div class="complete-details">
         <div class="complete-details-title" data-en="[Order details]">【ご注文内容】</div>
@@ -1417,7 +1417,7 @@
         
         <h2 class="section-title fade-in-up" data-en="AirFly Custom Order">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
-        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="Place your order, then pay at the venue in cash or with Square">お支払いは注文確定後、会場にて現金またはSquareで承ります</small></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="Place your order, then pay at the venue in cash or by credit card">お支払いは注文確定後、会場にて現金またはクレジットカードで承ります</small></div>
         <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <!-- ステップ1: モデル選択 -->
@@ -1744,8 +1744,8 @@
               <thead>
                 <tr>
                   <th>大会名</th>
-                  <th>開催日</th>
-                  <th>状態</th>
+                  <th style="white-space:nowrap;">開催日</th>
+                  <th style="white-space:nowrap;">状態</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -3662,15 +3662,15 @@
         if (isVenueEventOpen(ev)) status = '<span style="color:#16a34a; font-weight:bold;">開催中</span>';
         else if (ev.startDate > today) status = '<span style="color:#2563eb;">予定</span>';
         return `<tr>
-          <td style="font-weight:700;">${escHtml(ev.name)}<br><span style="font-size:0.75rem; color:#64748b; font-weight:normal;">受付番号: ${escHtml(ev.prefix || 'A')}-001〜（${ev.orderSeq || 0}件）<br>会場受け取りの配送先: ${ev.venueAddress ? `〒${escHtml(ev.venueZip || '')} ${escHtml(ev.venueAddress)}` : '未登録'}</span></td>
+          <td style="font-weight:700; min-width:8em;">${escHtml(ev.name)}<br><span style="font-size:0.75rem; color:#64748b; font-weight:normal;">受付番号: ${escHtml(ev.prefix || 'A')}-001〜（${ev.orderSeq || 0}件）</span></td>
           <td style="white-space:nowrap;">${escHtml(formatVenueDates(ev)).replace(' 〜 ', '<br>〜 ')}</td>
-          <td>${status}</td>
-          <td style="white-space:nowrap;">
+          <td style="white-space:nowrap;">${status}</td>
+          <td><div style="display:flex; flex-wrap:wrap; gap:4px;">
             <button onclick="openVenueDesk('${ev.id}')" style="padding:4px 8px; background:#16a34a; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">受付を開く</button>
             <button onclick="showVenueQr('${ev.id}')" style="padding:4px 8px; background:#2563eb; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">URL・QR</button>
             <button onclick="startVenueEdit('${ev.id}')" style="padding:4px 8px; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">編集</button>
             <button onclick="deleteVenueEvent('${ev.id}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
-          </td>
+          </div></td>
         </tr>`;
       }).join('');
     }
@@ -3827,10 +3827,14 @@
       if (!win) { alert('ポップアップがブロックされました。許可してから再度お試しください。'); return; }
       win.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>AirFly 会場注文QR</title>
         <style>body{font-family:'Noto Sans JP',sans-serif;text-align:center;padding:40px 16px;color:#1e293b}
-        h1{font-size:2rem;margin:0 0 8px}h2{font-size:2.6rem;color:#ea580c;margin:8px 0 24px}
-        img{width:320px;height:320px;image-rendering:pixelated}p{font-size:1.2rem;font-weight:700;line-height:1.7}</style></head>
-        <body><h1>AirFly ご注文はこちら</h1><h2>会場限定 15%OFF</h2>
-        <img src="${src}" alt="QR"><p>スマートフォンで読み取って、商品を選んでご注文ください。<br>注文確定後、受付番号の画面をスタッフにお見せください。<br>お支払い：現金 / Square</p>
+        h1{font-size:2rem;margin:0}h2{font-size:2.6rem;color:#ea580c;margin:12px 0 0}
+        .en{font-family:Arial,sans-serif;font-size:1.05rem;font-weight:700;color:#475569;margin:2px 0 0}
+        img{width:320px;height:320px;margin-top:20px;image-rendering:pixelated}p{font-size:1.2rem;font-weight:700;line-height:1.7;margin:16px 0 0}
+        p.en{font-size:1rem;line-height:1.6;margin-top:8px}</style></head>
+        <body><h1>AirFly ご注文はこちら</h1><div class="en">Order AirFly here</div>
+        <h2>会場限定 15%OFF</h2><div class="en">15% OFF at this venue only</div>
+        <img src="${src}" alt="QR"><p>スマートフォンで読み取って、商品を選んでご注文ください。<br>注文確定後、受付番号の画面をスタッフにお見せください。<br>お支払い：現金 / クレジットカード</p>
+        <p class="en">Scan with your phone, choose your products and place your order.<br>Then show the receipt number screen to our staff.<br>Payment: cash / credit card<br>Tap “English” at the top right of the order page to switch to English.</p>
         <p style="font-size:0.9rem;color:#64748b;">${escHtml(title)}</p></body></html>`);
       win.document.close();
       // 画像はdataURLのため即座に描画される。onloadは発火済みのことがあるので使わない
