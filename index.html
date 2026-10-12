@@ -1661,7 +1661,8 @@
               <input type="text" id="new-venue-prefix" value="A" maxlength="2" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
             </div>
           </div>
-          <button class="btn-admin-action" onclick="createVenueEvent()">大会を登録</button>
+          <button class="btn-admin-action" id="venue-save-btn" onclick="saveVenueEvent()">大会を登録</button>
+          <button class="btn-admin-action" id="venue-cancel-edit-btn" style="display:none; background:#64748b;" onclick="cancelVenueEdit()">編集をやめる</button>
           <div id="admin-venue-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
           <div style="overflow-x: auto;">
             <table class="admin-table">
@@ -3380,13 +3381,49 @@
           <td style="white-space:nowrap;">
             <button onclick="openVenueDesk('${ev.id}')" style="padding:4px 8px; background:#16a34a; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">受付を開く</button>
             <button onclick="showVenueQr('${ev.id}')" style="padding:4px 8px; background:#2563eb; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">URL・QR</button>
+            <button onclick="startVenueEdit('${ev.id}')" style="padding:4px 8px; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">編集</button>
             <button onclick="deleteVenueEvent('${ev.id}')" style="padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px; font-size:0.8rem; cursor:pointer;">削除</button>
           </td>
         </tr>`;
       }).join('');
     }
 
-    async function createVenueEvent() {
+    let editingVenueEventId = null; // 編集中の大会ID（null のときは新規登録）
+
+    // 一覧の「編集」：登録フォームに大会の内容を入れて編集モードにする
+    function startVenueEdit(eventId) {
+      const ev = venueEventList.find(e => e.id === eventId);
+      if (!ev) return;
+      editingVenueEventId = eventId;
+      document.getElementById('new-venue-name').value = ev.name || '';
+      document.getElementById('new-venue-start').value = ev.startDate || '';
+      document.getElementById('new-venue-end').value = ev.endDate && ev.endDate !== ev.startDate ? ev.endDate : '';
+      document.getElementById('new-venue-prefix').value = ev.prefix || 'A';
+      document.getElementById('venue-save-btn').textContent = '変更を保存';
+      document.getElementById('venue-cancel-edit-btn').style.display = '';
+      const msgEl = document.getElementById('admin-venue-msg');
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#2563eb';
+      msgEl.textContent = `大会「${ev.name}」を編集中です。会場用のURL・QRコードは変わりません。`;
+      document.getElementById('new-venue-name').focus();
+    }
+
+    function resetVenueForm() {
+      editingVenueEventId = null;
+      document.getElementById('new-venue-name').value = '';
+      document.getElementById('new-venue-start').value = '';
+      document.getElementById('new-venue-end').value = '';
+      document.getElementById('new-venue-prefix').value = 'A';
+      document.getElementById('venue-save-btn').textContent = '大会を登録';
+      document.getElementById('venue-cancel-edit-btn').style.display = 'none';
+    }
+
+    function cancelVenueEdit() {
+      resetVenueForm();
+      document.getElementById('admin-venue-msg').textContent = '';
+    }
+
+    async function saveVenueEvent() {
       const name = document.getElementById('new-venue-name').value.trim();
       const startDate = document.getElementById('new-venue-start').value;
       const endDate = document.getElementById('new-venue-end').value || startDate;
@@ -3398,6 +3435,24 @@
       if (!name || !startDate) { msgEl.textContent = '大会名と開催日を入力してください。'; return; }
       if (endDate < startDate) { msgEl.textContent = '最終日は開催日（初日）以降の日付にしてください。'; return; }
       if (!/^[A-Z]{1,2}$/.test(prefix)) { msgEl.textContent = '受付番号の頭文字は英字1〜2文字で入力してください。'; return; }
+
+      if (editingVenueEventId) {
+        const ev = venueEventList.find(e => e.id === editingVenueEventId);
+        if (ev && ev.orderSeq > 0 && prefix !== (ev.prefix || 'A')
+          && !confirm(`受付番号の頭文字を ${ev.prefix || 'A'} から ${prefix} に変えると、これからの受付番号は ${prefix}-${String(ev.orderSeq + 1).padStart(3, '0')} からになります（受付済みの番号は変わりません）。変更しますか？`)) return;
+        try {
+          // 受付番号の連番（orderSeq）は注文のたびにサーバーが更新するため、ここでは触らない
+          await db.collection('venue_events').doc(editingVenueEventId).update({ name, startDate, endDate, prefix });
+          msgEl.style.color = '#10b981';
+          msgEl.textContent = `大会「${name}」の変更を保存しました。会場用のURL・QRコードはそのまま使えます。`;
+          resetVenueForm();
+          loadVenueEvents();
+        } catch (e) {
+          console.error('Failed to update venue event:', e);
+          msgEl.textContent = '保存に失敗しました。ログイン状態とFirestoreのルール設定をご確認ください。';
+        }
+        return;
+      }
 
       try {
         await db.collection('venue_events').add({
@@ -3423,6 +3478,7 @@
       if (!confirm(`大会「${ev.name}」を削除しますか？\n※会場用URLが使えなくなります（支払済の注文はスプレッドシートに残ります）。`)) return;
       try {
         await db.collection('venue_events').doc(eventId).delete();
+        if (editingVenueEventId === eventId) cancelVenueEdit();
         loadVenueEvents();
       } catch (e) {
         console.error('Failed to delete venue event:', e);
