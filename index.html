@@ -1062,6 +1062,23 @@
     .venue-price-note { display: none; margin-top: 8px; font-size: 0.95rem; color: #ea580c; font-weight: 700; text-align: right; }
     body.venue-mode .venue-price-note { display: block; }
     .card-venue-price { display: block; margin-top: 4px; color: #ea580c; font-weight: 900; font-size: 1.05rem; }
+    /* 会場URLを開催期間外に開いたときの案内（通常のWeb販売になることを知らせる） */
+    .venue-closed-notice {
+      display: none;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin: 0 auto 24px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .venue-closed-notice small { display: block; font-weight: 500; font-size: 0.85rem; color: #64748b; }
+    body.venue-closed:not(.venue-mode) .venue-closed-notice { display: block; }
 
     /* スタッフ代理入力中バー */
     .staff-proxy-bar {
@@ -1243,6 +1260,7 @@
     <section id="hero">
       <div class="hero-content fade-in-up">
         <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>この会場でのご注文は全商品15%OFFでご購入いただけます</small></div>
+        <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <h1 class="hero-title">
           Beyond
@@ -1349,6 +1367,7 @@
         <h2 class="section-title fade-in-up">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
         <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>お支払いは注文確定後、会場にて現金またはSquareで承ります</small></div>
+        <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <!-- ステップ1: モデル選択 -->
         <div id="flow-step-1" class="flow-step active">
@@ -3156,7 +3175,19 @@
       if (!eventId) return;
       try {
         const doc = await db.collection('venue_events').doc(eventId).get();
-        if (!doc.exists || !isVenueEventOpen(doc.data())) return; // 開催日以外は通常のWeb販売
+        if (!doc.exists) {
+          showVenueClosedNotice('この会場URLの大会は見つかりませんでした', '通常のWeb販売（オンライン決済）でご注文いただけます。');
+          return;
+        }
+        if (!isVenueEventOpen(doc.data())) { // 開催日以外は通常のWeb販売
+          const ev = doc.data();
+          if (ev.startDate && todayJst() < ev.startDate) {
+            showVenueClosedNotice(`${ev.name} の会場販売は ${formatVenueDates(ev)} です`, '開催期間になると会場限定15%OFF・会場払いでご注文いただけます。現在は通常のWeb販売（オンライン決済・会場割引なし）です。');
+          } else {
+            showVenueClosedNotice(`${ev.name} の会場販売は終了しました`, '現在は通常のWeb販売（オンライン決済・会場割引なし）です。');
+          }
+          return;
+        }
         urlVenueEvent = { id: doc.id, ...doc.data() };
         activateVenueMode(urlVenueEvent, true);
 
@@ -3167,7 +3198,15 @@
         }
       } catch (e) {
         console.error('Venue mode init failed:', e);
+        showVenueClosedNotice('会場情報を読み込めませんでした', '会場でご注文の方は、ページを再読み込みしてください。このままご注文いただくと通常のWeb販売（オンライン決済・会場割引なし）になります。');
       }
+    }
+
+    // 会場URLなのに会場モードにならなかったことを知らせる（何も出さずに通常販売になると分かりにくいため）
+    function showVenueClosedNotice(title, detail) {
+      document.querySelectorAll('.venue-closed-title').forEach(el => el.textContent = title);
+      document.querySelectorAll('.venue-closed-detail').forEach(el => el.textContent = detail);
+      document.body.classList.add('venue-closed');
     }
 
     function activateVenueMode(ev, fromUrl) {
