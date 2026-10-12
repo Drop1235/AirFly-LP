@@ -123,6 +123,30 @@
       width: auto;
       object-fit: contain;
     }
+    /* 言語切り替え（日本語 / English） */
+    .lang-switch {
+      display: inline-flex;
+      margin-left: auto;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border);
+      border-radius: 99px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .lang-switch button {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+    }
+    .lang-switch button.active { background: var(--color-accent-blue); color: #fff; }
+    /* 英語表示のときだけ出す補足 */
+    .en-only { display: none; }
+    html[lang="en"] .en-only { display: block; }
     .nav-badge {
       font-size: 0.68rem;
       font-weight: 700;
@@ -1185,26 +1209,26 @@
   <div id="order-complete-screen">
     <div class="complete-container">
       <div class="complete-icon"><i class="fas fa-check-circle"></i></div>
-      <h2 class="complete-title">ご注文ありがとうございます</h2>
-      <p class="complete-desc">以下の内容でご注文を承りました。</p>
+      <h2 class="complete-title" data-en="Thank you for your order">ご注文ありがとうございます</h2>
+      <p class="complete-desc" data-en="We have received your order as follows.">以下の内容でご注文を承りました。</p>
       
       <div class="complete-details">
-        <div class="complete-details-title">【ご注文内容】</div>
+        <div class="complete-details-title" data-en="[Order details]">【ご注文内容】</div>
         <div id="complete-items-list">
           <!-- JSで動的生成 -->
         </div>
         <div class="complete-total">
-          決済金額（送料込）: <span id="complete-total-amount">¥0</span>
+          <span data-en="Amount paid (incl. shipping):">決済金額（送料込）:</span> <span id="complete-total-amount">¥0</span>
         </div>
       </div>
       
-      <div class="complete-note">
+      <div class="complete-note" data-en="Orders usually arrive within 2 days to 1 week.<br>Depending on stock, delivery may take 2 weeks to 1 month.<br>A confirmation email (in Japanese) has been sent to you. We hope you enjoy your AirFly!">
         商品は通常、2日～1週間程度でお届けいたします。<br>
         なお、在庫状況によっては2週間～1ヶ月ほどお時間をいただく場合がございます。<br>
         商品の到着まで、楽しみにお待ちくださいませ。
       </div>
       
-      <button class="btn-flow" onclick="closeOrderCompleteScreen()">OK（トップへ戻る）</button>
+      <button class="btn-flow" onclick="closeOrderCompleteScreen()" data-en="OK (back to top)">OK（トップへ戻る）</button>
     </div>
   </div>
 
@@ -1216,25 +1240,25 @@
   <div id="venue-receipt-screen">
     <div class="complete-container">
       <div class="venue-receipt-event" id="venue-receipt-event"></div>
-      <h2 class="complete-title" style="margin-bottom: 8px;">ご注文を受け付けました</h2>
-      <div class="venue-receipt-label">受付番号</div>
+      <h2 class="complete-title" style="margin-bottom: 8px;" data-en="Your order has been received">ご注文を受け付けました</h2>
+      <div class="venue-receipt-label" data-en="Receipt number">受付番号</div>
       <div class="venue-receipt-no" id="venue-receipt-no"></div>
-      <div class="venue-receipt-instruction">
+      <div class="venue-receipt-instruction" data-en="<i class='fas fa-hand-point-right'></i> Please show this screen to our staff<br>and pay in cash or with Square.">
         <i class="fas fa-hand-point-right"></i> この画面をスタッフにお見せいただき、<br>お支払い（現金またはSquare）をお願いいたします。
       </div>
       <div class="complete-details">
-        <div class="complete-details-title">【ご注文内容】</div>
+        <div class="complete-details-title" data-en="[Order details]">【ご注文内容】</div>
         <div id="venue-receipt-items"></div>
         <div class="venue-receipt-breakdown" id="venue-receipt-breakdown"></div>
         <div class="complete-total">
-          お支払い金額（送料込）: <span id="venue-receipt-total">¥0</span>
+          <span data-en="Amount due (incl. shipping):">お支払い金額（送料込）:</span> <span id="venue-receipt-total">¥0</span>
         </div>
       </div>
-      <div class="complete-note">
+      <div class="complete-note" data-en="After we confirm your payment, we will email your order details to the address you entered (the email is in Japanese).<br>*Your order is not complete until payment is made.">
         お支払いの確認後、ご入力いただいたメールアドレスにご注文内容の詳細をお送りします。<br>
         ※お支払いが完了するまで、ご注文は確定しません。
       </div>
-      <button class="btn-flow-back" onclick="closeVenueReceipt()">別の注文をする</button>
+      <button class="btn-flow-back" onclick="closeVenueReceipt()" data-en="Place another order">別の注文をする</button>
     </div>
   </div>
 
@@ -1253,22 +1277,26 @@
 
     <nav id="nav">
       <img src="エアフライロゴ2024 .png" alt="AirFly Logo" class="nav-logo-img" />
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang="ja" onclick="setLang('ja')">日本語</button>
+        <button type="button" data-lang="en" onclick="setLang('en')">English</button>
+      </div>
       <button id="admin-menu-btn" class="nav-badge" onclick="openAdminModal()" style="display: none; border: none; cursor: pointer; background: var(--color-accent-blue); color: #fff; padding: 6px 12px; border-radius: 99px; font-weight: 700; font-size: 0.85rem;">管理者メニュー</button>
     </nav>
 
     <!-- ファーストビュー #hero -->
     <section id="hero">
       <div class="hero-content fade-in-up">
-        <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>この会場でのご注文は全商品15%OFFでご購入いただけます</small></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="All products are 15% off when you order at this venue">この会場でのご注文は全商品15%OFFでご購入いただけます</small></div>
         <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <h1 class="hero-title">
           Beyond
           <span>the Limit</span>
         </h1>
-        <p class="hero-subtitle">「限界」の先へ。<br>ストレスフリーな視界で最高のパフォーマンスを。</p>
+        <p class="hero-subtitle" data-en="Go beyond your limits.<br>Peak performance with a stress-free view.">「限界」の先へ。<br>ストレスフリーな視界で最高のパフォーマンスを。</p>
         <a href="#visual-order-flow" class="btn-cta" style="display:inline-flex; max-width:340px; margin: 0 auto;">
-          商品を選んで注文する
+          <span data-en="Order now">商品を選んで注文する</span>
           <span>↓</span>
         </a>
         
@@ -1286,8 +1314,8 @@
       <div class="inner">
         <span class="section-label fade-in-up">Healthcare</span>
         <h2 class="section-title fade-in-up" style="font-size: clamp(1.4rem, 5vw, 2.2rem);">
-          一生に浴びる紫外線の半分以上は、<br>18歳までに集中しています。<br>
-          <span style="font-size: 0.65em; color: var(--color-text-secondary); display: block; margin-top: 16px; font-weight: 700; line-height: 1.5;">そして大人の眼には、「疲労」と「眼病リスク」として蓄積され続けます。</span>
+          <span data-en="More than half of the UV exposure in a lifetime<br>happens before age 18.<br>">一生に浴びる紫外線の半分以上は、<br>18歳までに集中しています。<br></span>
+          <span style="font-size: 0.65em; color: var(--color-text-secondary); display: block; margin-top: 16px; font-weight: 700; line-height: 1.5;" data-en="And in adult eyes, it keeps building up as fatigue and a risk of eye disease.">そして大人の眼には、「疲労」と「眼病リスク」として蓄積され続けます。</span>
         </h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
         
@@ -1296,8 +1324,8 @@
           <div class="uv-list-item">
             <div class="uv-list-icon">🔋</div>
             <div class="uv-list-content">
-              <h3 class="uv-list-title">全身の疲労を軽減</h3>
-              <p class="uv-list-desc">眼から入る紫外線は、脳に強いストレス信号を送り、全身の疲労物質（活性酸素）を発生させます。確実に紫外線をカットすることで、体力消耗を抑え、パフォーマンスを維持します。</p>
+              <h3 class="uv-list-title" data-en="Reduces whole-body fatigue">全身の疲労を軽減</h3>
+              <p class="uv-list-desc" data-en="UV entering the eyes sends strong stress signals to the brain and generates fatigue substances (reactive oxygen species) throughout the body. Reliably blocking UV helps you conserve energy and keep performing.">眼から入る紫外線は、脳に強いストレス信号を送り、全身の疲労物質（活性酸素）を発生させます。確実に紫外線をカットすることで、体力消耗を抑え、パフォーマンスを維持します。</p>
             </div>
           </div>
           
@@ -1305,8 +1333,8 @@
           <div class="uv-list-item">
             <div class="uv-list-icon">👁️</div>
             <div class="uv-list-content">
-              <h3 class="uv-list-title">深刻な眼病のリスクを防ぐ</h3>
-              <p class="uv-list-desc">子どもの頃からのダメージ蓄積は、白内障のリスクを大幅に高めます。また大人にとっても、長年の蓄積は視力低下につながる「翼状片」や「加齢黄斑変性」といった深刻な眼病の直接的な原因となります。</p>
+              <h3 class="uv-list-title" data-en="Lowers the risk of serious eye disease">深刻な眼病のリスクを防ぐ</h3>
+              <p class="uv-list-desc" data-en="Damage that builds up from childhood greatly increases the risk of cataracts. For adults, too, years of accumulated exposure are a direct cause of serious eye conditions such as pterygium and age-related macular degeneration, which can lead to vision loss.">子どもの頃からのダメージ蓄積は、白内障のリスクを大幅に高めます。また大人にとっても、長年の蓄積は視力低下につながる「翼状片」や「加齢黄斑変性」といった深刻な眼病の直接的な原因となります。</p>
             </div>
           </div>
 
@@ -1314,8 +1342,8 @@
           <div class="uv-list-item">
             <div class="uv-list-icon">🛡️</div>
             <div class="uv-list-content">
-              <h3 class="uv-list-title">紫外線対策は「世界基準」の常識</h3>
-              <p class="uv-list-desc">オーストラリアなどの紫外線対策先進国では、児童の屋外活動時に帽子やサングラスの着用がルール化されるなど、国を挙げて眼の保護に取り組んでいます。強力な紫外線が降り注ぐ中、無防備な状態で屋外スポーツを行うことは、もはや「オプション」ではなく「避けるべき危険な行為」です。</p>
+              <h3 class="uv-list-title" data-en="UV protection is the global standard">紫外線対策は「世界基準」の常識</h3>
+              <p class="uv-list-desc" data-en="In countries leading the way on UV protection, such as Australia, hats and sunglasses are required for children's outdoor activities, and protecting eyes is a national effort. Playing outdoor sports unprotected under strong UV is no longer “optional” — it is a risk to avoid.">オーストラリアなどの紫外線対策先進国では、児童の屋外活動時に帽子やサングラスの着用がルール化されるなど、国を挙げて眼の保護に取り組んでいます。強力な紫外線が降り注ぐ中、無防備な状態で屋外スポーツを行うことは、もはや「オプション」ではなく「避けるべき危険な行為」です。</p>
             </div>
           </div>
         </div>
@@ -1326,32 +1354,32 @@
     <section id="features">
       <div class="inner">
         <span class="section-label fade-in-up">Why AirFly?</span>
-        <h2 class="section-title fade-in-up">世界初。<br>鼻パッドのないスポーツサングラス。</h2>
+        <h2 class="section-title fade-in-up" data-en="A world first.<br>Sports sunglasses without nose pads.">世界初。<br>鼻パッドのないスポーツサングラス。</h2>
         <div class="divider fade-in-up"></div>
-        <p class="section-desc fade-in-up">
+        <p class="section-desc fade-in-up" data-en="Our flagship model, created to solve the frustrations of conventional sunglasses. A revolutionary design that changes what sports eyewear can be.">
           従来のサングラスが持つ「不満」を解消するために生まれたフラッグシップモデル。スポーツの常識を覆す革命的な設計です。
         </p>
 
         <div class="features-grid">
           <div class="feature-card fade-in-up">
             <div class="feature-icon-wrapper"><span class="feature-icon">💧</span></div>
-            <h3 class="feature-title">汗でズレない</h3>
-            <p class="feature-desc">鼻パッドがないため、汗をかいてもレンズが下がりません。激しい運動中もベストな視界を維持。</p>
+            <h3 class="feature-title" data-en="No slipping from sweat">汗でズレない</h3>
+            <p class="feature-desc" data-en="With no nose pads, the lens won't slide down when you sweat. Keep the best view even during intense exercise.">鼻パッドがないため、汗をかいてもレンズが下がりません。激しい運動中もベストな視界を維持。</p>
           </div>
           <div class="feature-card fade-in-up">
             <div class="feature-icon-wrapper"><span class="feature-icon">👃</span></div>
-            <h3 class="feature-title">鼻に跡がつかない</h3>
-            <p class="feature-desc">鼻への圧迫から解放され、長時間着用しても跡がつかない快適なフィット感を実現。</p>
+            <h3 class="feature-title" data-en="No marks on your nose">鼻に跡がつかない</h3>
+            <p class="feature-desc" data-en="Free from pressure on your nose, for a comfortable fit that leaves no marks even after long wear.">鼻への圧迫から解放され、長時間着用しても跡がつかない快適なフィット感を実現。</p>
           </div>
           <div class="feature-card fade-in-up">
             <div class="feature-icon-wrapper"><span class="feature-icon">🌐</span></div>
-            <h3 class="feature-title">視界が広い</h3>
-            <p class="feature-desc">フレームを極限まで排除したデザインで、上下左右の視野が拡大。プレーの判断力が向上。</p>
+            <h3 class="feature-title" data-en="Wider field of view">視界が広い</h3>
+            <p class="feature-desc" data-en="A design that minimizes the frame widens your view in every direction, helping you make better calls in play.">フレームを極限まで排除したデザインで、上下左右の視野が拡大。プレーの判断力が向上。</p>
           </div>
           <div class="feature-card fade-in-up">
             <div class="feature-icon-wrapper"><span class="feature-icon">💄</span></div>
-            <h3 class="feature-title">化粧が落ちにくい</h3>
-            <p class="feature-desc">鼻パッドがないため、ファンデーションが剥げたり鼻に跡が残る心配がありません。</p>
+            <h3 class="feature-title" data-en="Keeps your makeup in place">化粧が落ちにくい</h3>
+            <p class="feature-desc" data-en="With no nose pads, there's no worry about foundation rubbing off or marks left on your nose.">鼻パッドがないため、ファンデーションが剥げたり鼻に跡が残る心配がありません。</p>
           </div>
         </div>
       </div>
@@ -1364,20 +1392,20 @@
         <span class="section-label fade-in-up">ORDER FORM</span>
         
         
-        <h2 class="section-title fade-in-up">AirFlyカスタムオーダー</h2>
+        <h2 class="section-title fade-in-up" data-en="AirFly Custom Order">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
-        <div class="venue-banner"><span class="venue-event-name"></span> 会場限定 15%OFF<small>お支払いは注文確定後、会場にて現金またはSquareで承ります</small></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="Place your order, then pay at the venue in cash or with Square">お支払いは注文確定後、会場にて現金またはSquareで承ります</small></div>
         <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <!-- ステップ1: モデル選択 -->
         <div id="flow-step-1" class="flow-step active">
-          <p class="section-desc">まずはご希望のモデルをお選びください。</p>
+          <p class="section-desc" data-en="First, choose your model.">まずはご希望のモデルをお選びください。</p>
 
           <!-- 男性向け -->
           <div class="category-section">
             <div class="category-header">
               <div class="category-icon">🏃</div>
-              <div class="category-title">男性向けモデル<span style="font-size: 0.75rem; font-weight: 500; color: #4a5568; margin-left: 12px; vertical-align: middle;">※ユニセックス仕様（女性にもおすすめ）</span><small>MEN'S MODEL</small></div>
+              <div class="category-title"><span data-en="Men's models">男性向けモデル</span><span style="font-size: 0.75rem; font-weight: 500; color: #4a5568; margin-left: 12px; vertical-align: middle;" data-en="*Unisex (also recommended for women)">※ユニセックス仕様（女性にもおすすめ）</span><small>MEN'S MODEL</small></div>
             </div>
             <div class="card-grid" id="model-cards-men"></div>
           </div>
@@ -1386,7 +1414,7 @@
           <div class="category-section">
             <div class="category-header">
               <div class="category-icon">👩</div>
-              <div class="category-title">女性（又はジュニア）向けモデル<small>WOMEN'S / JUNIOR MODEL</small></div>
+              <div class="category-title"><span data-en="Women's / junior models">女性（又はジュニア）向けモデル</span><small>WOMEN'S / JUNIOR MODEL</small></div>
             </div>
             <div class="card-grid" id="model-cards-women"></div>
           </div>
@@ -1395,19 +1423,19 @@
           <div class="category-section">
             <div class="category-header">
               <div class="category-icon">👦</div>
-              <div class="category-title">キッズ向けモデル（推奨：4〜10歳）<small>KIDS MODEL</small></div>
+              <div class="category-title"><span data-en="Kids' models (recommended age: 4–10)">キッズ向けモデル（推奨：4〜10歳）</span><small>KIDS MODEL</small></div>
             </div>
             <div class="card-grid" id="model-cards-kids"></div>
           </div>
 
           <div class="flow-actions">
-            <button class="btn-flow" id="btn-next-1" onclick="nextStep(2)" disabled>次へ進む（レンズ選択）</button>
+            <button class="btn-flow" id="btn-next-1" onclick="nextStep(2)" disabled data-en="Next (choose a lens)">次へ進む（レンズ選択）</button>
           </div>
         </div>
 
         <!-- ステップ2: レンズ選択 -->
         <div id="flow-step-2" class="flow-step">
-          <p class="section-desc">
+          <p class="section-desc" data-en="Next, choose your lens.<br><span style='color: var(--color-accent-blue); font-weight: 700;'>*All lenses block 99% or more of harmful UV rays.</span>">
             次に、レンズの種類をお選びください。<br>
             <span style="color: var(--color-accent-blue); font-weight: 700;">※全レンズ、目に有害な紫外線を99％以上カットします。</span>
           </p>
@@ -1416,26 +1444,26 @@
           </div>
           <div class="card-grid" id="lens-cards" style="display:none;"></div>
           <div class="flow-actions">
-            <button class="btn-flow-back" onclick="prevStep(1)">戻る</button>
-            <button class="btn-flow" id="btn-next-2" onclick="nextStep(3)" disabled>次へ進む（フレーム選択）</button>
+            <button class="btn-flow-back" onclick="prevStep(1)" data-en="Back">戻る</button>
+            <button class="btn-flow" id="btn-next-2" onclick="nextStep(3)" disabled data-en="Next (choose a frame)">次へ進む（フレーム選択）</button>
           </div>
         </div>
 
         <!-- ステップ3: フレーム選択 -->
         <div id="flow-step-3" class="flow-step">
-          <p class="section-desc">最後に、フレームのバリエーションをお選びください。</p>
+          <p class="section-desc" data-en="Finally, choose your frame color.">最後に、フレームのバリエーションをお選びください。</p>
           <div class="card-grid" id="frame-cards">
             <!-- JSで動的に生成 -->
           </div>
           <div class="flow-actions">
-            <button class="btn-flow-back" onclick="prevStep(2)">戻る</button>
-            <button class="btn-flow" id="btn-next-3" onclick="addToCartAndConfirm()" disabled>カートに追加して確認へ</button>
+            <button class="btn-flow-back" onclick="prevStep(2)" data-en="Back">戻る</button>
+            <button class="btn-flow" id="btn-next-3" onclick="addToCartAndConfirm()" disabled data-en="Add to cart and review">カートに追加して確認へ</button>
           </div>
         </div>
 
         <!-- ステップ4: 最終確認 -->
         <div id="flow-step-4" class="flow-step">
-          <p class="section-desc">以下の内容で注文を確定します。</p>
+          <p class="section-desc" data-en="Please review your order below.">以下の内容で注文を確定します。</p>
           <div id="order-summary-box">
             
             <div id="cart-items-container">
@@ -1443,17 +1471,17 @@
             </div>
  
             <div class="summary-row" style="border-top: 2px solid var(--color-border); margin-top: 16px; padding-top: 16px; border-bottom: none;">
-              <span class="summary-label">送料（全国一律）</span>
-              <span class="summary-value">¥600（税込）</span>
+              <span class="summary-label" data-en="Shipping (flat rate within Japan)">送料（全国一律）</span>
+              <span class="summary-value" data-en="¥600 (tax incl.)">¥600（税込）</span>
             </div>
  
             <div class="summary-price-row">
               <span class="price-label" style="display:none;">定価参考の合計</span>
               <span class="price-original" id="summary-price-original" style="display:none;">¥0（税込）</span>
-              <span class="price-label">合計金額（送料込）</span>
+              <span class="price-label" data-en="Total (incl. shipping)">合計金額（送料込）</span>
               <div class="price-sale-row" style="margin-top: 12px;">
                 <span class="price-sale" id="summary-price">¥0</span>
-                <span class="price-sale-unit">（税込）</span>
+                <span class="price-sale-unit" data-en="(tax incl.)">（税込）</span>
               </div>
               <div id="coupon-discount-row" style="display: none; margin-top: 8px; font-size: 0.95rem; color: #e11d48; font-weight: bold; text-align: right;">
                 クーポン割引 (10%OFF): -<span id="coupon-discount-amount">¥0</span>
@@ -1463,35 +1491,36 @@
           </div>
 
           <div id="shipping-form-box" style="background: #fff; border: 1px solid var(--color-border); border-radius: 16px; padding: 32px; max-width: 600px; margin: 0 auto 32px; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.04);">
-            <h4 style="margin-bottom: 20px; color: var(--color-text-primary); border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;"><i class="fas fa-truck"></i> お届け先情報</h4>
+            <h4 style="margin-bottom: 20px; color: var(--color-text-primary); border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;" data-en="<i class='fas fa-truck'></i> Shipping information"><i class="fas fa-truck"></i> お届け先情報</h4>
+            <p class="en-only" style="margin: -8px 0 16px; font-size: 0.85rem; color: #ea580c; font-weight: 700;">We can only deliver within Japan. Please enter a Japanese postal code and phone number.</p>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-name" style="display: block; font-weight: 700; margin-bottom: 8px;">お名前 <span style="color: red; font-size: 0.8rem;">必須</span></label>
-              <input type="text" id="shipping-name" placeholder="山田 太郎" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+              <label for="shipping-name" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Name">お名前</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
+              <input type="text" id="shipping-name" placeholder="山田 太郎" data-en-placeholder="Taro Yamada" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-email" style="display: block; font-weight: 700; margin-bottom: 8px;">メールアドレス <span style="color: red; font-size: 0.8rem;">必須</span></label>
+              <label for="shipping-email" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Email">メールアドレス</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
               <input type="email" id="shipping-email" placeholder="sample@example.com" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;">郵便番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
+              <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Postal code">郵便番号</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Numbers only, no hyphens">※ハイフンなしで入力してください</span></label>
               <input type="text" id="shipping-zip" placeholder="1234567" inputmode="numeric" autocomplete="postal-code" oninput="onZipInput(this.value)" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
               <div id="zip-lookup-msg" style="margin-top: 6px; font-size: 0.85rem; display: none;"></div>
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;">住所 <span style="color: red; font-size: 0.8rem;">必須</span></label>
-              <input type="text" id="shipping-address" placeholder="東京都渋谷区〇〇 1-2-3 マンション101" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+              <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Address">住所</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
+              <input type="text" id="shipping-address" placeholder="東京都渋谷区〇〇 1-2-3 マンション101" data-en-placeholder="e.g. 1-2-3 Jingumae, Shibuya-ku, Tokyo, Apt 101" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;">電話番号 <span style="color: red; font-size: 0.8rem;">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;">※ハイフンなしで入力してください</span></label>
+              <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Phone number">電話番号</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Numbers only, no hyphens">※ハイフンなしで入力してください</span></label>
               <input type="tel" id="shipping-phone" placeholder="09012345678" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
 
             <!-- クーポン入力欄（会場販売では非表示） -->
             <div id="coupon-box" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--color-border);">
-              <label for="coupon-code" style="display: block; font-weight: 700; margin-bottom: 8px;"><i class="fas fa-ticket-alt"></i> クーポンコード（任意）</label>
+              <label for="coupon-code" style="display: block; font-weight: 700; margin-bottom: 8px;" data-en="<i class='fas fa-ticket-alt'></i> Coupon code (optional)"><i class="fas fa-ticket-alt"></i> クーポンコード（任意）</label>
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="coupon-code" placeholder="例: SPECIAL10" style="flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
-                <button type="button" onclick="applyCoupon()" style="padding: 12px 24px; background: var(--color-text-primary); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;">適用</button>
+                <input type="text" id="coupon-code" placeholder="例: SPECIAL10" data-en-placeholder="e.g. SPECIAL10" style="flex: 1; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
+                <button type="button" onclick="applyCoupon()" style="padding: 12px 24px; background: var(--color-text-primary); color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;" data-en="Apply">適用</button>
               </div>
               <div id="coupon-message" style="margin-top: 8px; font-size: 0.9rem; display: none;"></div>
             </div>
@@ -1500,19 +1529,19 @@
             <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--color-border);">
               <div style="display: flex; align-items: flex-start; gap: 8px;">
                 <input type="checkbox" id="newsletter-opt-in" checked style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;">
-                <label for="newsletter-opt-in" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; font-weight: 500;">
+                <label for="newsletter-opt-in" style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; font-weight: 500;" data-en="Receive special offers and the latest news from TempMachi">
                   TempMachiからのお得なキャンペーン情報や最新情報を受け取る
                 </label>
               </div>
             </div>
           </div>
 
-          <div style="font-size: 0.85rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 24px;">
+          <div style="font-size: 0.85rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 24px;" data-en="Your personal information will be handled properly in accordance with our <a href='privacy.html' target='_blank' style='color:var(--color-accent-blue); text-decoration:underline;'>Privacy Policy</a> (in Japanese).">
             入力いただいた個人情報は、<a href="privacy.html" target="_blank" style="color:var(--color-accent-blue); text-decoration:underline;">プライバシーポリシー</a>に基づき適切に管理・利用します。
           </div>
           <div class="flow-actions" style="flex-wrap: wrap; gap: 16px;">
-            <button class="btn-flow-back" onclick="backFromSummary()"><i class="fas fa-chevron-left"></i> 戻る</button>
-            <button class="btn-flow-back" onclick="addAnotherItem()">別の商品を追加する</button>
+            <button class="btn-flow-back" onclick="backFromSummary()" data-en="<i class='fas fa-chevron-left'></i> Back"><i class="fas fa-chevron-left"></i> 戻る</button>
+            <button class="btn-flow-back" onclick="addAnotherItem()" data-en="Add another item">別の商品を追加する</button>
             <button class="btn-flow" id="btn-submit" onclick="submitOrder()"><i class="fas fa-lock"></i> 決済に進む</button>
           </div>
         </div>
@@ -1523,20 +1552,20 @@
     <!-- ローディング用オーバーレイ -->
     <div id="loading-overlay">
       <div class="loading-spinner"></div>
-      <p style="font-weight: 700; color: #2d3748; margin-top: 16px;">送信中...</p>
+      <p style="font-weight: 700; color: #2d3748; margin-top: 16px;" data-en="Sending...">送信中...</p>
     </div>
 
     <!-- フッター -->
     <footer>
       <p class="footer-logo">AirFly × TempMachi</p>
       <div style="margin-bottom: 16px; font-size: 0.85rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;">
-        <a href="tokushoho.html" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">特定商取引法に基づく表記</a>
+        <a href="tokushoho.html" data-en="Legal notice (in Japanese)" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">特定商取引法に基づく表記</a>
         <span style="color: var(--color-border);">|</span>
-        <a href="terms.html" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">利用規約</a>
+        <a href="terms.html" data-en="Terms of use (in Japanese)" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">利用規約</a>
         <span style="color: var(--color-border);">|</span>
-        <a href="privacy.html" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">プライバシーポリシー</a>
+        <a href="privacy.html" data-en="Privacy policy (in Japanese)" style="color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--color-accent-blue)'" onmouseout="this.style.color='var(--color-text-secondary)'">プライバシーポリシー</a>
       </div>
-      <p class="footer-note">
+      <p class="footer-note" data-en="Seller: TempMachi | Product: ZYGOSPEC AirFly<br>© 2026 TempMachi.">
         販売元：TempMachi | 提供品：ZYGOSPEC AirFly<br>
         © 2026 TempMachi.
       </p>
@@ -2193,26 +2222,26 @@
       if (!codeInput) {
         msgEl.style.display = 'block';
         msgEl.style.color = '#ef4444';
-        msgEl.textContent = 'クーポンコードを入力してください。';
+        msgEl.textContent = tr('クーポンコードを入力してください。', 'Please enter a coupon code.');
         return;
       }
 
       msgEl.style.display = 'block';
       msgEl.style.color = '#4a5568';
-      msgEl.textContent = '確認中...';
+      msgEl.textContent = tr('確認中...', 'Checking...');
 
       try {
         const doc = await db.collection('coupons').doc(codeInput).get();
         if (!doc.exists) {
           msgEl.style.color = '#ef4444';
-          msgEl.textContent = '有効なクーポンコードではありません。';
+          msgEl.textContent = tr('有効なクーポンコードではありません。', 'This coupon code is not valid.');
           return;
         }
 
         const data = doc.data();
         if (!data.isUnlimited && data.isUsed) {
           msgEl.style.color = '#ef4444';
-          msgEl.textContent = 'このクーポンコードはすでに使用されています。';
+          msgEl.textContent = tr('このクーポンコードはすでに使用されています。', 'This coupon code has already been used.');
           return;
         }
 
@@ -2221,7 +2250,7 @@
           expiry.setHours(23, 59, 59, 999);
           if (new Date() > expiry) {
             msgEl.style.color = '#ef4444';
-            msgEl.textContent = 'このクーポンコードは有効期限が切れています。';
+            msgEl.textContent = tr('このクーポンコードは有効期限が切れています。', 'This coupon code has expired.');
             return;
           }
         }
@@ -2232,14 +2261,14 @@
         appliedDiscount = rate / 100;
         
         msgEl.style.color = '#10b981';
-        msgEl.textContent = `クーポン（${rate}%OFF）が適用されました！`;
+        msgEl.textContent = tr(`クーポン（${rate}%OFF）が適用されました！`, `Coupon (${rate}% OFF) applied!`);
         
         renderCart();
 
       } catch (e) {
         console.error("Coupon fetch error:", e);
         msgEl.style.color = '#ef4444';
-        msgEl.textContent = '通信エラーが発生しました。再度お試しください。';
+        msgEl.textContent = tr('通信エラーが発生しました。再度お試しください。', 'A network error occurred. Please try again.');
       }
     }
 
@@ -2256,6 +2285,143 @@
       initVisualOrderFlow();
       checkAdminStatus();
       initVenueMode();
+    }
+
+    /* ==============================================
+       言語切り替え（日本語 / English）
+       - 固定の文言：要素の data-en（英語のHTML）と、最初の日本語の内容を入れ替える
+       - JSで作る文言：tr('日本語', 'English') で出し分ける
+       - サーバー・スプレッドシートに送るレンズ名・フレーム名は日本語のまま（表示だけ英語にする）
+       - 管理者メニュー・会場受付（スタッフ用）は日本語のみ
+    ============================================== */
+    const LANG_KEY = 'airfly_lang';
+    let currentLang = 'ja';
+    const jaHtml = new WeakMap();        // data-en を持つ要素の日本語の内容
+    const jaPlaceholder = new WeakMap();
+    let venueNoticeTexts = null;          // 表示中の会場案内（言語を切り替えたら表示し直す）
+    let shownVenueReceipt = null;         // 表示中の受付番号画面
+
+    function tr(ja, en) {
+      return currentLang === 'en' ? en : ja;
+    }
+
+    // ?lang=en / ?lang=ja が付いていればそれを、なければ前回選んだ言語を使う（初期値は日本語）
+    function initLang() {
+      const fromUrl = new URLSearchParams(window.location.search).get('lang');
+      let saved = null;
+      try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
+      applyStaticLang(fromUrl === 'en' || fromUrl === 'ja' ? fromUrl : (saved === 'en' ? 'en' : 'ja'));
+    }
+
+    function applyStaticLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-en]').forEach(el => {
+        if (!jaHtml.has(el)) jaHtml.set(el, el.innerHTML);
+        el.innerHTML = lang === 'en' ? el.dataset.en : jaHtml.get(el);
+      });
+      document.querySelectorAll('[data-en-placeholder]').forEach(el => {
+        if (!jaPlaceholder.has(el)) jaPlaceholder.set(el, el.placeholder);
+        el.placeholder = lang === 'en' ? el.dataset.enPlaceholder : jaPlaceholder.get(el);
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+      updateSubmitButton();
+    }
+
+    function setLang(lang) {
+      if (lang === currentLang) return;
+      try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+      applyStaticLang(lang);
+      rerenderFlowForLang();
+      if (venueNoticeTexts) showVenueClosedNotice(...venueNoticeTexts);
+      if (shownVenueReceipt) showVenueReceipt(shownVenueReceipt);
+    }
+
+    function updateSubmitButton() {
+      const btn = document.getElementById('btn-submit');
+      if (!btn) return;
+      btn.innerHTML = venueEvent
+        ? `<i class="fas fa-check"></i> ${tr('注文を確定（会場でお支払い）', 'Place order (pay at the venue)')}`
+        : `<i class="fas fa-lock"></i> ${tr('決済に進む', 'Proceed to payment')}`;
+    }
+
+    // 表示用の名前（英語のときだけ変換。注文データは日本語のまま）
+    const LENS_COLOR_EN = {
+      'グレー': 'Gray', 'ライトスモーク': 'Light Smoke', 'ゴールド': 'Gold', 'ブルーピンク': 'Blue Pink', 'ブルー': 'Blue',
+      'ハイコントラストローズ': 'High Contrast Rose', 'ライトピンク': 'Light Pink', 'スモーク': 'Smoke', 'ピンク': 'Pink'
+    };
+    const FRAME_EN = {
+      'ホワイトマット': 'Matte White', 'ブラック': 'Black', 'ブルーカモフラージュ': 'Blue Camouflage', 'ブルー': 'Blue',
+      'レッド': 'Red', 'ネオンイエローマット': 'Matte Neon Yellow', 'シルバー': 'Silver', 'カーボンスタイル': 'Carbon Style',
+      'クリアアッシュ': 'Clear Ash', 'アクアブルー': 'Aqua Blue', 'クリアグレー': 'Clear Gray', 'ピンク': 'Pink',
+      'ペールホワイト': 'Pale White', 'エメラルドグリーン': 'Emerald Green', 'グレーカモフラージュ': 'Gray Camouflage'
+    };
+    const PHOTOCHROMIC_DESC_EN = 'The lens tint changes automatically with the amount of UV light: sunglasses outdoors, clear glasses indoors and at night. One pair does both jobs, so you never need to switch.\\n*The tint does not change inside cars with UV-cut glass.';
+    const LENS_DESC_EN = {
+      '強い日差しをしっかり防ぐ、晴天時の屋外プレーに最適なレンズです。': 'Blocks strong sunlight. Ideal for outdoor play on sunny days.',
+      '眩しさを抑えつつ、適度な明るさも確保するバランスの良いレンズです。': 'A well-balanced lens that cuts glare while keeping a comfortable level of brightness.',
+      '視界が暗くなりすぎず、天候の変化にも対応しやすい明るめのレンズです。': 'A brighter lens that keeps your view from getting too dark and adapts easily to changing weather.',
+      '紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。\\n※UVカットガラスの車内では色は変わりません。': PHOTOCHROMIC_DESC_EN,
+      '裸眼に近い自然な色合いで、曇天時や夕暮れ時でもボールを捉えやすい明るめのレンズです。': 'A brighter lens with natural colors close to the naked eye, making the ball easy to track even on cloudy days or at dusk.',
+      '色調の変化が少なく自然な視界を保ち、長時間の使用でも目が疲れにくいベーシックなレンズです。': 'A basic lens with minimal color shift for a natural view that stays easy on the eyes over long hours.',
+      '景色の輪郭や路面の起伏をくっきりと際立たせるハイコントラスト仕様で、対象物をより鮮明に捉えられるレンズです。': 'A high-contrast lens that sharpens outlines and surface details so you can see your target more clearly.',
+      '裸眼に近い自然な色合いで、曇天時や夕暮れ時など少し暗い環境でも景色を捉えやすい明るめのレンズです。': 'A brighter lens with natural colors close to the naked eye that keeps your view clear in dim conditions such as cloudy days or dusk.',
+      '視界を明るく保ちながらコントラストを高め、曇天時や日陰など少し暗い環境でもクリアな視界を提供するレンズです。': 'Keeps your view bright while boosting contrast, for a clear view in dim conditions such as cloudy days or shade.',
+      '視界が暗くなりすぎず、スポーツから普段の外遊びまで幅広く使える明るめの万能レンズです。': 'A brighter all-round lens that never gets too dark, great for everything from sports to everyday outdoor play.'
+    };
+
+    function lensColorLabel(base) {
+      return currentLang === 'en' ? (LENS_COLOR_EN[base] || base) : base;
+    }
+
+    // 例: "ゴールド★偏光" → "Gold (Polarized)"
+    function lensLabel(lens) {
+      if (currentLang !== 'en') return lens;
+      const s = String(lens);
+      const suffix = s.includes('★偏光') ? ' (Polarized)' : (s.includes('■調光') ? ' (Photochromic)' : '');
+      return lensColorLabel(s.replace('★偏光', '').replace('■調光', '')) + suffix;
+    }
+
+    function frameLabel(frame) {
+      return currentLang === 'en' ? (FRAME_EN[frame] || frame) : frame;
+    }
+
+    function lensDesc(desc) {
+      return currentLang === 'en' ? (LENS_DESC_EN[desc] || desc) : desc;
+    }
+
+    function modelText(info) {
+      return currentLang === 'en' && info.en ? info.en : info;
+    }
+
+    // 注文内容の1行（完了画面・受付番号画面）
+    function itemLine(item) {
+      return `${tr('モデル', 'Model')}: ${escHtml(item.model)} / ${tr('レンズ', 'Lens')}: ${escHtml(lensLabel(item.lens))} / ${tr('フレーム', 'Frame')}: ${escHtml(frameLabel(item.frame))}`;
+    }
+
+    // 言語の切り替え後に、注文フローの表示を作り直す（選んでいるカードはそのまま）
+    function selectedCardIndex(rootSelector) {
+      return [...document.querySelectorAll(rootSelector + ' .visual-card')].findIndex(c => c.classList.contains('selected'));
+    }
+
+    function reselectCard(rootSelector, index) {
+      const card = index >= 0 ? document.querySelectorAll(rootSelector + ' .visual-card')[index] : null;
+      if (card) card.classList.add('selected');
+    }
+
+    function rerenderFlowForLang() {
+      rerenderModelCards();
+      if (renderedLensModel) {
+        const i = selectedCardIndex('#lens-selection-container');
+        renderLensStep(renderedLensModel);
+        reselectCard('#lens-selection-container', i);
+      }
+      if (renderedFrameFor) {
+        const i = selectedCardIndex('#frame-cards');
+        renderFrameStep(renderedFrameFor.model, renderedFrameFor.lens);
+        reselectCard('#frame-cards', i);
+      }
+      renderCart();
     }
 
         /* ==============================================
@@ -2511,6 +2677,8 @@
     };
     
     let cart = [];
+    let renderedLensModel = null;   // レンズ選択に表示中のモデル
+    let renderedFrameFor = null;    // フレーム選択に表示中の { model, lens }
 
     function formatPrice(num) { return num.toLocaleString('ja-JP'); }
 
@@ -2547,6 +2715,7 @@
     const MODEL_INFO = {
       'AF-301-BK': {
         subtitle: 'バイクモデル：縦横に深い1枚レンズ',
+        en: { subtitle: 'Bike model: tall, wide single lens', features: ['Tall, wide lens blocks UV around the whole eye area', 'Deep wraparound curve also blocks sunlight from the side'], lensWidth: 'Lens width: approx. 136 mm' },
         features: [
           '縦横ワイドなレンズで目元全体の紫外線をカット',
           '顔に沿う深いカーブで、横からの日差しもブロック'
@@ -2559,6 +2728,7 @@
       },
       'AF-301-WV': {
         subtitle: 'ワイドビューモデル：横に広いレンズ',
+        en: { subtitle: 'Wide-view model: horizontally wide lens', features: ['Sharp, stylish lens design', 'Angled cut stays clear of your cheeks for a comfortable view'], lensWidth: 'Lens width: approx. 136 mm' },
         features: [
           'シャープでかっこいい印象のレンズデザイン',
           '頬に干渉しない斜めカットで快適な視界'
@@ -2571,6 +2741,7 @@
       },
       'AF-301': {
         subtitle: 'スタンダードモデル：ベーシックな1枚レンズ',
+        en: { subtitle: 'Standard model: basic single lens', features: ['Just-right size that stays clear of your cheeks', 'Standard design with minimal distortion'], lensWidth: 'Lens width: approx. 127 mm' },
         features: [
           '大きすぎない絶妙なサイズ感で頬に干渉しない',
           '視界の歪みを抑えたクセのないスタンダード設計'
@@ -2583,6 +2754,7 @@
       },
       'AF-302-WP': {
         subtitle: 'ワイドプロテクトモデル：縦に広いレンズ',
+        en: { subtitle: 'Wide-protect model: vertically tall lens', features: ['Tall lens covers from the eyes to the cheeks for UV care', 'Blocks glare when you look up'], lensWidth: 'Lens width: approx. 129 mm' },
         features: [
           '縦幅の広いレンズで目元から頬まで覆いUVケア',
           '上を見上げたときの眩しさをしっかり防ぐ'
@@ -2595,6 +2767,7 @@
       },
       'AF-302-SP': {
         subtitle: 'スポーツプラスモデル：細身のレンズ',
+        en: { subtitle: 'Sport-plus model: slim lens', features: ['Slim, low-profile lens for a sharp view', 'Ultra-light compact lens stays comfortable all day'], lensWidth: 'Lens width: approx. 123 mm' },
         features: [
           '縦幅を抑えたスリムレンズでシャープな視界',
           '圧倒的に軽いコンパクトレンズで長丁場でも快適'
@@ -2607,6 +2780,7 @@
       },
       'AF-901': {
         subtitle: 'キッズモデル：子供専用レンズ',
+        en: { subtitle: 'Kids model: lens made for children', features: ['Kid-specific lens shape protects small faces without gaps', 'Shatter-resistant material that holds up to ball hits and falls'], lensWidth: 'Lens width: approx. 118 mm' },
         features: [
           '小さな顔を隙間なく守るキッズ専用のレンズ形状',
           'ボールの直撃や転倒でも割れにくい安全な素材'
@@ -2640,25 +2814,26 @@
         models.forEach(m => {
           const info = MODEL_INFO[m];
           if (!info) return;
+          const text = modelText(info);
           const card = document.createElement('div');
           card.className = 'visual-card';
           card.innerHTML = `
             <img src="${info.image}" alt="${m}" class="card-product-img" />
             <h4 class="card-title">${m}</h4>
-            <p class="card-subtitle">（${info.subtitle}）</p>
+            <p class="card-subtitle">${tr(`（${text.subtitle}）`, `(${text.subtitle})`)}</p>
             <div class="card-price-container">
               <div class="card-price-row">
                 <div>
-                  <span style="font-size: 0.85rem; color: #64748b; font-weight: normal; margin-right: 4px;">定価</span>
+                  <span style="font-size: 0.85rem; color: #64748b; font-weight: normal; margin-right: 4px;">${tr('定価', 'Price')}</span>
                   <span class="card-price-sale" style="color: #1a1a1a;${venueEvent ? ' text-decoration: line-through; font-size: 0.95rem;' : ''}">¥${formatPrice(info.priceOrig)}</span>
-                  <span class="card-price-suffix"> (税込)</span>
-                  ${venueEvent ? `<span class="card-venue-price">会場価格 ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))}〜 (税込)</span>` : ''}
+                  <span class="card-price-suffix"> ${tr('(税込)', '(tax incl.)')}</span>
+                  ${venueEvent ? `<span class="card-venue-price">${tr(`会場価格 ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))}〜 (税込)`, `Venue price from ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))} (tax incl.)`)}</span>` : ''}
                 </div>
               </div>
             </div>
             <ul class="card-features">
-              ${info.features.map(f => `<li>${f}</li>`).join('')}
-              <li class="lens-width">${info.lensWidth}</li>
+              ${text.features.map(f => `<li>${f}</li>`).join('')}
+              <li class="lens-width">${text.lensWidth}</li>
             </ul>
           `;
           card.onclick = () => selectModel(m, card);
@@ -2674,23 +2849,26 @@
       const btnNext = document.getElementById('btn-next-1');
       btnNext.disabled = false;
       setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-      
-      // レンズカード再生成
-      // レンズコンテナをリセット
-      const lensRoot = document.getElementById('lens-selection-container');
-      lensRoot.innerHTML = '';
       orderState.lens = '';
       document.getElementById('btn-next-2').disabled = true;
+      renderLensStep(model);
+    }
+
+    // レンズ選択（ステップ2）を描画する
+    function renderLensStep(model) {
+      renderedLensModel = model;
+      const lensRoot = document.getElementById('lens-selection-container');
+      lensRoot.innerHTML = '';
 
       // 選択中モデル名をステップ2に表示
-      const modelInfo = MODEL_INFO[model];
+      const modelInfo = modelText(MODEL_INFO[model]);
       const modelBadgeId = 'selected-model-display';
       let existingBadge = document.getElementById(modelBadgeId);
       if (existingBadge) existingBadge.remove();
       const badge = document.createElement('div');
       badge.id = modelBadgeId;
       badge.className = 'selected-model-badge';
-      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${model}（${modelInfo.subtitle}）`;
+      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${model}${tr(`（${modelInfo.subtitle}）`, ` (${modelInfo.subtitle})`)}`;
       
       const step2El = document.getElementById('flow-step-2');
       const step2Desc = step2El.querySelector('.section-desc');
@@ -2724,23 +2902,25 @@
         const catTitle = document.createElement('div');
         catTitle.className = 'lens-category-title';
         catTitle.innerHTML = title;
-        const priceBasis = venueEvent ? '（定価）' : '';
+        const priceBasis = venueEvent ? tr('（定価）', ' (list price)') : '';
         if (categoryType === 'polarized') {
-          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋4,400円${priceBasis}</span>`;
+          catTitle.innerHTML += ` <span class="price-note">${tr(`通常レンズの＋4,400円${priceBasis}`, `+¥4,400 vs. standard lenses${priceBasis}`)}</span>`;
         } else if (categoryType === 'photochromic') {
-          catTitle.innerHTML += ` <span class="price-note">通常レンズの＋6,600円${priceBasis}</span>`;
+          catTitle.innerHTML += ` <span class="price-note">${tr(`通常レンズの＋6,600円${priceBasis}`, `+¥6,600 vs. standard lenses${priceBasis}`)}</span>`;
         }
         lensRoot.appendChild(catTitle);
 
         if (categoryType === 'polarized') {
           const catDesc = document.createElement('div');
           catDesc.className = 'lens-category-desc polarized';
-          catDesc.innerHTML = `<b>※偏光レンズ</b>・・・乱反射を防ぐ偏光レンズを採用。アスファルトやコートの強烈な照り返しをカットし、よりはっきりとした鮮明な視界を実現します。`;
+          catDesc.innerHTML = tr(`<b>※偏光レンズ</b>・・・乱反射を防ぐ偏光レンズを採用。アスファルトやコートの強烈な照り返しをカットし、よりはっきりとした鮮明な視界を実現します。`,
+            `<b>*Polarized lenses</b> reduce scattered reflections, cutting harsh glare from asphalt and courts for a sharper, clearer view.`);
           lensRoot.appendChild(catDesc);
         } else if (categoryType === 'photochromic') {
           const catDesc = document.createElement('div');
           catDesc.className = 'lens-category-desc photochromic';
-          catDesc.innerHTML = `<b>※調光レンズ</b>・・・紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。<br><span style="font-size: 0.9em; color: #e53e3e;">※UVカットガラスの車内では色は変わりません。</span>`;
+          catDesc.innerHTML = tr(`<b>※調光レンズ</b>・・・紫外線の量に合わせて、レンズの色が自然に変わります。屋外ではサングラスとして眩しさを防ぎ、室内や夜間はクリアなメガネに。掛け替える手間が省ける、1本2役の便利なレンズです。<br><span style="font-size: 0.9em; color: #e53e3e;">※UVカットガラスの車内では色は変わりません。</span>`,
+            `<b>*Photochromic lenses</b> change tint automatically with the amount of UV light: sunglasses outdoors, clear glasses indoors and at night. One pair does both jobs.<br><span style="font-size: 0.9em; color: #e53e3e;">*The tint does not change inside cars with UV-cut glass.</span>`);
           lensRoot.appendChild(catDesc);
         }
 
@@ -2749,15 +2929,15 @@
         
         lenses.forEach(l => {
           const info = lensInfoForModel[l];
-          const displayTitle = (categoryType === 'polarized') ? l.replace('★偏光', '') : (categoryType === 'photochromic' ? l.replace('■調光', '') : l);
+          const displayTitle = lensColorLabel((categoryType === 'polarized') ? l.replace('★偏光', '') : (categoryType === 'photochromic' ? l.replace('■調光', '') : l));
           const card = document.createElement('div');
           card.className = 'visual-card';
           if (info && info.image) {
             card.innerHTML = `
               <img src="${info.image}" alt="${l}" class="card-product-img" />
               <h4 class="card-title">${displayTitle}</h4>
-              ${info.desc ? `<p class="lens-desc">${info.desc.replace(/\\n/g, '<br>')}</p>` : ''}
-              <span class="lens-transmittance">可視光線透過率：${info.transmittance}</span>
+              ${info.desc ? `<p class="lens-desc">${lensDesc(info.desc).replace(/\\n/g, '<br>')}</p>` : ''}
+              <span class="lens-transmittance">${tr('可視光線透過率：', 'Visible light transmission: ')}${tr(info.transmittance, info.transmittance.replace(/％/g, '%').replace(/[〜～]/g, '–'))}</span>
             `;
           } else {
             card.innerHTML = `
@@ -2775,16 +2955,17 @@
       };
 
       // カテゴリごとに描画（通常レンズを上に）
-      renderCategory('通常レンズ', regularLenses, 'regular');
-      renderCategory('偏光レンズ', polarizedLenses, 'polarized');
-      renderCategory('調光レンズ', photochromicLenses, 'photochromic');
+      renderCategory(tr('通常レンズ', 'Standard lenses'), regularLenses, 'regular');
+      renderCategory(tr('偏光レンズ', 'Polarized lenses'), polarizedLenses, 'polarized');
+      renderCategory(tr('調光レンズ', 'Photochromic lenses'), photochromicLenses, 'photochromic');
 
       // 可視光線透過率の説明ボックスを追加
       const infoBox = document.createElement('div');
       infoBox.className = 'transmittance-info-box';
       infoBox.innerHTML = `
-        <div class="info-title"><i class="fas fa-info-circle"></i> ※可視光線透過率とは？</div>
-        <p class="info-desc">レンズが自然の光を通す割合のことです。数値が低いほど光を遮断して眩しさを抑え（晴天向き）、数値が高いほど光を通して視界が明るくなります（曇天・ナイター・インドア向き）。</p>
+        <div class="info-title"><i class="fas fa-info-circle"></i> ${tr('※可視光線透過率とは？', '*What is visible light transmission?')}</div>
+        <p class="info-desc">${tr('レンズが自然の光を通す割合のことです。数値が低いほど光を遮断して眩しさを抑え（晴天向き）、数値が高いほど光を通して視界が明るくなります（曇天・ナイター・インドア向き）。',
+          'The percentage of natural light the lens lets through. Lower values block more light and reduce glare (for sunny days); higher values let more light through for a brighter view (for cloudy days, night games and indoors).')}</p>
       `;
       lensRoot.appendChild(infoBox);
     }
@@ -2796,6 +2977,12 @@
       const btnNext = document.getElementById('btn-next-2');
       btnNext.disabled = false;
       setTimeout(() => btnNext.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      renderFrameStep(orderState.model, lens);
+    }
+
+    // フレーム選択（ステップ3）を描画する
+    function renderFrameStep(model, lens) {
+      renderedFrameFor = { model, lens };
 
       // 選択中情報をステップ3に表示
       const selectionBadgeId = 'step3-selection-display';
@@ -2804,8 +2991,8 @@
       const badge = document.createElement('div');
       badge.id = selectionBadgeId;
       badge.className = 'selected-model-badge';
-      const displayLens = orderState.lens.replace('★偏光', '').replace('■調光', '');
-      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${orderState.model} / ${displayLens}`;
+      const displayLens = lensColorLabel(lens.replace('★偏光', '').replace('■調光', ''));
+      badge.innerHTML = `<i class="fas fa-check-circle"></i> ${model} / ${displayLens}`;
       
       const step3El = document.getElementById('flow-step-3');
       const step3Desc = step3El.querySelector('.section-desc');
@@ -2820,7 +3007,7 @@
         const imgPath = `image/フレーム_${f}.jpg`;
         card.innerHTML = `
           <img src="${imgPath}" alt="${f}" class="card-product-img" />
-          <h4 class="card-title">${f}</h4>
+          <h4 class="card-title">${frameLabel(f)}</h4>
         `;
         card.onclick = () => selectFrame(f, card);
         frameContainer.appendChild(card);
@@ -2885,13 +3072,13 @@
         itemDiv.className = 'cart-item';
         itemDiv.innerHTML = `
           <div class="cart-item-header">
-            <span class="cart-item-title"><i class="fas fa-shopping-bag"></i> 商品 ${index + 1}</span>
-            <button class="btn-delete-item" onclick="removeFromCart(${index})" title="削除"><i class="fas fa-trash-alt"></i></button>
+            <span class="cart-item-title"><i class="fas fa-shopping-bag"></i> ${tr('商品', 'Item')} ${index + 1}</span>
+            <button class="btn-delete-item" onclick="removeFromCart(${index})" title="${tr('削除', 'Remove')}"><i class="fas fa-trash-alt"></i></button>
           </div>
-          <div class="cart-item-detail"><strong>モデル：</strong>${item.model}</div>
-          <div class="cart-item-detail"><strong>レンズ：</strong>${item.lens}</div>
-          <div class="cart-item-detail"><strong>フレーム：</strong>${item.frame}</div>
-          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">小計：¥${formatPrice(item.price)}（税込）${venueEvent ? `<span style="font-weight:500; color:#64748b; text-decoration:line-through; margin-left:8px;">¥${formatPrice(item.originalPrice)}</span>` : ''}</div>
+          <div class="cart-item-detail"><strong>${tr('モデル：', 'Model: ')}</strong>${item.model}</div>
+          <div class="cart-item-detail"><strong>${tr('レンズ：', 'Lens: ')}</strong>${lensLabel(item.lens)}</div>
+          <div class="cart-item-detail"><strong>${tr('フレーム：', 'Frame: ')}</strong>${frameLabel(item.frame)}</div>
+          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">${tr(`小計：¥${formatPrice(item.price)}（税込）`, `Subtotal: ¥${formatPrice(item.price)} (tax incl.)`)}${venueEvent ? `<span style="font-weight:500; color:#64748b; text-decoration:line-through; margin-left:8px;">¥${formatPrice(item.originalPrice)}</span>` : ''}</div>
         `;
         container.appendChild(itemDiv);
       });
@@ -2902,14 +3089,15 @@
         totalSale -= discountAmount;
         
         document.getElementById('coupon-discount-row').style.display = 'block';
-        document.getElementById('coupon-discount-row').innerHTML = `クーポン割引 (${Math.round(appliedDiscount * 100)}%OFF): -¥${formatPrice(discountAmount)}`;
+        document.getElementById('coupon-discount-row').innerHTML = `${tr('クーポン割引', 'Coupon discount')} (${Math.round(appliedDiscount * 100)}%OFF): -¥${formatPrice(discountAmount)}`;
       } else {
         document.getElementById('coupon-discount-row').style.display = 'none';
       }
       
       const venueNote = document.getElementById('venue-price-note');
       if (venueEvent && cart.length > 0) {
-        venueNote.textContent = `会場限定15%OFF適用済み（定価合計 ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)}）`;
+        venueNote.textContent = tr(`会場限定15%OFF適用済み（定価合計 ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)}）`,
+          `Venue-only 15% OFF applied (list price total ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)})`);
       } else {
         venueNote.textContent = '';
       }
@@ -2925,14 +3113,14 @@
       
       document.getElementById('btn-submit').disabled = cart.length === 0;
       if(cart.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding: 20px; color:#64748b; font-weight:700;">カートに商品がありません。</p>';
+        container.innerHTML = `<p style="text-align:center; padding: 20px; color:#64748b; font-weight:700;">${tr('カートに商品がありません。', 'Your cart is empty.')}</p>`;
         document.getElementById('summary-price-original').textContent = '¥0（税込）';
         document.getElementById('summary-price').textContent = '0';
       }
     }
 
     function removeFromCart(index) {
-      if(confirm('この商品を削除しますか？')) {
+      if(confirm(tr('この商品を削除しますか？', 'Remove this item?'))) {
         cart.splice(index, 1);
         renderCart();
       }
@@ -2952,6 +3140,8 @@
       
       document.getElementById('lens-selection-container').innerHTML = '';
       document.getElementById('frame-cards').innerHTML = '';
+      renderedLensModel = null;
+      renderedFrameFor = null;
       
       nextStep(1);
     }
@@ -2991,7 +3181,7 @@
         if (!hit) {
           msgEl.style.display = 'block';
           msgEl.style.color = '#ea580c';
-          msgEl.textContent = 'この郵便番号の住所が見つかりませんでした。住所を直接入力してください。';
+          msgEl.textContent = tr('この郵便番号の住所が見つかりませんでした。住所を直接入力してください。', 'No address was found for this postal code. Please enter your address directly.');
           return;
         }
         const autoAddress = `${hit.address1}${hit.address2}${hit.address3}`;
@@ -3003,7 +3193,7 @@
           lastAutoAddress = autoAddress;
           msgEl.style.display = 'block';
           msgEl.style.color = '#16a34a';
-          msgEl.textContent = '住所を途中まで入力しました。続きの番地・建物名を入力してください。';
+          msgEl.textContent = tr('住所を途中まで入力しました。続きの番地・建物名を入力してください。', 'We filled in part of your address. Please add the rest (street number and building name).');
           addressEl.focus();
           addressEl.setSelectionRange(addressEl.value.length, addressEl.value.length);
         }
@@ -3015,7 +3205,7 @@
 
     function submitOrder() {
       if (cart.length === 0) {
-        alert('カートに商品がありません。');
+        alert(tr('カートに商品がありません。', 'Your cart is empty.'));
         return;
       }
       
@@ -3027,28 +3217,28 @@
       let phone = document.getElementById('shipping-phone').value.trim();
       
       if(!name || !shippingEmail || !zip || !address || !phone) {
-        alert('お届け先情報の必須項目をすべて入力してください。');
+        alert(tr('お届け先情報の必須項目をすべて入力してください。', 'Please fill in all required shipping fields.'));
         return;
       }
 
       // 郵便番号のクレンジングとチェック（ハイフン除去、半角数字7桁）
       zip = zip.replace(/[-ー]/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
       if (!/^\d{7}$/.test(zip)) {
-        alert('郵便番号はハイフンなしの半角数字7桁で入力してください。');
+        alert(tr('郵便番号はハイフンなしの半角数字7桁で入力してください。', 'Please enter a 7-digit Japanese postal code (numbers only, no hyphens).'));
         return;
       }
 
       // 電話番号のクレンジングとチェック（ハイフン除去、半角数字10〜11桁）
       phone = phone.replace(/[-ー]/g, '').replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
       if (!/^\d{10,11}$/.test(phone)) {
-        alert('電話番号はハイフンなしの半角数字10桁または11桁で入力してください。');
+        alert(tr('電話番号はハイフンなしの半角数字10桁または11桁で入力してください。', 'Please enter a 10- or 11-digit Japanese phone number (numbers only, no hyphens).'));
         return;
       }
 
       // 会場販売：Stripeには進まず、会場払いの注文として受け付ける
       if (venueEvent) {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shippingEmail)) {
-          alert('メールアドレスの形式が正しくありません。ご確認ください。');
+          alert(tr('メールアドレスの形式が正しくありません。ご確認ください。', 'The email address does not look right. Please check it.'));
           return;
         }
         submitVenueOrder({ name, email: shippingEmail, zip, address, phone });
@@ -3063,14 +3253,16 @@
       } else {
         // クーポンコードが入力されているが、適用されていない場合のアラート
         if (currentCouponInput.toUpperCase() !== appliedCouponCode) {
-          alert('クーポンコードが入力されていますが、適用されていません。\n「適用」ボタンを押して割引後の金額をご確認の上、決済画面へお進みください。');
+          alert(tr('クーポンコードが入力されていますが、適用されていません。\n「適用」ボタンを押して割引後の金額をご確認の上、決済画面へお進みください。',
+            'You entered a coupon code but have not applied it.\nPress "Apply" and check the discounted total before proceeding to payment.'));
           return;
         }
       }
 
       // クーポン適用時の確認ダイアログ（1回のみクーポンの場合）
       if (appliedCouponCode && currentCouponInput.toUpperCase() === appliedCouponCode && !appliedCouponUnlimited) {
-        const confirmMsg = "適用されたクーポンは、決済画面に進むと「使用済み」となり、決済をキャンセルしても再利用できなくなります。\n決済画面へ進んでよろしいですか？";
+        const confirmMsg = tr("適用されたクーポンは、決済画面に進むと「使用済み」となり、決済をキャンセルしても再利用できなくなります。\n決済画面へ進んでよろしいですか？",
+          "Once you proceed to payment, this coupon is marked as used and cannot be reused, even if you cancel the payment.\nProceed to payment?");
         if (!confirm(confirmMsg)) {
           return; // いいえを選択した場合は中断して画面に戻る
         }
@@ -3128,13 +3320,13 @@
           window.location.href = data.url;
         } else {
           document.getElementById('loading-overlay').style.display = 'none';
-          alert('決済セッションの作成に失敗しました: ' + (data.error || '不明なエラー'));
+          alert(tr('決済セッションの作成に失敗しました: ', 'Could not start the payment: ') + (data.error || tr('不明なエラー', 'unknown error')));
         }
       })
       .catch(err => {
         document.getElementById('loading-overlay').style.display = 'none';
         console.error('Checkout error:', err);
-        alert('通信エラーが発生しました。もう一度お試しください。');
+        alert(tr('通信エラーが発生しました。もう一度お試しください。', 'A network error occurred. Please try again.'));
       });
     }
 
@@ -3144,7 +3336,6 @@
        - スタッフ：管理者メニュー → 会場受付 で支払済を確定
     ============================================== */
     const VENUE_RECEIPT_KEY = 'airfly_venue_receipt';
-    const SUBMIT_BUTTON_DEFAULT_HTML = '<i class="fas fa-lock"></i> 決済に進む';
 
     function escHtml(str) {
       return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3177,15 +3368,18 @@
       try {
         const doc = await db.collection('venue_events').doc(eventId).get();
         if (!doc.exists) {
-          showVenueClosedNotice('この会場URLの大会は見つかりませんでした', '通常のWeb販売（オンライン決済）でご注文いただけます。');
+          showVenueClosedNotice('この会場URLの大会は見つかりませんでした', '通常のWeb販売（オンライン決済）でご注文いただけます。',
+            'The event for this venue link was not found', 'You can still order from our regular online store (online payment).');
           return;
         }
         if (!isVenueEventOpen(doc.data())) { // 開催日以外は通常のWeb販売
           const ev = doc.data();
           if (ev.startDate && todayJst() < ev.startDate) {
-            showVenueClosedNotice(`${ev.name} の会場販売は ${formatVenueDates(ev)} です`, '開催期間になると会場限定15%OFF・会場払いでご注文いただけます。現在は通常のWeb販売（オンライン決済・会場割引なし）です。');
+            showVenueClosedNotice(`${ev.name} の会場販売は ${formatVenueDates(ev)} です`, '開催期間になると会場限定15%OFF・会場払いでご注文いただけます。現在は通常のWeb販売（オンライン決済・会場割引なし）です。',
+              `Venue sales for ${ev.name}: ${formatVenueDates(ev)}`, 'During the event you can order at 15% off and pay at the venue. Right now this is our regular online store (online payment, no venue discount).');
           } else {
-            showVenueClosedNotice(`${ev.name} の会場販売は終了しました`, '現在は通常のWeb販売（オンライン決済・会場割引なし）です。');
+            showVenueClosedNotice(`${ev.name} の会場販売は終了しました`, '現在は通常のWeb販売（オンライン決済・会場割引なし）です。',
+              `Venue sales for ${ev.name} have ended`, 'This is now our regular online store (online payment, no venue discount).');
           }
           return;
         }
@@ -3199,14 +3393,16 @@
         }
       } catch (e) {
         console.error('Venue mode init failed:', e);
-        showVenueClosedNotice('会場情報を読み込めませんでした', '会場でご注文の方は、ページを再読み込みしてください。このままご注文いただくと通常のWeb販売（オンライン決済・会場割引なし）になります。');
+        showVenueClosedNotice('会場情報を読み込めませんでした', '会場でご注文の方は、ページを再読み込みしてください。このままご注文いただくと通常のWeb販売（オンライン決済・会場割引なし）になります。',
+          'Could not load the venue information', 'If you are ordering at the venue, please reload this page. Otherwise your order will go through our regular online store (online payment, no venue discount).');
       }
     }
 
     // 会場URLなのに会場モードにならなかったことを知らせる（何も出さずに通常販売になると分かりにくいため）
-    function showVenueClosedNotice(title, detail) {
-      document.querySelectorAll('.venue-closed-title').forEach(el => el.textContent = title);
-      document.querySelectorAll('.venue-closed-detail').forEach(el => el.textContent = detail);
+    function showVenueClosedNotice(title, detail, titleEn, detailEn) {
+      venueNoticeTexts = [title, detail, titleEn, detailEn];
+      document.querySelectorAll('.venue-closed-title').forEach(el => el.textContent = tr(title, titleEn));
+      document.querySelectorAll('.venue-closed-detail').forEach(el => el.textContent = tr(detail, detailEn));
       document.body.classList.add('venue-closed');
     }
 
@@ -3215,7 +3411,7 @@
       venueModeFromUrl = fromUrl;
       document.body.classList.add('venue-mode');
       document.querySelectorAll('.venue-event-name').forEach(el => el.textContent = ev.name);
-      document.getElementById('btn-submit').innerHTML = '<i class="fas fa-check"></i> 注文を確定（会場でお支払い）';
+      updateSubmitButton();
       // 会場クーポンとの併用不可：Webクーポンの適用状態をクリア
       appliedCouponCode = '';
       appliedDiscount = 0;
@@ -3230,7 +3426,7 @@
       venueEvent = null;
       venueModeFromUrl = false;
       document.body.classList.remove('venue-mode');
-      document.getElementById('btn-submit').innerHTML = SUBMIT_BUTTON_DEFAULT_HTML;
+      updateSubmitButton();
       rerenderModelCards();
       repriceCart();
       renderCart();
@@ -3246,8 +3442,10 @@
     }
 
     function rerenderModelCards() {
+      const selected = selectedCardIndex('#flow-step-1');
       ['model-cards-men', 'model-cards-women', 'model-cards-kids'].forEach(id => document.getElementById(id).innerHTML = '');
       initVisualOrderFlow();
+      reselectCard('#flow-step-1', selected);
     }
 
     // カート・入力欄・選択状態を初期化する
@@ -3325,18 +3523,21 @@
       } catch (e) {
         overlay.style.display = 'none';
         console.error('Venue order error:', e);
-        alert(e.message || '通信エラーが発生しました。もう一度お試しください。');
+        alert(currentLang === 'en'
+          ? 'We could not place your order. Please ask our staff for help.' + (e.message ? '\n(' + e.message + ')' : '')
+          : (e.message || '通信エラーが発生しました。もう一度お試しください。'));
       }
     }
 
     function showVenueReceipt(receipt) {
-      document.getElementById('venue-receipt-event').textContent = `${receipt.eventName} 会場`;
+      shownVenueReceipt = receipt;
+      document.getElementById('venue-receipt-event').textContent = tr(`${receipt.eventName} 会場`, receipt.eventName);
       document.getElementById('venue-receipt-no').textContent = receipt.receiptNo;
       document.getElementById('venue-receipt-items').innerHTML = receipt.items.map((item, i) =>
-        `<div class="complete-item"><strong>[${i + 1}]</strong> モデル: ${escHtml(item.model)} / レンズ: ${escHtml(item.lens)} / フレーム: ${escHtml(item.frame)}<br>¥${formatPrice(item.price)}（会場限定15%OFF）</div>`
+        `<div class="complete-item"><strong>[${i + 1}]</strong> ${itemLine(item)}<br>¥${formatPrice(item.price)}${tr('（会場限定15%OFF）', ' (venue-only 15% OFF)')}</div>`
       ).join('');
       document.getElementById('venue-receipt-breakdown').innerHTML =
-        `商品小計：¥${formatPrice(receipt.subtotal)}<br>送料：¥${formatPrice(receipt.shippingFee)}`;
+        `${tr('商品小計：', 'Subtotal: ')}¥${formatPrice(receipt.subtotal)}<br>${tr('送料：', 'Shipping: ')}¥${formatPrice(receipt.shippingFee)}`;
       document.getElementById('venue-receipt-total').textContent = `¥${formatPrice(receipt.total)}`;
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('venue-receipt-screen').classList.add('visible');
@@ -3344,7 +3545,8 @@
     }
 
     function closeVenueReceipt() {
-      if (!confirm('受付番号の画面を閉じて、別の注文を始めますか？\n※お支払いがまだの場合は、先にスタッフにこの画面をお見せください。')) return;
+      if (!confirm(tr('受付番号の画面を閉じて、別の注文を始めますか？\n※お支払いがまだの場合は、先にスタッフにこの画面をお見せください。',
+        'Close this receipt screen and start a new order?\n*If you have not paid yet, please show this screen to our staff first.'))) return;
       localStorage.removeItem(VENUE_RECEIPT_KEY);
       window.location.href = venueUrl(venueEvent ? venueEvent.id : new URLSearchParams(window.location.search).get('venue'));
     }
@@ -3960,7 +4162,7 @@ function checkOrderSuccess() {
         orderData.items.forEach((item, index) => {
           const div = document.createElement('div');
           div.className = 'complete-item';
-          div.innerHTML = `<strong>[${index + 1}]</strong> モデル: ${escHtml(item.model)} / レンズ: ${escHtml(item.lens)} / フレーム: ${escHtml(item.frame)}`;
+          div.innerHTML = `<strong>[${index + 1}]</strong> ${itemLine(item)}`;
           listContainer.appendChild(div);
         });
         
@@ -3991,6 +4193,7 @@ function closeOrderCompleteScreen() {
 }
 
 // 初期実行
+initLang();
 if (!checkOrderSuccess()) {
   // 完了画面が出ない場合はLIFFを通常通り初期化
   document.addEventListener('DOMContentLoaded', function() {
