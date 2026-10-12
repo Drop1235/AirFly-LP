@@ -1,6 +1,8 @@
 // 会場で手渡しした商品の印（D列）と、全商品手渡し時のステータス（J列）
 var HANDOVER_MARK = "【手渡し】";
 var HANDOVER_DONE_STATUS = "手渡し完了（手配不要）";
+// 「代理店へ送信」のチェックボックスの列（I列）
+var SEND_CHECK_COL = 9;
 
 /**
  * 送信元（Netlify）の認証トークンを検証する
@@ -123,7 +125,7 @@ function doPost(e) {
       sheetText(address),
       "'" + formattedPhone,
       "¥" + String(totalAmount).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-      "",
+      false,
       (isVenue && shipCount === 0) ? HANDOVER_DONE_STATUS : "",
       (params.opt_in === true || params.opt_in === "true") ? "希望する" : "希望しない",
       isVenue ? "会場: " + (params.event_name || "") : "Web",
@@ -133,6 +135,8 @@ function doPost(e) {
       isVenue ? (params.entered_by || "") : "お客様",
       isVenue ? "" : (params.stripe_session_id || "")
     ]);
+    // 追加した行のI列を、クリックで切り替えられる通常のチェックボックスにする
+    sheet.getRange(sheet.getLastRow(), SEND_CHECK_COL).setDataValidation(checkboxRule());
     SpreadsheetApp.flush();
     lock.releaseLock();
     
@@ -328,7 +332,81 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('TempMachi メニュー')
     .addItem('選択した注文をLINEで代理店へ送信', 'sendToLine')
+    .addItem('「代理店へ送信」のチェックボックスを修復', 'repairSendCheckboxes')
     .addToUi();
+}
+
+/**
+ * 通常のチェックボックス（オン=TRUE / オフ=FALSE）の入力規則
+ */
+function checkboxRule() {
+  return SpreadsheetApp.newDataValidation().requireCheckbox().build();
+}
+
+/**
+ * I列（代理店へ送信）のチェックボックスを、クリックで切り替えられる状態に直す
+ *  - セルに数式が入っている → 数式の結果のチェックボックスはクリックしても切り替わらないため、値に置き換える
+ *  - 入力規則が通常のチェックボックス以外 → 通常のチェックボックスにする
+ *  - オンになっているものはオンのまま残す
+ * 範囲の保護（他の編集者がチェックできない原因になる）は変更せず、見つかったら知らせる
+ */
+function repairSendCheckboxes() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]; // 注文記録のシート（doPost と同じ）
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    ui.alert('確認', 'データが登録されていません。', ui.ButtonSet.OK);
+    return;
+  }
+
+  // 見出し（I1）に配列数式があると、I2以下に値を書くと数式がエラーになるため、先に消してもらう
+  var headerFormula = sheet.getRange(1, SEND_CHECK_COL).getFormula();
+  if (headerFormula) {
+    ui.alert('修復を中止しました', 'I1（見出し）に数式が入っています。\n' + headerFormula + '\n\nこの数式がI列のチェックボックスを上書きしているため、チェックできません。I1の数式を消して「代理店へ送信」と入力してから、もう一度このメニューを実行してください。', ui.ButtonSet.OK);
+    return;
+  }
+
+  var range = sheet.getRange(2, SEND_CHECK_COL, lastRow - 1, 1);
+  var formulas = range.getFormulas();
+  var values = range.getValues();
+  var rules = range.getDataValidations();
+
+  var formulaCount = 0;
+  var notCheckboxCount = 0;
+  var newValues = [];
+  for (var i = 0; i < values.length; i++) {
+    if (formulas[i][0]) formulaCount++;
+    var rule = rules[i][0];
+    var isPlainCheckbox = rule
+      && rule.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.CHECKBOX
+      && rule.getCriteriaValues().length === 0;
+    if (!isPlainCheckbox) notCheckboxCount++;
+    var v = values[i][0];
+    newValues.push([v === true || String(v).toUpperCase() === 'TRUE']);
+  }
+
+  range.setDataValidation(checkboxRule());
+  range.setValues(newValues);
+  SpreadsheetApp.flush();
+
+  // I列にかかっている保護（範囲の保護・シート全体の保護）
+  var protectedRanges = [];
+  var rangeProtections = sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE);
+  for (var p = 0; p < rangeProtections.length; p++) {
+    var pr = rangeProtections[p].getRange();
+    if (pr.getColumn() <= SEND_CHECK_COL && SEND_CHECK_COL <= pr.getLastColumn()) protectedRanges.push(pr.getA1Notation());
+  }
+  if (sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).length > 0) protectedRanges.push('シート全体');
+
+  var message = 'I2〜I' + lastRow + ' を通常のチェックボックスに直しました。\n'
+    + '・数式が入っていたセル: ' + formulaCount + ' 件\n'
+    + '・通常のチェックボックス以外だったセル: ' + notCheckboxCount + ' 件\n'
+    + '（オンになっていたチェックはそのまま残しています）';
+  if (protectedRanges.length > 0) {
+    message += '\n\n※I列に保護がかかっています（' + protectedRanges.join('、') + '）。\n'
+      + '保護で許可されていない人はチェックできません。「データ」→「シートと範囲を保護」で確認してください。';
+  }
+  ui.alert('修復しました', message, ui.ButtonSet.OK);
 }
 
 /**
