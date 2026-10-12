@@ -1086,6 +1086,29 @@
     .venue-price-note { display: none; margin-top: 8px; font-size: 0.95rem; color: #ea580c; font-weight: 700; text-align: right; }
     body.venue-mode .venue-price-note { display: block; }
     .card-venue-price { display: block; margin-top: 4px; color: #ea580c; font-weight: 900; font-size: 1.05rem; }
+    /* 会場受け取り（会場あてに配送）：会場モードのときだけ表示。選ぶと郵便番号・住所は不要、電話番号は任意 */
+    .venue-pickup-box {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border: 2px solid #fdba74;
+      background: #fff7ed;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    body.venue-mode .venue-pickup-box { display: flex; }
+    .venue-pickup-box input { margin-top: 3px; width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
+    .venue-pickup-box strong { display: block; color: #c2410c; }
+    .venue-pickup-box small { display: block; margin-top: 4px; font-size: 0.85rem; color: #64748b; }
+    .phone-optional, .phone-note-pickup { display: none; }
+    body.venue-pickup .home-address-field,
+    body.venue-pickup .ship-note,
+    body.venue-pickup .phone-required,
+    body.venue-pickup .phone-note-home { display: none; }
+    body.venue-pickup .phone-optional,
+    body.venue-pickup .phone-note-pickup { display: inline; }
     /* 会場URLを開催期間外に開いたときの案内（通常のWeb販売になることを知らせる） */
     .venue-closed-notice {
       display: none;
@@ -1492,7 +1515,15 @@
 
           <div id="shipping-form-box" style="background: #fff; border: 1px solid var(--color-border); border-radius: 16px; padding: 32px; max-width: 600px; margin: 0 auto 32px; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.04);">
             <h4 style="margin-bottom: 20px; color: var(--color-text-primary); border-bottom: 2px solid var(--color-accent-blue); padding-bottom: 8px;" data-en="<i class='fas fa-truck'></i> Shipping information"><i class="fas fa-truck"></i> お届け先情報</h4>
-            <p class="en-only" style="margin: -8px 0 16px; font-size: 0.85rem; color: #ea580c; font-weight: 700;">We can only deliver within Japan. Please enter a Japanese postal code and phone number.</p>
+            <p class="en-only ship-note" style="margin: -8px 0 16px; font-size: 0.85rem; color: #ea580c; font-weight: 700;">We can only deliver within Japan. Please enter a Japanese postal code and phone number.</p>
+            <!-- 会場受け取り（会場モードのみ表示） -->
+            <label class="venue-pickup-box" for="venue-pickup">
+              <input type="checkbox" id="venue-pickup" onchange="setVenuePickup(this.checked)">
+              <span>
+                <strong data-en="Pick up at the venue (we ship it to the venue, earliest 1–2 days later)">会場で受け取る（会場あてに配送・最短1〜2日後）</strong>
+                <small data-en="No postal code or address needed. Also for visitors without an address in Japan.">郵便番号・住所の入力は不要です。日本国内に住所がない方もこちらをお選びください。</small>
+              </span>
+            </label>
             <div style="margin-bottom: 16px;">
               <label for="shipping-name" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Name">お名前</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
               <input type="text" id="shipping-name" placeholder="山田 太郎" data-en-placeholder="Taro Yamada" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
@@ -1501,17 +1532,17 @@
               <label for="shipping-email" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Email">メールアドレス</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
               <input type="email" id="shipping-email" placeholder="sample@example.com" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
-            <div style="margin-bottom: 16px;">
+            <div class="home-address-field" style="margin-bottom: 16px;">
               <label for="shipping-zip" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Postal code">郵便番号</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Numbers only, no hyphens">※ハイフンなしで入力してください</span></label>
               <input type="text" id="shipping-zip" placeholder="1234567" inputmode="numeric" autocomplete="postal-code" oninput="onZipInput(this.value)" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
               <div id="zip-lookup-msg" style="margin-top: 6px; font-size: 0.85rem; display: none;"></div>
             </div>
-            <div style="margin-bottom: 16px;">
+            <div class="home-address-field" style="margin-bottom: 16px;">
               <label for="shipping-address" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Address">住所</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span></label>
               <input type="text" id="shipping-address" placeholder="東京都渋谷区〇〇 1-2-3 マンション101" data-en-placeholder="e.g. 1-2-3 Jingumae, Shibuya-ku, Tokyo, Apt 101" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
             <div style="margin-bottom: 16px;">
-              <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Phone number">電話番号</span> <span style="color: red; font-size: 0.8rem;" data-en="Required">必須</span> <span style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Numbers only, no hyphens">※ハイフンなしで入力してください</span></label>
+              <label for="shipping-phone" style="display: block; font-weight: 700; margin-bottom: 8px;"><span data-en="Phone number">電話番号</span> <span class="phone-required" style="color: red; font-size: 0.8rem;" data-en="Required">必須</span><span class="phone-optional" style="color: #64748b; font-size: 0.8rem;" data-en="Optional">任意</span> <span class="phone-note-home" style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Numbers only, no hyphens">※ハイフンなしで入力してください</span><span class="phone-note-pickup" style="color: #64748b; font-size: 0.8rem; font-weight: normal; margin-left: 8px;" data-en="*Overseas numbers OK (e.g. +44 20 1234 5678)">※海外の番号も入力できます（例: +44 20 1234 5678）</span></label>
               <input type="tel" id="shipping-phone" placeholder="09012345678" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 1rem;">
             </div>
 
@@ -1688,6 +1719,21 @@
             <div>
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">受付番号の頭文字</label>
               <input type="text" id="new-venue-prefix" value="A" maxlength="2" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
+            </div>
+            <div style="grid-column: 1 / -1; margin-top: 4px; font-size: 0.8rem; color: #64748b;">
+              会場受け取りの配送先（任意）：お客様が「会場で受け取る」を選んだ注文は、ここに入れた会場あてに配送します。
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">会場の郵便番号（任意）</label>
+              <input type="text" id="new-venue-zip" placeholder="例: 4000000" inputmode="numeric" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">会場の電話番号（任意）</label>
+              <input type="tel" id="new-venue-phone" placeholder="例: 0551234567" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">会場の住所（任意）</label>
+              <input type="text" id="new-venue-address" placeholder="例: 山梨県甲府市〇〇町1-2-3 〇〇テニスコート" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
             </div>
           </div>
           <button class="btn-admin-action" id="venue-save-btn" onclick="saveVenueEvent()">大会を登録</button>
@@ -3216,6 +3262,25 @@
       const address = document.getElementById('shipping-address').value.trim();
       let phone = document.getElementById('shipping-phone').value.trim();
       
+      // 会場受け取り：郵便番号・住所は不要、電話番号は任意（海外の番号も可）
+      if (venueEvent && document.getElementById('venue-pickup').checked) {
+        if (!name || !shippingEmail) {
+          alert(tr('お名前とメールアドレスを入力してください。', 'Please enter your name and email address.'));
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shippingEmail)) {
+          alert(tr('メールアドレスの形式が正しくありません。ご確認ください。', 'The email address does not look right. Please check it.'));
+          return;
+        }
+        const pickupPhone = normalizePickupPhone(phone);
+        if (pickupPhone === null) {
+          alert(tr('電話番号は数字で入力してください（海外の番号は先頭に + を付けてください）。', 'Please enter the phone number in digits (start with + for overseas numbers).'));
+          return;
+        }
+        submitVenueOrder({ name, email: shippingEmail, zip: '', address: '', phone: pickupPhone, pickup: true });
+        return;
+      }
+
       if(!name || !shippingEmail || !zip || !address || !phone) {
         alert(tr('お届け先情報の必須項目をすべて入力してください。', 'Please fill in all required shipping fields.'));
         return;
@@ -3422,9 +3487,25 @@
       renderCart();
     }
 
+    // 会場受け取り（会場あてに配送）の切り替え
+    function setVenuePickup(on) {
+      document.getElementById('venue-pickup').checked = on;
+      document.body.classList.toggle('venue-pickup', on);
+    }
+
+    // 会場受け取りの電話番号（任意）：空ならそのまま。全角は半角に、空白・ハイフン・括弧は除き、+と数字8〜15桁ならOK（それ以外は null）
+    function normalizePickupPhone(value) {
+      const v = String(value || '')
+        .replace(/[０-９＋]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+        .replace(/[\s\-ー()（）]/g, '');
+      if (!v) return '';
+      return /^\+?\d{8,15}$/.test(v) ? v : null;
+    }
+
     function deactivateVenueMode() {
       venueEvent = null;
       venueModeFromUrl = false;
+      setVenuePickup(false);
       document.body.classList.remove('venue-mode');
       updateSubmitButton();
       rerenderModelCards();
@@ -3455,6 +3536,7 @@
       ['shipping-name', 'shipping-email', 'shipping-zip', 'shipping-address', 'shipping-phone'].forEach(id => document.getElementById(id).value = '');
       lastAutoAddress = '';
       document.getElementById('zip-lookup-msg').style.display = 'none';
+      setVenuePickup(false);
       renderCart();
       addAnotherItem();
     }
@@ -3481,7 +3563,8 @@
         customer_phone: customer.phone,
         items: cart.map(item => ({ model: item.model, lens: item.lens, frame: item.frame })),
         opt_in: !!optIn,
-        entered_by: venueStaffProxy ? 'staff' : 'customer'
+        entered_by: venueStaffProxy ? 'staff' : 'customer',
+        pickup_at_venue: !!customer.pickup
       };
 
       try {
@@ -3516,7 +3599,8 @@
           items: data.items,
           subtotal: data.subtotal,
           shippingFee: data.shipping_fee,
-          total: data.total
+          total: data.total,
+          pickup: !!customer.pickup
         };
         localStorage.setItem(VENUE_RECEIPT_KEY, JSON.stringify(receipt));
         showVenueReceipt(receipt);
@@ -3537,7 +3621,8 @@
         `<div class="complete-item"><strong>[${i + 1}]</strong> ${itemLine(item)}<br>¥${formatPrice(item.price)}${tr('（会場限定15%OFF）', ' (venue-only 15% OFF)')}</div>`
       ).join('');
       document.getElementById('venue-receipt-breakdown').innerHTML =
-        `${tr('商品小計：', 'Subtotal: ')}¥${formatPrice(receipt.subtotal)}<br>${tr('送料：', 'Shipping: ')}¥${formatPrice(receipt.shippingFee)}`;
+        (receipt.pickup ? `<span style="color:#c2410c; font-weight:700;">${tr('受け取り：会場（会場あてに配送・最短1〜2日後）', 'Pickup: at the venue (shipped to the venue, earliest 1–2 days later)')}</span><br>` : '')
+        + `${tr('商品小計：', 'Subtotal: ')}¥${formatPrice(receipt.subtotal)}<br>${tr('送料：', 'Shipping: ')}¥${formatPrice(receipt.shippingFee)}`;
       document.getElementById('venue-receipt-total').textContent = `¥${formatPrice(receipt.total)}`;
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('venue-receipt-screen').classList.add('visible');
@@ -3577,7 +3662,7 @@
         if (isVenueEventOpen(ev)) status = '<span style="color:#16a34a; font-weight:bold;">開催中</span>';
         else if (ev.startDate > today) status = '<span style="color:#2563eb;">予定</span>';
         return `<tr>
-          <td style="font-weight:700;">${escHtml(ev.name)}<br><span style="font-size:0.75rem; color:#64748b; font-weight:normal;">受付番号: ${escHtml(ev.prefix || 'A')}-001〜（${ev.orderSeq || 0}件）</span></td>
+          <td style="font-weight:700;">${escHtml(ev.name)}<br><span style="font-size:0.75rem; color:#64748b; font-weight:normal;">受付番号: ${escHtml(ev.prefix || 'A')}-001〜（${ev.orderSeq || 0}件）<br>会場受け取りの配送先: ${ev.venueAddress ? `〒${escHtml(ev.venueZip || '')} ${escHtml(ev.venueAddress)}` : '未登録'}</span></td>
           <td style="white-space:nowrap;">${escHtml(formatVenueDates(ev)).replace(' 〜 ', '<br>〜 ')}</td>
           <td>${status}</td>
           <td style="white-space:nowrap;">
@@ -3601,6 +3686,9 @@
       document.getElementById('new-venue-start').value = ev.startDate || '';
       document.getElementById('new-venue-end').value = ev.endDate && ev.endDate !== ev.startDate ? ev.endDate : '';
       document.getElementById('new-venue-prefix').value = ev.prefix || 'A';
+      document.getElementById('new-venue-zip').value = ev.venueZip || '';
+      document.getElementById('new-venue-address').value = ev.venueAddress || '';
+      document.getElementById('new-venue-phone').value = ev.venuePhone || '';
       document.getElementById('venue-save-btn').textContent = '変更を保存';
       document.getElementById('venue-cancel-edit-btn').style.display = '';
       const msgEl = document.getElementById('admin-venue-msg');
@@ -3616,8 +3704,13 @@
       document.getElementById('new-venue-start').value = '';
       document.getElementById('new-venue-end').value = '';
       document.getElementById('new-venue-prefix').value = 'A';
+      clearVenueAddressFields();
       document.getElementById('venue-save-btn').textContent = '大会を登録';
       document.getElementById('venue-cancel-edit-btn').style.display = 'none';
+    }
+
+    function clearVenueAddressFields() {
+      ['new-venue-zip', 'new-venue-address', 'new-venue-phone'].forEach(id => document.getElementById(id).value = '');
     }
 
     function cancelVenueEdit() {
@@ -3638,13 +3731,23 @@
       if (endDate < startDate) { msgEl.textContent = '最終日は開催日（初日）以降の日付にしてください。'; return; }
       if (!/^[A-Z]{1,2}$/.test(prefix)) { msgEl.textContent = '受付番号の頭文字は英字1〜2文字で入力してください。'; return; }
 
+      // 会場受け取りの配送先（任意）
+      const toHalfDigits = v => v.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[-ー\s]/g, '');
+      const venueZip = toHalfDigits(document.getElementById('new-venue-zip').value.trim());
+      const venueAddress = document.getElementById('new-venue-address').value.trim();
+      const venuePhone = toHalfDigits(document.getElementById('new-venue-phone').value.trim());
+      if (venueZip && !/^\d{7}$/.test(venueZip)) { msgEl.textContent = '会場の郵便番号は数字7桁で入力してください。'; return; }
+      if (venuePhone && !/^\d{10,11}$/.test(venuePhone)) { msgEl.textContent = '会場の電話番号は数字10〜11桁で入力してください。'; return; }
+      if (venueAddress.length > 200) { msgEl.textContent = '会場の住所は200文字以内で入力してください。'; return; }
+      if ((venueZip || venuePhone) && !venueAddress) { msgEl.textContent = '会場の郵便番号・電話番号を入れる場合は、会場の住所も入力してください。'; return; }
+
       if (editingVenueEventId) {
         const ev = venueEventList.find(e => e.id === editingVenueEventId);
         if (ev && ev.orderSeq > 0 && prefix !== (ev.prefix || 'A')
           && !confirm(`受付番号の頭文字を ${ev.prefix || 'A'} から ${prefix} に変えると、これからの受付番号は ${prefix}-${String(ev.orderSeq + 1).padStart(3, '0')} からになります（受付済みの番号は変わりません）。変更しますか？`)) return;
         try {
           // 受付番号の連番（orderSeq）は注文のたびにサーバーが更新するため、ここでは触らない
-          await db.collection('venue_events').doc(editingVenueEventId).update({ name, startDate, endDate, prefix });
+          await db.collection('venue_events').doc(editingVenueEventId).update({ name, startDate, endDate, prefix, venueZip, venueAddress, venuePhone });
           msgEl.style.color = '#10b981';
           msgEl.textContent = `大会「${name}」の変更を保存しました。会場用のURL・QRコードはそのまま使えます。`;
           resetVenueForm();
@@ -3659,6 +3762,7 @@
       try {
         await db.collection('venue_events').add({
           name, startDate, endDate, prefix,
+          venueZip, venueAddress, venuePhone,
           orderSeq: 0,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -3667,6 +3771,7 @@
         document.getElementById('new-venue-name').value = '';
         document.getElementById('new-venue-start').value = '';
         document.getElementById('new-venue-end').value = '';
+        clearVenueAddressFields();
         loadVenueEvents();
       } catch (e) {
         console.error('Failed to create venue event:', e);
@@ -3829,7 +3934,7 @@
         <button type="button" class="desk-order-card${o.id === deskState.selectedId ? ' selected' : ''}" onclick="selectDeskOrder('${o.id}')">
           <span class="desk-order-no">${escHtml(o.receiptNo)}</span>
           <span class="desk-order-meta">
-            <strong>${escHtml(o.customerName)} 様</strong>
+            <strong>${escHtml(o.customerName)} 様</strong>${o.pickupAtVenue ? ' <span style="color:#c2410c; font-size:0.8rem; font-weight:700;">会場受取</span>' : ''}
             ${o.items.length}点・${orderTimeText(o)}${o.enteredBy === 'staff' ? '・代理入力' : ''}${o.status === 'paid' && !o.sheetSynced ? ' <span style="color:#ef4444; font-weight:700;">要再送</span>' : ''}
           </span>
           <span class="desk-order-amount">¥${formatPrice(o.total)}</span>
@@ -3991,7 +4096,8 @@
           </div>
           <div style="margin-top:12px; font-weight:700; font-size:1.1rem;">${escHtml(order.customerName)} 様</div>
           <div style="font-size:0.85rem; color:#475569; line-height:1.7;">
-            ${escHtml(order.email)} / ${escHtml(order.phone)}<br>
+            ${escHtml(order.email)}${order.phone ? ' / ' + escHtml(order.phone) : ''}<br>
+            ${order.pickupAtVenue ? '<span style="color:#c2410c; font-weight:700;">会場受け取り（会場あてに配送・最短1〜2日後）</span><br>' : ''}
             〒${escHtml(order.zip)} ${escHtml(order.address)}<br>
             受付 ${orderTimeText(order)}・${order.enteredBy === 'staff' ? 'スタッフ代理入力' : 'お客様入力'}
           </div>

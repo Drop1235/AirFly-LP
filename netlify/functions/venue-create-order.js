@@ -28,15 +28,21 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || '{}');
     const { event_id, email, customer_name, customer_zip, customer_address, customer_phone, items, entered_by, id_token, opt_in } = body;
+    // 会場受け取り（会場あてに配送）：郵便番号・住所は不要、電話番号は任意（海外の番号も可）
+    const pickupAtVenue = body.pickup_at_venue === true;
 
     if (!isShortString(event_id, 100)) return json(400, { error: '会場情報が不正です。' });
-    if (!isShortString(customer_name, 100) || !isShortString(email, 200) || !isShortString(customer_address, 300)) {
+    if (!isShortString(customer_name, 100) || !isShortString(email, 200) || (!pickupAtVenue && !isShortString(customer_address, 300))) {
       return json(400, { error: 'お客様情報の必須項目が入力されていません。' });
     }
     if (!EMAIL_PATTERN.test(email.trim())) {
       return json(400, { error: 'メールアドレスの形式が正しくありません。' });
     }
-    if (!/^\d{7}$/.test(customer_zip || '') || !/^\d{10,11}$/.test(customer_phone || '')) {
+    if (pickupAtVenue) {
+      if (customer_phone && (typeof customer_phone !== 'string' || !/^\+?\d{8,15}$/.test(customer_phone))) {
+        return json(400, { error: '電話番号の形式が正しくありません。' });
+      }
+    } else if (!/^\d{7}$/.test(customer_zip || '') || !/^\d{10,11}$/.test(customer_phone || '')) {
       return json(400, { error: '郵便番号または電話番号の形式が正しくありません。' });
     }
     if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) {
@@ -80,6 +86,14 @@ exports.handler = async (event) => {
         tx.set(rateRef, inWindow ? { windowStart: rate.windowStart, count: rate.count + 1 } : { windowStart: now, count: 1 });
       }
       const ev = eventSnap.data();
+      // 会場受け取りのお届け先は、大会に登録した会場の住所（未登録なら大会名だけ記録し、スタッフが確認する）
+      const shipTo = pickupAtVenue
+        ? {
+          zip: ev.venueZip || '',
+          address: '【会場受け取り】' + (ev.venueAddress ? `${ev.venueAddress}（${ev.name}）` : ev.name),
+          phone: customer_phone || ev.venuePhone || ''
+        }
+        : { zip: customer_zip, address: customer_address.trim(), phone: customer_phone };
       const seq = (ev.orderSeq || 0) + 1;
       const no = `${ev.prefix || 'A'}-${String(seq).padStart(3, '0')}`;
       tx.update(eventRef, { orderSeq: seq });
@@ -91,9 +105,10 @@ exports.handler = async (event) => {
         enteredBy: enteredBy,
         customerName: customer_name.trim(),
         email: email.trim(),
-        zip: customer_zip,
-        address: customer_address.trim(),
-        phone: customer_phone,
+        zip: shipTo.zip,
+        address: shipTo.address,
+        phone: shipTo.phone,
+        pickupAtVenue: pickupAtVenue,
         optIn: opt_in === true,
         items: totals.items,
         subtotal: totals.subtotal,
@@ -110,7 +125,8 @@ exports.handler = async (event) => {
       items: totals.items,
       subtotal: totals.subtotal,
       shipping_fee: totals.shippingFee,
-      total: totals.total
+      total: totals.total,
+      pickup_at_venue: pickupAtVenue
     });
   } catch (error) {
     console.error('venue-create-order error:', error);
