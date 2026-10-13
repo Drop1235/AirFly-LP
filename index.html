@@ -1717,6 +1717,10 @@
         <!-- 会場販売（大会）セクション -->
         <div class="admin-section">
           <h3><i class="fas fa-store"></i> 会場販売（大会）</h3>
+          <button class="btn-admin-action" id="venue-new-btn" onclick="openNewVenueForm()"><i class="fas fa-plus"></i> 新しい大会を登録</button>
+          <!-- 大会の登録・編集フォーム（「新しい大会を登録」か一覧の「編集」で開く） -->
+          <div id="venue-form" style="display:none; padding:16px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc;">
+          <div id="venue-form-title" style="font-weight:700; margin-bottom:12px;">新しい大会を登録</div>
           <div class="admin-grid">
             <div style="grid-column: 1 / -1;">
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">大会名</label>
@@ -1771,7 +1775,8 @@
             </div>
           </div>
           <button class="btn-admin-action" id="venue-save-btn" onclick="saveVenueEvent()">大会を登録</button>
-          <button class="btn-admin-action" id="venue-cancel-edit-btn" style="display:none; background:#64748b;" onclick="cancelVenueEdit()">編集をやめる</button>
+          <button class="btn-admin-action" id="venue-cancel-edit-btn" style="background:#64748b;" onclick="cancelVenueEdit()">キャンセル</button>
+          </div>
           <div id="admin-venue-msg" style="margin-top: 8px; font-size: 0.9rem; font-weight: bold;"></div>
           <div style="overflow-x: auto;">
             <table class="admin-table">
@@ -3783,11 +3788,27 @@
       document.getElementById('new-venue-address').value = ev.venueAddress || '';
       document.getElementById('new-venue-phone').value = ev.venuePhone || '';
       document.getElementById('venue-save-btn').textContent = '変更を保存';
-      document.getElementById('venue-cancel-edit-btn').style.display = '';
+      document.getElementById('venue-cancel-edit-btn').textContent = '編集をやめる';
+      document.getElementById('venue-form-title').textContent = `大会を編集：${ev.name}`;
+      showVenueForm(true);
       const msgEl = document.getElementById('admin-venue-msg');
       msgEl.style.display = 'block';
       msgEl.style.color = '#2563eb';
       msgEl.textContent = `大会「${ev.name}」を編集中です。会場用のURL・QRコードは変わりません。`;
+      document.getElementById('venue-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('new-venue-name').focus({ preventScroll: true });
+    }
+
+    // 登録・編集フォームの開閉（開いている間は「新しい大会を登録」ボタンを隠す）
+    function showVenueForm(open) {
+      document.getElementById('venue-form').style.display = open ? '' : 'none';
+      document.getElementById('venue-new-btn').style.display = open ? 'none' : '';
+    }
+
+    function openNewVenueForm() {
+      resetVenueForm();
+      document.getElementById('admin-venue-msg').textContent = '';
+      showVenueForm(true);
       document.getElementById('new-venue-name').focus();
     }
 
@@ -3799,7 +3820,8 @@
       document.getElementById('new-venue-prefix').value = 'A';
       clearVenueAddressFields();
       document.getElementById('venue-save-btn').textContent = '大会を登録';
-      document.getElementById('venue-cancel-edit-btn').style.display = 'none';
+      document.getElementById('venue-cancel-edit-btn').textContent = 'キャンセル';
+      document.getElementById('venue-form-title').textContent = '新しい大会を登録';
     }
 
     function clearVenueAddressFields() {
@@ -3810,6 +3832,7 @@
 
     function cancelVenueEdit() {
       resetVenueForm();
+      showVenueForm(false);
       document.getElementById('admin-venue-msg').textContent = '';
     }
 
@@ -3855,6 +3878,7 @@
           msgEl.style.color = '#10b981';
           msgEl.textContent = `大会「${name}」の変更を保存しました。会場用のURL・QRコードはそのまま使えます。`;
           resetVenueForm();
+          showVenueForm(false);
           loadVenueEvents();
         } catch (e) {
           console.error('Failed to update venue event:', e);
@@ -3873,10 +3897,8 @@
         });
         msgEl.style.color = '#10b981';
         msgEl.textContent = `大会「${name}」を登録しました。「URL・QR」から会場用のQRコードを印刷できます。`;
-        document.getElementById('new-venue-name').value = '';
-        document.getElementById('new-venue-start').value = '';
-        document.getElementById('new-venue-end').value = '';
-        clearVenueAddressFields();
+        resetVenueForm();
+        showVenueForm(false);
         loadVenueEvents();
       } catch (e) {
         console.error('Failed to create venue event:', e);
