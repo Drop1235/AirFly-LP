@@ -1086,6 +1086,18 @@
     .venue-price-note { display: none; margin-top: 8px; font-size: 0.95rem; color: #ea580c; font-weight: 700; text-align: right; }
     body.venue-mode .venue-price-note { display: block; }
     .card-venue-price { display: block; margin-top: 4px; color: #ea580c; font-weight: 900; font-size: 1.05rem; }
+    /* 会場：YouTube（今大会の決勝動画）とLINEの案内。大会にURLが登録されているときだけ表示 */
+    .venue-links { display: none; flex-direction: column; gap: 8px; max-width: 600px; margin: 0 auto 24px; }
+    .venue-links.visible { display: flex; }
+    .venue-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 12px;
+      font-weight: 700; font-size: 0.95rem; line-height: 1.5; text-align: left;
+      text-decoration: none; color: #1e293b; background: #fff; border: 1px solid var(--color-border);
+    }
+    .venue-link i { font-size: 1.5rem; flex-shrink: 0; }
+    .venue-link.youtube i { color: #ff0000; }
+    .venue-link.line i { color: #06c755; }
     /* 会場受け取り（会場あてに配送）：会場モードのときだけ表示。選ぶと郵便番号・住所は不要、電話番号は任意 */
     .venue-pickup-box {
       display: none;
@@ -1281,6 +1293,7 @@
         お支払いの確認後、ご入力いただいたメールアドレスにご注文内容の詳細をお送りします。<br>
         ※お支払いが完了するまで、ご注文は確定しません。
       </div>
+      <div class="venue-links" style="margin-top: 24px;"></div>
       <button class="btn-flow-back" onclick="closeVenueReceipt()" data-en="Place another order">別の注文をする</button>
     </div>
   </div>
@@ -1310,8 +1323,9 @@
     <!-- ファーストビュー #hero -->
     <section id="hero">
       <div class="hero-content fade-in-up">
-        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="All products are 15% off when you order at this venue">この会場でのご注文は全商品15%OFFでご購入いただけます</small></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> <span class="venue-banner-headline"></span><small class="venue-banner-hero-detail"></small></div>
         <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
+        <div class="venue-links"></div>
         
         <h1 class="hero-title">
           Beyond
@@ -1417,7 +1431,7 @@
         
         <h2 class="section-title fade-in-up" data-en="AirFly Custom Order">AirFlyカスタムオーダー</h2>
         <div class="divider fade-in-up" style="margin-left: auto; margin-right: auto;"></div>
-        <div class="venue-banner"><span class="venue-event-name"></span> <span data-en="Venue-only 15% OFF">会場限定 15%OFF</span><small data-en="Place your order, then pay at the venue in cash or by credit card">お支払いは注文確定後、会場にて現金またはクレジットカードで承ります</small></div>
+        <div class="venue-banner"><span class="venue-event-name"></span> <span class="venue-banner-headline"></span><small class="venue-banner-order-detail"></small></div>
         <div class="venue-closed-notice"><span class="venue-closed-title"></span><small class="venue-closed-detail"></small></div>
         
         <!-- ステップ1: モデル選択 -->
@@ -1494,8 +1508,8 @@
             </div>
  
             <div class="summary-row" style="border-top: 2px solid var(--color-border); margin-top: 16px; padding-top: 16px; border-bottom: none;">
-              <span class="summary-label" data-en="Shipping (flat rate within Japan)">送料（全国一律）</span>
-              <span class="summary-value" data-en="¥600 (tax incl.)">¥600（税込）</span>
+              <span class="summary-label" id="summary-shipping-label">送料（全国一律）</span>
+              <span class="summary-value" id="summary-shipping-value">¥600（税込）</span>
             </div>
  
             <div class="summary-price-row">
@@ -1720,6 +1734,15 @@
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">受付番号の頭文字</label>
               <input type="text" id="new-venue-prefix" value="A" maxlength="2" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; text-transform: uppercase;">
             </div>
+            <div>
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">会場の割引率（%）</label>
+              <input type="number" id="new-venue-discount" value="0" min="0" max="50" step="1" inputmode="numeric" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">0 = 定価（値引きなし）</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; padding-top:20px;">
+              <input type="checkbox" id="new-venue-free-shipping" checked style="width:18px; height:18px;">
+              <label for="new-venue-free-shipping" style="font-size:0.9rem;">会場での注文は送料無料</label>
+            </div>
             <div style="grid-column: 1 / -1; margin-top: 4px; font-size: 0.8rem; color: #64748b;">
               会場受け取りの配送先（任意）：お客様が「会場で受け取る」を選んだ注文は、ここに入れた会場あてに配送します。
             </div>
@@ -1734,6 +1757,17 @@
             <div style="grid-column: 1 / -1;">
               <label style="display:block; font-size:0.85rem; margin-bottom:4px;">会場の住所（任意）</label>
               <input type="text" id="new-venue-address" placeholder="例: 山梨県甲府市〇〇町1-2-3 〇〇テニスコート" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div style="grid-column: 1 / -1; margin-top: 4px; font-size: 0.8rem; color: #64748b;">
+              注文画面・受付番号画面の案内（任意）：URLを入れたものだけ表示します。
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">YouTube URL（今大会の決勝動画）</label>
+              <input type="url" id="new-venue-youtube" placeholder="https://www.youtube.com/..." style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label style="display:block; font-size:0.85rem; margin-bottom:4px;">LINE 友だち追加URL</label>
+              <input type="url" id="new-venue-line" placeholder="https://lin.ee/..." style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px;">
             </div>
           </div>
           <button class="btn-admin-action" id="venue-save-btn" onclick="saveVenueEvent()">大会を登録</button>
@@ -1907,7 +1941,22 @@
     const db = firebase.firestore();
 
     // 会場販売の状態（会場モード中は会場限定価格で表示・会場払いで受付）
-    const VENUE_DISCOUNT_RATE = 0.15;
+    // 会場の割引率（%）。大会ごとの設定（0 = 定価）。未設定の大会・注文は従来どおり15%（サーバー netlify/lib/pricing.js と同じ）
+    function venueDiscountPercent(value) {
+      return Number.isInteger(value) && value >= 0 && value <= 50 ? value : 15;
+    }
+
+    function venueUnitPrice(orig, discountPercent) {
+      return Math.floor(orig * (100 - venueDiscountPercent(discountPercent)) / 100);
+    }
+
+    function venueRate() {
+      return venueEvent ? venueDiscountPercent(venueEvent.discountRate) : 0;
+    }
+
+    function venueFreeShipping() {
+      return !!(venueEvent && venueEvent.freeShipping === true);
+    }
     let venueEvent = null;          // 会場モード中の大会情報
     let venueModeFromUrl = false;   // 会場URLから開かれたか（代理入力で一時的に有効化した場合は false）
     let urlVenueEvent = null;       // 会場URLで開いた大会（代理入力の終了後に戻すため）
@@ -2380,6 +2429,7 @@
       applyStaticLang(lang);
       rerenderFlowForLang();
       if (venueNoticeTexts) showVenueClosedNotice(...venueNoticeTexts);
+      renderVenueTexts();
       if (shownVenueReceipt) showVenueReceipt(shownVenueReceipt);
     }
 
@@ -2752,7 +2802,7 @@
       }
       // 会場販売では会場限定割引（サーバー側 netlify/lib/pricing.js と同じ計算）
       if (venueEvent) {
-        return { orig: orig, sale: Math.floor(orig * (1 - VENUE_DISCOUNT_RATE)) };
+        return { orig: orig, sale: venueUnitPrice(orig, venueEvent.discountRate) };
       }
       return { orig: orig, sale: orig };
     }
@@ -2871,9 +2921,9 @@
               <div class="card-price-row">
                 <div>
                   <span style="font-size: 0.85rem; color: #64748b; font-weight: normal; margin-right: 4px;">${tr('定価', 'Price')}</span>
-                  <span class="card-price-sale" style="color: #1a1a1a;${venueEvent ? ' text-decoration: line-through; font-size: 0.95rem;' : ''}">¥${formatPrice(info.priceOrig)}</span>
+                  <span class="card-price-sale" style="color: #1a1a1a;${venueRate() > 0 ? ' text-decoration: line-through; font-size: 0.95rem;' : ''}">¥${formatPrice(info.priceOrig)}</span>
                   <span class="card-price-suffix"> ${tr('(税込)', '(tax incl.)')}</span>
-                  ${venueEvent ? `<span class="card-venue-price">${tr(`会場価格 ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))}〜 (税込)`, `Venue price from ¥${formatPrice(Math.floor(info.priceOrig * (1 - VENUE_DISCOUNT_RATE)))} (tax incl.)`)}</span>` : ''}
+                  ${venueRate() > 0 ? `<span class="card-venue-price">${tr(`会場価格 ¥${formatPrice(venueUnitPrice(info.priceOrig, venueEvent.discountRate))}〜 (税込)`, `Venue price from ¥${formatPrice(venueUnitPrice(info.priceOrig, venueEvent.discountRate))} (tax incl.)`)}</span>` : ''}
                 </div>
               </div>
             </div>
@@ -2948,7 +2998,7 @@
         const catTitle = document.createElement('div');
         catTitle.className = 'lens-category-title';
         catTitle.innerHTML = title;
-        const priceBasis = venueEvent ? tr('（定価）', ' (list price)') : '';
+        const priceBasis = venueRate() > 0 ? tr('（定価）', ' (list price)') : '';
         if (categoryType === 'polarized') {
           catTitle.innerHTML += ` <span class="price-note">${tr(`通常レンズの＋4,400円${priceBasis}`, `+¥4,400 vs. standard lenses${priceBasis}`)}</span>`;
         } else if (categoryType === 'photochromic') {
@@ -3124,7 +3174,7 @@
           <div class="cart-item-detail"><strong>${tr('モデル：', 'Model: ')}</strong>${item.model}</div>
           <div class="cart-item-detail"><strong>${tr('レンズ：', 'Lens: ')}</strong>${lensLabel(item.lens)}</div>
           <div class="cart-item-detail"><strong>${tr('フレーム：', 'Frame: ')}</strong>${frameLabel(item.frame)}</div>
-          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">${tr(`小計：¥${formatPrice(item.price)}（税込）`, `Subtotal: ¥${formatPrice(item.price)} (tax incl.)`)}${venueEvent ? `<span style="font-weight:500; color:#64748b; text-decoration:line-through; margin-left:8px;">¥${formatPrice(item.originalPrice)}</span>` : ''}</div>
+          <div class="cart-item-detail" style="font-weight:700; color:#1e40af; margin-top:8px;">${tr(`小計：¥${formatPrice(item.price)}（税込）`, `Subtotal: ¥${formatPrice(item.price)} (tax incl.)`)}${venueRate() > 0 ? `<span style="font-weight:500; color:#64748b; text-decoration:line-through; margin-left:8px;">¥${formatPrice(item.originalPrice)}</span>` : ''}</div>
         `;
         container.appendChild(itemDiv);
       });
@@ -3141,14 +3191,21 @@
       }
       
       const venueNote = document.getElementById('venue-price-note');
-      if (venueEvent && cart.length > 0) {
-        venueNote.textContent = tr(`会場限定15%OFF適用済み（定価合計 ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)}）`,
-          `Venue-only 15% OFF applied (list price total ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)})`);
+      if (venueRate() > 0 && cart.length > 0) {
+        venueNote.textContent = tr(`会場限定${venueRate()}%OFF適用済み（定価合計 ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)}）`,
+          `Venue-only ${venueRate()}% OFF applied (list price total ¥${formatPrice(totalOrig)} → -¥${formatPrice(totalOrig - totalSale)})`);
       } else {
         venueNote.textContent = '';
       }
       
-      const SHIPPING_FEE = 600;
+      // 送料：会場で送料無料の大会なら0円
+      const SHIPPING_FEE = venueFreeShipping() ? 0 : 600;
+      document.getElementById('summary-shipping-label').textContent = venueFreeShipping()
+        ? tr('送料（会場でのご注文は無料）', 'Shipping (free for venue orders)')
+        : tr('送料（全国一律）', 'Shipping (flat rate within Japan)');
+      document.getElementById('summary-shipping-value').textContent = venueFreeShipping()
+        ? tr('無料', 'Free')
+        : tr('¥600（税込）', '¥600 (tax incl.)');
       
       if(cart.length > 0) {
         totalSale += SHIPPING_FEE;
@@ -3440,11 +3497,14 @@
         if (!isVenueEventOpen(doc.data())) { // 開催日以外は通常のWeb販売
           const ev = doc.data();
           if (ev.startDate && todayJst() < ev.startDate) {
-            showVenueClosedNotice(`${ev.name} の会場販売は ${formatVenueDates(ev)} です`, '開催期間になると会場限定15%OFF・会場払いでご注文いただけます。現在は通常のWeb販売（オンライン決済・会場割引なし）です。',
-              `Venue sales for ${ev.name}: ${formatVenueDates(ev)}`, 'During the event you can order at 15% off and pay at the venue. Right now this is our regular online store (online payment, no venue discount).');
+            const rate = venueDiscountPercent(ev.discountRate);
+            showVenueClosedNotice(`${ev.name} の会場販売は ${formatVenueDates(ev)} です`,
+              `開催期間になると${rate > 0 ? `会場限定${rate}%OFF・` : ''}会場払いでご注文いただけます${ev.freeShipping === true ? '（送料無料）' : ''}。現在は通常のWeb販売（オンライン決済）です。`,
+              `Venue sales for ${ev.name}: ${formatVenueDates(ev)}`,
+              `During the event you can order${rate > 0 ? ` at ${rate}% off` : ''} and pay at the venue${ev.freeShipping === true ? ' (free shipping)' : ''}. Right now this is our regular online store (online payment).`);
           } else {
-            showVenueClosedNotice(`${ev.name} の会場販売は終了しました`, '現在は通常のWeb販売（オンライン決済・会場割引なし）です。',
-              `Venue sales for ${ev.name} have ended`, 'This is now our regular online store (online payment, no venue discount).');
+            showVenueClosedNotice(`${ev.name} の会場販売は終了しました`, '現在は通常のWeb販売（オンライン決済）です。',
+              `Venue sales for ${ev.name} have ended`, 'This is now our regular online store (online payment).');
           }
           return;
         }
@@ -3471,11 +3531,38 @@
       document.body.classList.add('venue-closed');
     }
 
+    // 会場バナーの文言（割引率・送料無料は大会の設定）と、YouTube / LINE の案内
+    function renderVenueTexts() {
+      if (!venueEvent) return;
+      const rate = venueRate();
+      const free = venueFreeShipping();
+      const headline = rate > 0 ? tr(`会場限定 ${rate}%OFF`, `Venue-only ${rate}% OFF`) : tr('会場販売', 'On-site sales');
+      const heroDetail = rate > 0
+        ? tr(`この会場でのご注文は全商品${rate}%OFFでご購入いただけます${free ? '（送料無料）' : ''}`, `All products are ${rate}% off when you order at this venue${free ? ' (free shipping)' : ''}`)
+        : tr(`会場で試着してご注文いただけます${free ? '。会場でのご注文は送料無料です' : ''}`, `Try them on and order here${free ? '. Free shipping on venue orders' : ''}`);
+      const orderDetail = tr(`お支払いは注文確定後、会場にて現金またはクレジットカードで承ります${free ? '（送料無料）' : ''}`,
+        `Place your order, then pay at the venue in cash or by credit card${free ? ' (free shipping)' : ''}`);
+      document.querySelectorAll('.venue-banner-headline').forEach(el => el.textContent = headline);
+      document.querySelectorAll('.venue-banner-hero-detail').forEach(el => el.textContent = heroDetail);
+      document.querySelectorAll('.venue-banner-order-detail').forEach(el => el.textContent = orderDetail);
+
+      const safeUrl = url => (typeof url === 'string' && /^https:\/\/\S+$/.test(url)) ? url : '';
+      const youtube = safeUrl(venueEvent.youtubeUrl);
+      const line = safeUrl(venueEvent.lineUrl);
+      const linksHtml = (youtube ? `<a class="venue-link youtube" href="${escHtml(youtube)}" target="_blank" rel="noopener"><i class="fab fa-youtube"></i><span>${tr('今大会の決勝動画はYouTubeで観られます', "Watch this tournament's final on YouTube")}</span></a>` : '')
+        + (line ? `<a class="venue-link line" href="${escHtml(line)}" target="_blank" rel="noopener"><i class="fab fa-line"></i><span>${tr('大人のテニスに役立つ情報をLINEでも配信中。よかったら友だち登録してね', 'We also share tips for adult tennis players on LINE. Feel free to add us as a friend!')}</span></a>` : '');
+      document.querySelectorAll('.venue-links').forEach(el => {
+        el.innerHTML = linksHtml;
+        el.classList.toggle('visible', !!linksHtml);
+      });
+    }
+
     function activateVenueMode(ev, fromUrl) {
       venueEvent = ev;
       venueModeFromUrl = fromUrl;
       document.body.classList.add('venue-mode');
       document.querySelectorAll('.venue-event-name').forEach(el => el.textContent = ev.name);
+      renderVenueTexts();
       updateSubmitButton();
       // 会場クーポンとの併用不可：Webクーポンの適用状態をクリア
       appliedCouponCode = '';
@@ -3600,7 +3687,9 @@
           subtotal: data.subtotal,
           shippingFee: data.shipping_fee,
           total: data.total,
-          pickup: !!customer.pickup
+          pickup: !!customer.pickup,
+          discountRate: data.discount_rate,
+          freeShipping: data.free_shipping === true
         };
         localStorage.setItem(VENUE_RECEIPT_KEY, JSON.stringify(receipt));
         showVenueReceipt(receipt);
@@ -3618,11 +3707,11 @@
       document.getElementById('venue-receipt-event').textContent = tr(`${receipt.eventName} 会場`, receipt.eventName);
       document.getElementById('venue-receipt-no').textContent = receipt.receiptNo;
       document.getElementById('venue-receipt-items').innerHTML = receipt.items.map((item, i) =>
-        `<div class="complete-item"><strong>[${i + 1}]</strong> ${itemLine(item)}<br>¥${formatPrice(item.price)}${tr('（会場限定15%OFF）', ' (venue-only 15% OFF)')}</div>`
+        `<div class="complete-item"><strong>[${i + 1}]</strong> ${itemLine(item)}<br>¥${formatPrice(item.price)}${venueDiscountPercent(receipt.discountRate) > 0 ? tr(`（会場限定${venueDiscountPercent(receipt.discountRate)}%OFF）`, ` (venue-only ${venueDiscountPercent(receipt.discountRate)}% OFF)`) : ''}</div>`
       ).join('');
       document.getElementById('venue-receipt-breakdown').innerHTML =
         (receipt.pickup ? `<span style="color:#c2410c; font-weight:700;">${tr('受け取り：会場（会場あてに配送・最短1〜2日後）', 'Pickup: at the venue (shipped to the venue, earliest 1–2 days later)')}</span><br>` : '')
-        + `${tr('商品小計：', 'Subtotal: ')}¥${formatPrice(receipt.subtotal)}<br>${tr('送料：', 'Shipping: ')}¥${formatPrice(receipt.shippingFee)}`;
+        + `${tr('商品小計：', 'Subtotal: ')}¥${formatPrice(receipt.subtotal)}<br>${tr('送料：', 'Shipping: ')}${receipt.freeShipping && receipt.shippingFee === 0 ? tr('無料（会場でのご注文特典）', 'Free (venue order)') : '¥' + formatPrice(receipt.shippingFee)}`;
       document.getElementById('venue-receipt-total').textContent = `¥${formatPrice(receipt.total)}`;
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('venue-receipt-screen').classList.add('visible');
@@ -3686,6 +3775,10 @@
       document.getElementById('new-venue-start').value = ev.startDate || '';
       document.getElementById('new-venue-end').value = ev.endDate && ev.endDate !== ev.startDate ? ev.endDate : '';
       document.getElementById('new-venue-prefix').value = ev.prefix || 'A';
+      document.getElementById('new-venue-discount').value = venueDiscountPercent(ev.discountRate);
+      document.getElementById('new-venue-free-shipping').checked = ev.freeShipping === true;
+      document.getElementById('new-venue-youtube').value = ev.youtubeUrl || '';
+      document.getElementById('new-venue-line').value = ev.lineUrl || '';
       document.getElementById('new-venue-zip').value = ev.venueZip || '';
       document.getElementById('new-venue-address').value = ev.venueAddress || '';
       document.getElementById('new-venue-phone').value = ev.venuePhone || '';
@@ -3710,7 +3803,9 @@
     }
 
     function clearVenueAddressFields() {
-      ['new-venue-zip', 'new-venue-address', 'new-venue-phone'].forEach(id => document.getElementById(id).value = '');
+      ['new-venue-zip', 'new-venue-address', 'new-venue-phone', 'new-venue-youtube', 'new-venue-line'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('new-venue-discount').value = 0;
+      document.getElementById('new-venue-free-shipping').checked = true;
     }
 
     function cancelVenueEdit() {
@@ -3741,13 +3836,22 @@
       if (venueAddress.length > 200) { msgEl.textContent = '会場の住所は200文字以内で入力してください。'; return; }
       if ((venueZip || venuePhone) && !venueAddress) { msgEl.textContent = '会場の郵便番号・電話番号を入れる場合は、会場の住所も入力してください。'; return; }
 
+      // 割引率（0〜50%の整数、0 = 定価）・送料無料・案内のURL
+      const discountRate = Number(document.getElementById('new-venue-discount').value);
+      const freeShipping = document.getElementById('new-venue-free-shipping').checked;
+      const youtubeUrl = document.getElementById('new-venue-youtube').value.trim();
+      const lineUrl = document.getElementById('new-venue-line').value.trim();
+      if (!Number.isInteger(discountRate) || discountRate < 0 || discountRate > 50) { msgEl.textContent = '会場の割引率は0〜50の整数で入力してください（0 = 定価）。'; return; }
+      const isValidUrl = url => !url || (/^https:\/\/\S+$/.test(url) && url.length <= 300);
+      if (!isValidUrl(youtubeUrl) || !isValidUrl(lineUrl)) { msgEl.textContent = 'YouTube・LINEのURLは https:// から始まるURLを入力してください。'; return; }
+
       if (editingVenueEventId) {
         const ev = venueEventList.find(e => e.id === editingVenueEventId);
         if (ev && ev.orderSeq > 0 && prefix !== (ev.prefix || 'A')
           && !confirm(`受付番号の頭文字を ${ev.prefix || 'A'} から ${prefix} に変えると、これからの受付番号は ${prefix}-${String(ev.orderSeq + 1).padStart(3, '0')} からになります（受付済みの番号は変わりません）。変更しますか？`)) return;
         try {
           // 受付番号の連番（orderSeq）は注文のたびにサーバーが更新するため、ここでは触らない
-          await db.collection('venue_events').doc(editingVenueEventId).update({ name, startDate, endDate, prefix, venueZip, venueAddress, venuePhone });
+          await db.collection('venue_events').doc(editingVenueEventId).update({ name, startDate, endDate, prefix, venueZip, venueAddress, venuePhone, discountRate, freeShipping, youtubeUrl, lineUrl });
           msgEl.style.color = '#10b981';
           msgEl.textContent = `大会「${name}」の変更を保存しました。会場用のURL・QRコードはそのまま使えます。`;
           resetVenueForm();
@@ -3763,6 +3867,7 @@
         await db.collection('venue_events').add({
           name, startDate, endDate, prefix,
           venueZip, venueAddress, venuePhone,
+          discountRate, freeShipping, youtubeUrl, lineUrl,
           orderSeq: 0,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -3793,9 +3898,12 @@
       }
     }
 
+    let qrEvent = null; // QR表示中の大会（印刷画面の文言に使う）
+
     function showVenueQr(eventId) {
       const ev = venueEventList.find(e => e.id === eventId);
       if (!ev) return;
+      qrEvent = ev;
       const url = venueUrl(eventId);
       document.getElementById('venue-qr-title').textContent = `${ev.name}（${formatVenueDates(ev)}）`;
       document.getElementById('venue-qr-url').value = url;
@@ -3818,6 +3926,16 @@
     }
 
     // ブースに掲示する印刷用ページを開く
+    // 印刷画面の見出し（割引率・送料無料は大会の設定）
+    function qrPrintHeadline() {
+      const rate = qrEvent ? venueDiscountPercent(qrEvent.discountRate) : 15;
+      const free = !!(qrEvent && qrEvent.freeShipping === true);
+      const head = rate > 0
+        ? `<h2>会場限定 ${rate}%OFF</h2><div class="en">${rate}% OFF at this venue only</div>`
+        : `<h2>試着してその場でご注文</h2><div class="en">Try them on and order here</div>`;
+      return head + (free ? `<p style="margin-top:8px;">会場でのご注文は送料無料</p><div class="en">Free shipping on venue orders</div>` : '');
+    }
+
     function printVenueQr() {
       const canvas = document.querySelector('#venue-qr-code canvas');
       const img = document.querySelector('#venue-qr-code img');
@@ -3832,7 +3950,7 @@
         img{width:320px;height:320px;margin-top:20px;image-rendering:pixelated}p{font-size:1.2rem;font-weight:700;line-height:1.7;margin:16px 0 0}
         p.en{font-size:1rem;line-height:1.6;margin-top:8px}</style></head>
         <body><h1>AirFly ご注文はこちら</h1><div class="en">Order AirFly here</div>
-        <h2>会場限定 15%OFF</h2><div class="en">15% OFF at this venue only</div>
+        ${qrPrintHeadline()}
         <img src="${src}" alt="QR"><p>スマートフォンで読み取って、商品を選んでご注文ください。<br>注文確定後、受付番号の画面をスタッフにお見せください。<br>お支払い：現金 / クレジットカード</p>
         <p class="en">Scan with your phone, choose your products and place your order.<br>Then show the receipt number screen to our staff.<br>Payment: cash / credit card<br>Tap “English” at the top right of the order page to switch to English.</p>
         <p style="font-size:0.9rem;color:#64748b;">${escHtml(title)}</p></body></html>`);
@@ -3970,7 +4088,7 @@
     // 画面表示用の金額計算（確定時はサーバー側で再計算する）
     function calcDeskTotals(order, deliveries) {
       const subtotal = order.items.reduce((sum, item) => sum + item.price, 0);
-      const shippingFee = deliveries.some(d => d === 'ship') ? 600 : 0;
+      const shippingFee = order.freeShipping !== true && deliveries.some(d => d === 'ship') ? 600 : 0;
       return { subtotal, shippingFee, total: subtotal + shippingFee };
     }
 
@@ -4110,8 +4228,8 @@
           <div style="font-weight:700; margin-bottom:4px;">ご注文商品 ${isUnpaid ? '<span style="font-size:0.8rem; color:#64748b; font-weight:normal;">（在庫からお渡しする商品は「手渡し」に）</span>' : ''}</div>
           ${itemsHtml}
           <div style="margin-top:12px;">
-            <div class="desk-total-row"><span>商品小計（会場15%OFF）</span><span>¥${formatPrice(totals.subtotal)}</span></div>
-            <div class="desk-total-row"><span>送料${totals.shippingFee === 0 ? '（全商品手渡し）' : ''}</span><span>¥${formatPrice(totals.shippingFee)}</span></div>
+            <div class="desk-total-row"><span>商品小計${venueDiscountPercent(order.discountRate) > 0 ? `（会場${venueDiscountPercent(order.discountRate)}%OFF）` : '（定価）'}</span><span>¥${formatPrice(totals.subtotal)}</span></div>
+            <div class="desk-total-row"><span>送料${totals.shippingFee === 0 ? (order.freeShipping === true ? '（会場特典で無料）' : '（全商品手渡し）') : ''}</span><span>¥${formatPrice(totals.shippingFee)}</span></div>
             <div class="desk-total-row grand"><span>合計</span><span>¥${formatPrice(totals.total)}</span></div>
           </div>
         </div>

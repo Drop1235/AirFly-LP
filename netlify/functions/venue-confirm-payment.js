@@ -50,7 +50,9 @@ exports.handler = async (event) => {
         }
 
         const deliveryList = Array.isArray(deliveries) ? deliveries : [];
-        const totals = calcVenueTotals(order.items, order.items.map((_, i) => deliveryList[i]));
+        // 割引率・送料無料は注文の受付時に保存した値を使う（大会の設定を後から変えても、受付済みの注文の金額は変わらない）
+        const totals = calcVenueTotals(order.items, order.items.map((_, i) => deliveryList[i]),
+          { discountPercent: order.discountRate, freeShipping: order.freeShipping === true });
         tx.update(orderRef, {
           status: 'paid',
           paymentMethod: payment_method,

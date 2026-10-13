@@ -283,6 +283,15 @@ function describeDeliveries(items) {
 /**
  * 会場販売のお客様向け注文詳細メール本文
  */
+/**
+ * 会場メールの商品小計に付ける割引の表記。例: "（会場限定15%OFF適用）"。割引なし（定価）なら空文字
+ * discount_rate が届かない（サイト側が更新前）の場合は従来どおり15%として扱う
+ */
+function venueDiscountLabel(params) {
+  var rate = (params.discount_rate === undefined || params.discount_rate === null) ? 15 : Number(params.discount_rate);
+  return rate > 0 ? "（会場限定" + rate + "%OFF適用）" : "";
+}
+
 function buildVenueBuyerEmail(params, customerName, itemsString, items, formattedZip, address, formattedPhone, shipCount) {
   var yen = function(n) { return "¥" + parseInt(n || 0, 10).toLocaleString(); };
   var body = customerName + " 様\n\n"
@@ -293,8 +302,8 @@ function buildVenueBuyerEmail(params, customerName, itemsString, items, formatte
     + itemsString + "\n"
     + (shipCount < items.length ? "※" + HANDOVER_MARK + "の商品は会場にてお渡し済みです。\n" : "")
     + "\n"
-    + "商品小計（会場限定15%OFF適用）: " + yen(params.subtotal) + "\n"
-    + "送料: " + yen(params.shipping_fee) + "\n"
+    + "商品小計" + venueDiscountLabel(params) + ": " + yen(params.subtotal) + "\n"
+    + "送料: " + (params.free_shipping === true && shipCount > 0 && Number(params.shipping_fee) === 0 ? "無料（会場でのご注文特典）" : yen(params.shipping_fee)) + "\n"
     + "お支払い金額: " + yen(params.total_amount) + "（" + (params.payment_method || "") + "）\n\n";
   
   if (shipCount > 0) {
