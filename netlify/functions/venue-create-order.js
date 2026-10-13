@@ -1,6 +1,6 @@
 // 会場販売：注文の受付（未払い状態で Firestore に保存し、受付番号を発行する）
 const { getDb, admin, verifyAdmin, isEventOpen, json, EMAIL_PATTERN } = require('../lib/venue');
-const { calcVenueTotals, KNOWN_MODELS } = require('../lib/pricing');
+const { calcVenueTotals, venueDiscountPercent, KNOWN_MODELS } = require('../lib/pricing');
 
 const crypto = require('crypto');
 
@@ -68,7 +68,8 @@ exports.handler = async (event) => {
     const rateRef = ip
       ? db.collection('venue_rate_limits').doc(crypto.createHash('sha256').update(event_id + '|' + ip).digest('hex'))
       : null;
-    const totals = calcVenueTotals(items.map(i => ({ model: i.model, lens: i.lens, frame: i.frame })));
+    const orderItems = items.map(i => ({ model: i.model, lens: i.lens, frame: i.frame }));
+    let totals = null;
 
     const receiptNo = await db.runTransaction(async (tx) => {
       const eventSnap = await tx.get(eventRef);
@@ -86,6 +87,10 @@ exports.handler = async (event) => {
         tx.set(rateRef, inWindow ? { windowStart: rate.windowStart, count: rate.count + 1 } : { windowStart: now, count: 1 });
       }
       const ev = eventSnap.data();
+      // 価格は大会の設定（割引率・送料無料）で計算し、注文にも保存する（後から設定を変えても受付済みの注文の金額は変わらない）
+      const discountRate = venueDiscountPercent(ev.discountRate);
+      const freeShipping = ev.freeShipping === true;
+      totals = calcVenueTotals(orderItems, null, { discountPercent: discountRate, freeShipping });
       // 会場受け取りのお届け先は、大会に登録した会場の住所（未登録なら大会名だけ記録し、スタッフが確認する）
       const shipTo = pickupAtVenue
         ? {
@@ -114,6 +119,8 @@ exports.handler = async (event) => {
         subtotal: totals.subtotal,
         shippingFee: totals.shippingFee,
         total: totals.total,
+        discountRate: discountRate,
+        freeShipping: freeShipping,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
       return no;
@@ -126,6 +133,8 @@ exports.handler = async (event) => {
       subtotal: totals.subtotal,
       shipping_fee: totals.shippingFee,
       total: totals.total,
+      discount_rate: venueDiscountPercent(totals.discountPercent),
+      free_shipping: totals.freeShipping,
       pickup_at_venue: pickupAtVenue
     });
   } catch (error) {

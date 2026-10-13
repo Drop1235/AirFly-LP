@@ -1,5 +1,6 @@
 // 会場販売用の共通処理（Firebase Admin・管理者認証・開催日判定・GAS送信）
 const admin = require('firebase-admin');
+const { venueDiscountPercent } = require('./pricing');
 
 const ADMIN_EMAIL = process.env.VENUE_ADMIN_EMAIL || 'hanks@tempmachi.com';
 
@@ -90,6 +91,8 @@ async function sendVenueOrderToGas(order) {
     opt_in: order.optIn === true,
     subtotal: order.subtotal,
     shipping_fee: order.shippingFee,
+    discount_rate: venueDiscountPercent(order.discountRate),
+    free_shipping: order.freeShipping === true,
     total_amount: order.total,
     items: order.items
   };
