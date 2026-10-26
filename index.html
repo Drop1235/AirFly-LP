@@ -2372,6 +2372,22 @@
       }
     }
 
+    // ?coupon=AF-9M50NC でアクセスされたときは、クーポン欄に入れて自動で適用する
+    // （LINE配信のリンクをタップするだけで割引が入った状態になるようにするため）
+    // ・会場モードはクーポン欄自体を隠しているので何もしない
+    // ・無効・期限切れのコードは applyCoupon() が通常と同じエラーを表示する（黙って無視はしない）
+    // ・カートが空でも適用してよい（appliedDiscount は renderCart() のたびに反映されるため、
+    //   あとから商品を追加しても割引が効く）
+    async function applyCouponFromUrl() {
+      if (document.body.classList.contains('venue-mode')) return;
+      const code = (new URLSearchParams(window.location.search).get('coupon') || '').trim().toUpperCase();
+      if (!code) return;
+      const input = document.getElementById('coupon-code');
+      if (!input) return;
+      input.value = code;
+      await applyCoupon();
+    }
+
     /* ==============================================
        アプリ初期化ロジック
     ============================================== */
@@ -2384,7 +2400,8 @@
       initScrollAnimation();
       initVisualOrderFlow();
       checkAdminStatus();
-      initVenueMode();
+      // 会場モードかどうかが決まってから、URLのクーポンを自動適用する
+      initVenueMode().then(applyCouponFromUrl);
     }
 
     /* ==============================================

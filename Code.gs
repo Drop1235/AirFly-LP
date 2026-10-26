@@ -115,7 +115,7 @@ function doPost(e) {
     var date = new Date();
     
     // シートの最終行にデータを追加（1回の注文につき1行）
-    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報 / Q: Stripe決済ID
+    // A〜H: 注文情報 / I: LINE手配チェック / J: ステータス / K: メルマガ配信 / L〜P: 販売チャネル情報 / Q: Stripe決済ID / R〜S: クーポン
     sheet.appendRow([
       date,
       sheetText(customerName),
@@ -133,7 +133,11 @@ function doPost(e) {
       isVenue ? (params.payment_method || "") : "クレジットカード(Stripe)",
       isVenue ? describeDeliveries(items) : "配送",
       isVenue ? (params.entered_by || "") : "お客様",
-      isVenue ? "" : (params.stripe_session_id || "")
+      isVenue ? "" : (params.stripe_session_id || ""),
+      // R〜S: クーポン（会場注文にはクーポンの仕組みがないため、Web注文のみ。
+      //        クーポンを使っていない注文は空欄のままにして、埋まっているセル＝クーポン経由と分かるようにする）
+      isVenue ? "" : sheetText(params.coupon_code || ""),
+      (!isVenue && params.coupon_discount_rate) ? String(params.coupon_discount_rate) + "%OFF" : ""
     ]);
     // 追加した行のI列を、クリックで切り替えられる通常のチェックボックスにする
     sheet.getRange(sheet.getLastRow(), SEND_CHECK_COL).setDataValidation(checkboxRule());
@@ -224,10 +228,17 @@ function doPost(e) {
 }
 
 /**
- * L〜Q列の見出しのうち未設定のものを自動で追加する
+ * L〜S列の見出しのうち未設定のものを自動で追加する
+ * 既存の見出しは書き換えず、空いているものだけを埋めるので、後ろに列を足しても既存の行は動かない
  */
 function ensureChannelHeaders(sheet) {
-  var headers = ["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者", "決済ID"];
+  var headers = ["販売チャネル", "受付番号", "支払方法", "受取方法", "入力者", "決済ID", "クーポンコード", "クーポン割引率"];
+  // L列は12列目なので、必要な列数は 11 + 見出しの数（= S列の19）。足りなければシートに列を足す
+  var neededColumns = 11 + headers.length;
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < neededColumns) {
+    sheet.insertColumnsAfter(maxColumns, neededColumns - maxColumns);
+  }
   var headerRange = sheet.getRange(1, 12, 1, headers.length);
   var current = headerRange.getValues()[0];
   var changed = false;
