@@ -43,6 +43,9 @@ exports.handler = async (event, context) => {
         customer_phone: session.metadata.customer_phone || '',
         opt_in: session.metadata.opt_in === 'true',
         total_amount: session.metadata.total_amount || String(session.amount_total || 0),
+        // クーポン経由の注文を台帳で見分けるため（クーポン未使用の注文では空文字）
+        coupon_code: session.metadata.coupon_code || '',
+        coupon_discount_rate: session.metadata.coupon_discount_rate || '',
         items: items,
         stripe_session_id: session.id, // GAS側の重複記録防止に使う
         secret_token: process.env.GAS_SECRET_TOKEN

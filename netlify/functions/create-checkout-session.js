@@ -53,6 +53,8 @@ exports.handler = async (event, context) => {
 
     // クーポンの検証と消費（1回限りのクーポンは、ここでサーバーが使用済みにする）
     let appliedDiscount = 0;
+    // 台帳（スプレッドシート）に記録するクーポン。検証を通ったコードだけを入れる
+    let appliedCouponCode = '';
     if (coupon_code) {
       const result = await redeemCoupon(coupon_code);
       if (result.error) {
@@ -60,6 +62,7 @@ exports.handler = async (event, context) => {
       }
       appliedDiscount = result.discount;
       consumedCouponRef = result.consumedRef;
+      appliedCouponCode = result.code;
     }
 
     // Convert cart items to Stripe line_items format using securely calculated prices
@@ -124,7 +127,10 @@ exports.handler = async (event, context) => {
         customer_address: customer_address || '',
         customer_phone: customer_phone || '',
         opt_in: opt_in ? 'true' : 'false',
-        total_amount: totalSale.toString()
+        total_amount: totalSale.toString(),
+        // クーポン経由の注文を台帳で見分けるため（Stripeのmetadataは1つの値が500文字までなので短く保つ）
+        coupon_code: appliedCouponCode,
+        coupon_discount_rate: appliedDiscount > 0 ? String(Math.round(appliedDiscount * 100)) : ''
       }
     });
 
@@ -150,7 +156,8 @@ exports.handler = async (event, context) => {
 };
 
 // クーポンを検証し、1回限りのものはトランザクションで使用済みにする（同時利用でも1回だけ成功する）
-// 戻り値: { discount, consumedRef } または { error }
+// 戻り値: { discount, consumedRef, code } または { error }
+// code は Firestore に登録されている正規のコード（台帳に記録するのはこちら。ブラウザから来た文字列は使わない）
 async function redeemCoupon(rawCode) {
   if (typeof rawCode !== 'string' || !rawCode.trim() || rawCode.length > 100 || rawCode.includes('/')) {
     return { error: '有効なクーポンコードではありません。' };
@@ -177,8 +184,8 @@ async function redeemCoupon(rawCode) {
     const discount = rate >= 1 ? rate / 100 : rate;
     if (!(discount > 0 && discount < 1)) return { error: '有効なクーポンコードではありません。' };
 
-    if (isUnlimited) return { discount, consumedRef: null };
+    if (isUnlimited) return { discount, consumedRef: null, code: ref.id };
     tx.update(ref, { isUsed: true, usedAt: admin.firestore.FieldValue.serverTimestamp() });
-    return { discount, consumedRef: ref };
+    return { discount, consumedRef: ref, code: ref.id };
   });
 }
