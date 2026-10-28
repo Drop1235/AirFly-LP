@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
   let consumedCouponRef = null;
   try {
     // ※割引の検証先（Firebaseプロジェクト）はクライアントから受け取らない（サーバー側の設定で固定）
-    const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code } = JSON.parse(event.body);
+    const { email, customer_name, customer_zip, customer_address, customer_phone, opt_in, items, coupon_code, ref_source } = JSON.parse(event.body);
 
     if (!Array.isArray(items) || items.length === 0) {
       return {
@@ -51,12 +51,12 @@ exports.handler = async (event, context) => {
       }
     }
 
-    // クーポンの検証と消費（1回限りのクーポンは、ここでサーバーが使用済みにする）
+    // クーポンの検証と消費（1回限り・回数上限つきのクーポンは、ここでサーバーが使用回数を更新する）
     let appliedDiscount = 0;
     // 台帳（スプレッドシート）に記録するクーポン。検証を通ったコードだけを入れる
     let appliedCouponCode = '';
     if (coupon_code) {
-      const result = await redeemCoupon(coupon_code);
+      const result = await redeemCoupon(coupon_code, ref_source);
       if (result.error) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: result.error }) };
       }
@@ -142,9 +142,9 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    // 決済画面を作れなかった場合は、消費したクーポンを未使用に戻す
+    // 決済画面を作れなかった場合は、消費したクーポンを元に戻す
     if (consumedCouponRef) {
-      await consumedCouponRef.update({ isUsed: false, usedAt: admin.firestore.FieldValue.delete() })
+      await consumedCouponRef.ref.update(consumedCouponRef.rollbackUpdate)
         .catch(e => console.error('Failed to release coupon:', e));
     }
     return {
@@ -155,23 +155,35 @@ exports.handler = async (event, context) => {
   }
 };
 
-// クーポンを検証し、1回限りのものはトランザクションで使用済みにする（同時利用でも1回だけ成功する）
+// クーポンを検証し、1回限り・回数上限つきのものはトランザクションで使用回数を更新する
 // 戻り値: { discount, consumedRef, code } または { error }
 // code は Firestore に登録されている正規のコード（台帳に記録するのはこちら。ブラウザから来た文字列は使わない）
-async function redeemCoupon(rawCode) {
+async function redeemCoupon(rawCode, refSource) {
   if (typeof rawCode !== 'string' || !rawCode.trim() || rawCode.length > 100 || rawCode.includes('/')) {
     return { error: '有効なクーポンコードではありません。' };
   }
+  const normalizedCode = rawCode.trim().toUpperCase();
   const db = getDb();
-  const ref = db.collection('coupons').doc(rawCode.trim().toUpperCase());
+  const ref = db.collection('coupons').doc(normalizedCode);
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return { error: '有効なクーポンコードではありません。' };
     const c = snap.data();
 
-    const isUnlimited = c.isUnlimited === true;
-    if (!isUnlimited && c.isUsed === true) {
-      return { error: 'このクーポンコードはすでに使用されています。' };
+    // LINE限定クーポン（AF-LINE* または lineOnly === true）は ?ref=line 経由のみ許可
+    const isLineCoupon = c.lineOnly === true || normalizedCode.startsWith('AF-LINE');
+    if (isLineCoupon && refSource !== 'line') {
+      return { error: 'このクーポンは公式LINEのご案内リンクからのみご利用いただけます。' };
+    }
+
+    const usedCount = Number.isInteger(c.usedCount) ? c.usedCount : (c.isUsed === true ? 1 : 0);
+    // AF-LINE* クーポンは maxUses 未設定でも自動的に上限10回として保護する
+    const maxUses = Number.isInteger(c.maxUses) && c.maxUses > 0
+      ? c.maxUses
+      : (isLineCoupon ? 10 : (c.isUnlimited === true ? null : 1));
+
+    if ((maxUses !== null && usedCount >= maxUses) || (!c.isUnlimited && maxUses === 1 && c.isUsed === true)) {
+      return { error: 'このクーポンコードは利用上限に達したか、すでに使用されています。' };
     }
     if (c.expiresAt) {
       const expiry = c.expiresAt.toDate ? c.expiresAt.toDate() : new Date(c.expiresAt);
@@ -184,8 +196,28 @@ async function redeemCoupon(rawCode) {
     const discount = rate >= 1 ? rate / 100 : rate;
     if (!(discount > 0 && discount < 1)) return { error: '有効なクーポンコードではありません。' };
 
-    if (isUnlimited) return { discount, consumedRef: null, code: ref.id };
-    tx.update(ref, { isUsed: true, usedAt: admin.firestore.FieldValue.serverTimestamp() });
-    return { discount, consumedRef: ref, code: ref.id };
+    if (maxUses === null) {
+      tx.update(ref, { usedCount: usedCount + 1, lastUsedAt: admin.firestore.FieldValue.serverTimestamp() });
+      return { discount, consumedRef: null, code: ref.id };
+    }
+
+    const nextCount = usedCount + 1;
+    const reachedLimit = nextCount >= maxUses;
+    tx.update(ref, {
+      usedCount: nextCount,
+      isUsed: reachedLimit,
+      usedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return {
+      discount,
+      consumedRef: {
+        ref,
+        rollbackUpdate: {
+          usedCount: usedCount,
+          isUsed: false
+        }
+      },
+      code: ref.id
+    };
   });
 }
